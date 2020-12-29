@@ -9,14 +9,49 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
-    // split input into parts; strings don't get split; arrays don't get split
+    // used for checking whether the inner part of a string is valid or not
+    let allowed_string_inner_part_characters = vec![
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+        'K',
+        'L',
+        'M',
+        'N',
+        'O',
+        'P',
+        'Q',
+        'R',
+        'S',
+        'T',
+        'U',
+        'V',
+        'W',
+        'X',
+        'Y',
+        'Z',
+        ',',
+        '.',
+        ':',
+        '!',
+        '?',
+    ];
 
+    // split input into parts; strings don't get split; arrays don't get split
     let input = input + " ";
     let mut current_token = String::new();
     let mut array_token = String::new();
     let mut last_character = 'a'; // just something that isn't a space
     let mut is_there_a_string = false;
     let mut array_started = false;
+    let mut string_started = false;
     let mut split_of_input: Vec<String> = vec![];
     
     if input.contains(&"[".to_string()) && !(input.contains(&"]".to_string())) {
@@ -56,10 +91,25 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
         } else {
-            // normal character and if used (later on) for string not closed error; not in array because array checking does that
+            // normal character and if used (later on) for string not closed error; not in array because array checking does that; and checking if character is valid
             if character == '"' {
                 is_there_a_string = true;
+                if current_token.starts_with('"') {
+                    string_started = false;
+                } 
             }
+
+            if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
+                return final_tokens;
+            }
+
+            if character == '"' {
+                if !(current_token.starts_with('"')) {
+                    string_started = true;
+                } 
+            }
+
             current_token.push(character);
         }
 
@@ -121,7 +171,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "!=".to_string()
     ];
 
-    // checking whether a name is valid or not
+    // used for checking whether a name is valid or not
     let allowed_variable_function_characters = vec![
         'A',
         'B',
