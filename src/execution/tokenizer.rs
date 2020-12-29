@@ -14,6 +14,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     let input = input + " ";
     let mut current_token = String::new();
     let mut array_token = String::new();
+    let mut last_character = 'a'; // just something that isn't a space
     let mut is_there_a_string = false;
     let mut array_started = false;
     let mut split_of_input: Vec<String> = vec![];
@@ -42,6 +43,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         else if array_started {
             array_token.push(character);
         }
+        /*
         else if character == ' ' {
             if current_token.starts_with('"') && !current_token.ends_with('"') {
                 // space belongs to the string
@@ -52,6 +54,20 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 split_of_input.push(current_token);
                 current_token = String::new();
             }
+        } 
+        */
+        else if character == ' ' {
+            if current_token.starts_with('"') && !current_token.ends_with('"') {
+                // space belongs to the string
+                current_token.push(character);
+            }
+            else {
+                // end of token
+                if last_character != ' ' {
+                    split_of_input.push(current_token);
+                    current_token = String::new();
+                }
+            }
         } else {
             // normal character and if used (later on) for string not closed error; not in array because array checking does that
             if character == '"' {
@@ -59,6 +75,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
             }
             current_token.push(character);
         }
+
+        last_character = character;
     }
 
     if is_there_a_string && current_token != "" {
