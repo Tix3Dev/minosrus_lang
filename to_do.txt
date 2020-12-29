@@ -1,4 +1,4 @@
-- || thing (also update notes):
+- || thing (also update notes) -> verine, verines:
 	return stuff: LET A = | DO FUNC |
 	array indexing: LET A = | GET FROM A AT 0 |
 

@@ -2,7 +2,8 @@
 pub enum ValueEnum {
     String(String),
     IntegerVector(Vec<i32>),
-    StringVector(Vec<String>)
+    StringVector(Vec<String>),
+    TokenVector(Vec<String>) // used for verines 
 }
 
 pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
@@ -48,10 +49,12 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     let input = input + " ";
     let mut current_token = String::new();
     let mut array_token = String::new();
+    let mut verine_token = String::new();
     let mut last_character = 'a'; // just something that isn't a space
     let mut is_there_a_string = false;
     let mut array_started = false;
     let mut string_started = false;
+    let mut verine_started = false;
     let mut split_of_input: Vec<String> = vec![];
     
     if input.contains(&"[".to_string()) && !(input.contains(&"]".to_string())) {
@@ -77,6 +80,20 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         }
         else if array_started {
             array_token.push(character);
+        }
+        else if character == '|' {
+            if verine_token.starts_with('|') {
+                verine_token.push(character);
+                split_of_input.push(verine_token);
+                verine_token = String::new();
+                verine_started = false;
+            } else {
+                verine_token.push(character);
+                verine_started = true;
+            }
+        }
+        else if verine_started {
+            verine_token.push(character);
         }
         else if character == ' ' {
             if current_token.starts_with('"') && !current_token.ends_with('"') {
@@ -124,6 +141,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     if split_of_input[split_of_input.len() - 1] == "" {
         split_of_input.remove(split_of_input.len() - 1);
     }
+
+    println!("{:?}", split_of_input);
     
     // used for the hashmap final_tokens -> classification of token
     let token_classification = vec![
@@ -133,6 +152,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "INTEGER".to_string(),
         "STRING_ARRAY".to_string(),
         "INTEGER_ARRAY".to_string(),
+        "VERINE".to_string(),
         "COMMENT".to_string(),
         "VARIABLE/FUNCTION_NAME".to_string()
     ];
@@ -262,8 +282,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                                 current_element.push(character);
                                 split_of_array.push(current_element);
                                 current_element = String::new();
-                                first_quote = true;
                                 comma_count = 0;
+                                first_quote = true;
                             }
                         } else if comma_count == 0 {
                             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("COMMA BETWEEN ELEMENTS OF ARRAY MISSING!".to_string())));
@@ -274,6 +294,10 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                         }
                     } else {
                         if !(first_quote) {
+                            if !(allowed_string_inner_part_characters.contains(&character)) {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
+                                break;
+                        }
                             current_element.push(character);
                         } else if character == ',' {
                             comma_count += 1;
@@ -361,10 +385,69 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 break;
             }
         }
+        // verine check
+        else if part.chars().nth(0).unwrap() == '|' && part.chars().rev().nth(0).unwrap() == '|' {
+            let mut verine = part.clone();
+
+            // remove | and |
+            verine.remove(0);
+            verine.remove(verine.len() - 1);
+
+            // check if verine is empty
+            if verine.trim().is_empty() {
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string()))); 
+                break;
+            }
+
+            let mut split_of_verine: Vec<String> = vec![];
+
+            for character in verine.chars() {
+                /* just copied from split input... go to bed now
+                else if character == ' ' {
+                    if current_token.starts_with('"') && !current_token.ends_with('"') {
+                        // space belongs to the string
+                        current_token.push(character);
+                    }
+                    else {
+                        // end of token
+                        if last_character != ' ' {
+                            split_of_input.push(current_token);
+                            current_token = String::new();
+                        }
+                    }
+                } else {
+                    // normal character and if used (later on) for string not closed error; not in array because array checking does that; and checking if character is valid
+                    if character == '"' {
+                        is_there_a_string = true;
+                        if current_token.starts_with('"') {
+                            string_started = false;
+                        } 
+                    }
+
+                    if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
+                        return final_tokens;
+                    }
+
+                    if character == '"' {
+                        if !(current_token.starts_with('"')) {
+                            string_started = true;
+                        } 
+                    }
+
+                    current_token.push(character);
+                }
+
+                last_character = character;
+                */
+            }
+
+            final_tokens.push((token_classification[6].to_string(), ValueEnum::TokenVector(split_of_verine.to_string())));
+        }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[6].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else  {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -380,7 +463,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(part.to_string())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
