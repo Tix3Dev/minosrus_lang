@@ -43,19 +43,6 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         else if array_started {
             array_token.push(character);
         }
-        /*
-        else if character == ' ' {
-            if current_token.starts_with('"') && !current_token.ends_with('"') {
-                // space belongs to the string
-                current_token.push(character);
-            }
-            else {
-                // end of token
-                split_of_input.push(current_token);
-                current_token = String::new();
-            }
-        } 
-        */
         else if character == ' ' {
             if current_token.starts_with('"') && !current_token.ends_with('"') {
                 // space belongs to the string
