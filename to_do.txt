@@ -1,12 +1,4 @@
-- check strings for valid letters
-
-- predefined name POP and PUSH are not great. Better way:
-	PUSH 121 ONTO A
-	POP FROM A
-	INSERT 121 INTO A AT 0
-	REMOVE FROM A AT 1
-
-- || thing (update notes):
+- || thing (also update notes):
 	return stuff: LET A = | DO FUNC |
 	array indexing: LET A = | GET FROM A AT 0 |
 
