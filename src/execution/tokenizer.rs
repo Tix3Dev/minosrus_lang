@@ -101,8 +101,12 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "RESET".to_string(),
         "PUSH".to_string(),
         "POP".to_string(),
+        "INSERT".to_string(),
+        "REMOVE".to_string(),
+        "GET".to_string(),
+        "ONTO".to_string(),
         "FROM".to_string(),
-        "ON".to_string(),
+        "INTO".to_string(),
         "AT".to_string()
     ];
     let operators = vec![
