@@ -1,5 +1,3 @@
 - check strings for valid letters
 
-- check if string ends with quote - e.g. PRINT "HELLO
-
 - array indexing -> a[0]

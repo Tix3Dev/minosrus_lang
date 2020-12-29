@@ -14,6 +14,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     let input = input + " ";
     let mut current_token = String::new();
     let mut array_token = String::new();
+    let mut is_there_a_string = false;
     let mut array_started = false;
     let mut split_of_input: Vec<String> = vec![];
     
@@ -52,9 +53,17 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 current_token = String::new();
             }
         } else {
-            // normal character
+            // normal character and if used (later on) for string not closed error; not in array because array checking does that
+            if character == '"' {
+                is_there_a_string = true;
+            }
             current_token.push(character);
         }
+    }
+
+    if is_there_a_string && current_token != "" {
+        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING ISN'T CLOSED!".to_string())));
+        return final_tokens;
     }
     
     if split_of_input[split_of_input.len() - 1] == "" {
