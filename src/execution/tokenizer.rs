@@ -3,7 +3,7 @@ pub enum ValueEnum {
     String(String),
     IntegerVector(Vec<i32>),
     StringVector(Vec<String>),
-    TokenVector(Vec<String>) // used for verines 
+    TokenVector(Vec<(String, ValueEnum)>) // used for verines 
 }
 
 pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
@@ -46,7 +46,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     ];
 
     // split input into parts; strings don't get split; arrays don't get split
-    let input = input + " ";
+    let input = input.trim().to_string() + " ";
     let mut current_token = String::new();
     let mut array_token = String::new();
     let mut verine_token = String::new();
@@ -137,7 +137,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING ISN'T CLOSED!".to_string())));
         return final_tokens;
     }
-    
+   
     if split_of_input[split_of_input.len() - 1] == "" {
         split_of_input.remove(split_of_input.len() - 1);
     }
@@ -177,7 +177,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "ONTO".to_string(),
         "FROM".to_string(),
         "INTO".to_string(),
-        "AT".to_string()
+        "AT".to_string(),
+        "LEN".to_string()
     ];
     let operators = vec![
         "+".to_string(),
@@ -398,51 +399,23 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string()))); 
                 break;
             }
+            
+            let split_of_verine: Vec<(String, ValueEnum)> = make_tokens(verine);
 
-            let mut split_of_verine: Vec<String> = vec![];
-
-            for character in verine.chars() {
-                /* just copied from split input... go to bed now
-                else if character == ' ' {
-                    if current_token.starts_with('"') && !current_token.ends_with('"') {
-                        // space belongs to the string
-                        current_token.push(character);
-                    }
-                    else {
-                        // end of token
-                        if last_character != ' ' {
-                            split_of_input.push(current_token);
-                            current_token = String::new();
-                        }
-                    }
-                } else {
-                    // normal character and if used (later on) for string not closed error; not in array because array checking does that; and checking if character is valid
-                    if character == '"' {
-                        is_there_a_string = true;
-                        if current_token.starts_with('"') {
-                            string_started = false;
-                        } 
-                    }
-
-                    if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
-                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
-                        return final_tokens;
-                    }
-
-                    if character == '"' {
-                        if !(current_token.starts_with('"')) {
-                            string_started = true;
-                        } 
-                    }
-
-                    current_token.push(character);
+            if let Some((_, value)) = split_of_verine.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
+                match value {
+                    ValueEnum::String(v) => {
+                        let error_message = "IN VERINE: ".to_string() + v;
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(error_message.to_string())));
+                        break;
+                    },
+                    ValueEnum::IntegerVector(_v) => (),
+                    ValueEnum::StringVector(_v) => (),
+                    ValueEnum::TokenVector(_v) => ()
                 }
-
-                last_character = character;
-                */
             }
 
-            final_tokens.push((token_classification[6].to_string(), ValueEnum::TokenVector(split_of_verine.to_string())));
+            final_tokens.push((token_classification[6].to_string(), ValueEnum::TokenVector(split_of_verine)));
         }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {

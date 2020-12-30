@@ -13,8 +13,7 @@ fn main() {
 
         match io::stdin().read_line(&mut input) {
             Ok(_) => {
-                input = input.trim().to_string();
-                if !(input.is_empty()) {
+                if !(input.trim().to_string().is_empty()) {
                     execution::exec(input);
                 }
             },

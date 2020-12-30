@@ -17,7 +17,8 @@ pub fn exec(input: String) {
                 return;
             },
             tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => ()
+            tokenizer::ValueEnum::StringVector(_v) => (),
+            tokenizer::ValueEnum::TokenVector(_v) => ()
         }
     }
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"COMMENT") {
@@ -27,7 +28,8 @@ pub fn exec(input: String) {
                 return;
             },
             tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => ()
+            tokenizer::ValueEnum::StringVector(_v) => (),
+            tokenizer::ValueEnum::TokenVector(_v) => ()
         }
     }
 
