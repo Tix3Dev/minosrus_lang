@@ -15,7 +15,7 @@ pub fn exec(input: String) {
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
         match value {
             tokenizer::ValueEnum::String(v) => {
-                println!("ERROR: {}", v);
+                println!("SYNTAX ERROR: {}", v);
                 return;
             },
             tokenizer::ValueEnum::IntegerVector(_v) => (),
@@ -53,7 +53,14 @@ pub fn exec(input: String) {
                 "VARIABLE/FUNCTION_NAME", 
                 "OPERATOR", 
                 "INTEGER"
-            ]
+            ],
+            vec![
+                "PREDEFINED_NAME", 
+                "VARIABLE/FUNCTION_NAME", 
+                "OPERATOR", 
+                "VARIABLE/FUNCTION_NAME"
+            ],
+
         ]));
 
         hashmap.insert("PRINT", OrderEnum::MultipleOptions(
@@ -262,6 +269,46 @@ pub fn exec(input: String) {
         hashmap
     };
 
+    let first_key_element = &token_collection[0].0;
+    let first_value_element = &token_collection[0].1; 
+
+    // first execution error check - check if which predefined_name - check if order is right
+    if first_key_element != "PREDEFINED_NAME" {
+        println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
+        return;
+    } else {
+        match first_value_element {
+            tokenizer::ValueEnum::String(clean) => {
+                match predefined_name_order.get(&clean.as_str()) {
+                    Some(value) => {
+                        match value {
+                            OrderEnum::SingleOption(v) => {
+                                for element_nr in 0..v.len() {
+                                    println!("{:?}", v[element_nr]); 
+                                }
+                            },
+                            OrderEnum::MultipleOptions(v) => {
+                                for possibility_nr in 0..v.len() {
+                                    for element_nr in 0..v[possibility_nr].len() {
+                                        println!("{:?}", v[possibility_nr][element_nr]);
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    None => {
+                        println!("EXECUTION ERROR: FIRST PREDEFINED NAME IS ALWAYS NOT AT THE BEGINNING!");
+                        return;
+                    }
+                }
+            },
+            tokenizer::ValueEnum::IntegerVector(_clean) => (),
+            tokenizer::ValueEnum::StringVector(_clean) => (),
+            tokenizer::ValueEnum::TokenVector(_clean) => ()
+        }
+    }
+
+    /*
     match predefined_name_order.get("LET") {
         Some(value) => {
             match value {
@@ -272,6 +319,7 @@ pub fn exec(input: String) {
         None => ()
     }
     println!("{:?}", token_collection);
+    */
 }    
 
 pub fn reset() {
