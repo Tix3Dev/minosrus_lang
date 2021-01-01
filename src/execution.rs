@@ -10,6 +10,7 @@ enum OrderEnum {
 pub fn exec(input: String) {
     // tokenize the input
     let token_collection = tokenizer::make_tokens(input);
+    println!("{:?}", token_collection);
 
     // check for error
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -283,15 +284,64 @@ pub fn exec(input: String) {
                     Some(value) => {
                         match value {
                             OrderEnum::SingleOption(v) => {
+                                if token_collection.len() < v.len() {
+                                    println!("there are less tokens than {} needs", clean);
+                                    return;
+                                }
+                                if token_collection.len() > v.len() {
+                                    println!("there are more tokens than {} needs", clean);
+                                    return;
+                                }
+
+                                let mut option_passed = true;
+                                
                                 for element_nr in 0..v.len() {
-                                    println!("{:?}", v[element_nr]); 
+                                    if token_collection[element_nr].0 != v[element_nr] {
+                                        option_passed = false;
+                                    }
+                                }
+                                if option_passed {
+                                    println!("token order passed");
+                                } else {
+                                    println!("token order not passed");
                                 }
                             },
                             OrderEnum::MultipleOptions(v) => {
+                                let mut too_few_tokens = false;
+                                let mut too_many_tokens = false;
                                 for possibility_nr in 0..v.len() {
-                                    for element_nr in 0..v[possibility_nr].len() {
-                                        println!("{:?}", v[possibility_nr][element_nr]);
+                                    if token_collection.len() < v[possibility_nr].len() {
+                                        too_few_tokens = true;
                                     }
+                                    if token_collection.len() > v[possibility_nr].len() {
+                                        too_many_tokens = true;
+                                    }
+                                }
+                                if too_few_tokens {
+                                    println!("there are less tokens than {} needs", clean);
+                                    return;
+                                }
+                                if too_many_tokens {
+                                    println!("there are more tokens than {} needs", clean);
+                                    return;
+                                }
+                                let mut one_option_passed = false;
+                                for possibility_nr in 0..v.len() {
+                                    let mut current_option_passed = true;
+                                    for element_nr in 0..v[possibility_nr].len() {
+                                        if token_collection[element_nr].0 != v[possibility_nr][element_nr] {
+                                            current_option_passed = false;
+                                        }
+                                    }
+                                    if current_option_passed {
+                                        one_option_passed = true;
+                                        break;
+                                    }
+                                }
+                                if one_option_passed == true {
+                                    println!("token oder passed");
+                                } else {
+                                    println!("token order not passed");
                                 }
                             }
                         }
@@ -307,19 +357,6 @@ pub fn exec(input: String) {
             tokenizer::ValueEnum::TokenVector(_clean) => ()
         }
     }
-
-    /*
-    match predefined_name_order.get("LET") {
-        Some(value) => {
-            match value {
-                OrderEnum::SingleOption(v) => println!("It's single: {:?}", v),
-                OrderEnum::MultipleOptions(v) => println!("It's not single: {:?}", v)
-            }
-        },
-        None => ()
-    }
-    println!("{:?}", token_collection);
-    */
 }    
 
 pub fn reset() {
