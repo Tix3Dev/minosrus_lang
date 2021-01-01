@@ -44,22 +44,22 @@ pub fn exec(input: String) {
         hashmap.insert("LET", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME", 
-                "VARIABLE/FUNCTION_NAME", 
-                "OPERATOR", 
-                "STRING"
+                "PREDEFINED_NAME:LET", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "OPERATOR:=", 
+                "STRING:?"
             ], 
             vec![
-                "PREDEFINED_NAME", 
-                "VARIABLE/FUNCTION_NAME", 
-                "OPERATOR", 
-                "INTEGER"
+                "PREDEFINED_NAME:LET", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "OPERATOR:=", 
+                "INTEGER:?"
             ],
             vec![
-                "PREDEFINED_NAME", 
-                "VARIABLE/FUNCTION_NAME", 
-                "OPERATOR", 
-                "VARIABLE/FUNCTION_NAME"
+                "PREDEFINED_NAME:LET", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "OPERATOR:=", 
+                "VARIABLE/FUNCTION_NAME:?"
             ],
 
         ]));
@@ -67,203 +67,162 @@ pub fn exec(input: String) {
         hashmap.insert("PRINT", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME", 
-                "STRING"
+                "PREDEFINED_NAME:PRINT", 
+                "STRING:?"
             ], 
             vec![
-                "PREDEFINED_NAME", 
-                "INTEGER"
+                "PREDEFINED_NAME:PRINT", 
+                "INTEGER:?"
             ], 
             vec![
-                "PREFEINDED_NAME", 
-                "VARIABLE/FUNCTION_NAME"
+                "PREFEINDED_NAME:PRINT", 
+                "VARIABLE/FUNCTION_NAME:?"
             ]
         ]));
 
         hashmap.insert("FN", OrderEnum::SingleOption(
         vec![
-            "PREDEFINED_NAME", 
-            "VARIABLE/FUNCTION_NAME", 
-            "PREDEFINED_NAME"
+            "PREDEFINED_NAME:FN", 
+            "VARIABLE/FUNCTION_NAME:?", 
+            "PREDEFINED_NAME:START"
         ]));
 
         hashmap.insert("DO", OrderEnum::SingleOption(
         vec![
-            "PREDEFINED_NAME", 
-            "VARIABLE/FUNCTION_NAME", 
+            "PREDEFINED_NAME:DO", 
+            "VARIABLE/FUNCTION_NAME:?", 
         ]));
 
         hashmap.insert("IF", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME",
-                "STRING",
-                "OPERATOR",
-                "STRING",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:IF",
+                "STRING:?",
+                "OPERATOR:?",
+                "STRING:?",
+                "PREDEFINED_NAME:START"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "INTEGER",
-                "OPERATOR",
-                "INTEGER",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:IF",
+                "INTEGER:?",
+                "OPERATOR:?",
+                "INTEGER:?",
+                "PREDEFINED_NAME:START"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "OPERATOR",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:IF",
+                "VARIABLE/FUNCTION_NAME:?",
+                "OPERATOR:?",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:START"
             ]
         ]));
 
         hashmap.insert("WHILE", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME",
-                "STRING",
-                "OPERATOR",
-                "STRING",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:WHILE",
+                "STRING:?",
+                "OPERATOR:?",
+                "STRING:?",
+                "PREDEFINED_NAME:START"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "INTEGER",
-                "OPERATOR",
-                "INTEGER",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:WHILE",
+                "INTEGER:?",
+                "OPERATOR:?",
+                "INTEGER:?",
+                "PREDEFINED_NAME:START"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "OPERATOR",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:WHILE",
+                "VARIABLE/FUNCTION_NAME:?",
+                "OPERATOR:?",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:START"
             ]
         ]));
 
         hashmap.insert("PUSH", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME",
-                "STRING",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME"
+                "PREDEFINED_NAME:PUSH",
+                "STRING:?",
+                "PREDEFINED_NAME:ONTO",
+                "VARIABLE/FUNCTION_NAME:?"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "INTEGER",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME"
+                "PREDEFINED_NAME:PUSH",
+                "INTEGER:?",
+                "PREDEFINED_NAME:ONTO",
+                "VARIABLE/FUNCTION_NAME:?"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME"
+                "PREDEFINED_NAME:PUSH",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:ONTO",
+                "VARIABLE/FUNCTION_NAME:?"
             ]
         ]));
 
         hashmap.insert("POP", OrderEnum::SingleOption (
         vec![
-            "PREDEFINED_NAME",
-            "PREDEFINED_NAME",
-            "VARIABLE/FUNCTION_NAME"
+            "PREDEFINED_NAME:POP",
+            "PREDEFINED_NAME:FROM",
+            "VARIABLE/FUNCTION_NAME:?"
         ]));
 
         hashmap.insert("INSERT", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME",
-                "STRING",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
+                "PREDEFINED_NAME:INSERT",
+                "STRING:?",
+                "PREDEFINED_NAME:INTO",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "INTEGER:?"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "INTEGER",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
+                "PREDEFINED_NAME:INSERT",
+                "INTEGER:?",
+                "PREDEFINED_NAME:INTO",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "INTEGER:?"
             ],
             vec![
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
+                "PREDEFINED_NAME:INSERT",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:INTO",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "INTEGER:?"
             ]
         ]));
 
-        hashmap.insert("REMOVE", OrderEnum::MultipleOptions(
+        hashmap.insert("REMOVE", OrderEnum::SingleOption(
         vec![
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ],
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ],
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ]
+            "PREDEFINED_NAME:REMOVE",
+            "PREDEFINED_NAME:FROM",
+            "VARIABLE/FUNCTION_NAME:?",
+            "PREDEFINED_NAME:AT",
+            "INTEGER:?"
         ]));
 
-        hashmap.insert("REMOVE", OrderEnum::MultipleOptions(
-        vec![
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ],
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ],
-            vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
-            ]
-        ]));
-        
         hashmap.insert("GET", OrderEnum::MultipleOptions(
         vec![
             vec![
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME",
-                "INTEGER"
+                "PREDEFINED_NAME:GET",
+                "PREDEFINED_NAME:FROM",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "INTEGER:?"
             ],
             vec![ // LEN
-                "PREDEFINED_NAME",
-                "PREDEFINED_NAME",
-                "VARIABLE/FUNCTION_NAME",
-                "PREDEFINED_NAME"
+                "PREDEFINED_NAME:GET",
+                "PREDEFINED_NAME:FROM",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:LEN"
             ]
         ]));
 
@@ -293,15 +252,36 @@ pub fn exec(input: String) {
                                     return;
                                 }
 
-                                let mut option_passed = true;
-                                
+                                let mut is_classification_order_right = true;
+                                let mut is_value_order_right = true;
+
                                 for element_nr in 0..v.len() {
-                                    if token_collection[element_nr].0 != v[element_nr] {
-                                        option_passed = false;
+                                    println!("1.1: {} compared to {}", token_collection[element_nr].0, v[element_nr].split(':').nth(0).unwrap());
+                                    if token_collection[element_nr].0 != v[element_nr].split(':').nth(0).unwrap() {
+                                        println!("compared");
+                                        is_classification_order_right = false;
+                                        break;
+                                    }
+                                    match &token_collection[element_nr].1 {
+                                        tokenizer::ValueEnum::String(tc) => {
+                                            println!("1.2: {} compared to {}", tc, v[element_nr].split(':').nth(1).unwrap());
+                                            if tc != v[element_nr].split(':').nth(1).unwrap() && v[element_nr].split(':').nth(1).unwrap() != "?" {
+                                                println!("compared");
+                                                is_value_order_right = false;
+                                                break; 
+                                            }
+                                        },
+                                        tokenizer::ValueEnum::IntegerVector(_tc) => (),
+                                        tokenizer::ValueEnum::StringVector(_tc) => (),
+                                        tokenizer::ValueEnum::TokenVector(_tc) => ()
                                     }
                                 }
-                                if !(option_passed) {
+                                if !(is_classification_order_right) {
                                     println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
+                                    return;
+                                }
+                                if !(is_value_order_right) {
+                                    println!("EXECUTION ERROR: VALUE ORDER FOR {} ISN'T RIGHT!", clean);
                                     return;
                                 }
                             },
@@ -324,21 +304,48 @@ pub fn exec(input: String) {
                                     println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN {} NEEDS!", clean);
                                     return;
                                 }
-                                let mut one_option_passed = false;
+                                let mut is_one_token_order_right = false;
+                                let mut is_one_value_order_right = false;
                                 for possibility_nr in 0..v.len() {
-                                    let mut current_option_passed = true;
+                                    let mut is_current_token_order_right = true;
+                                    let mut is_current_value_order_right = true;
                                     for element_nr in 0..v[possibility_nr].len() {
-                                        if token_collection[element_nr].0 != v[possibility_nr][element_nr] {
-                                            current_option_passed = false;
+                                        println!("2.1: {} compared to {}", token_collection[element_nr].0, v[possibility_nr][element_nr].split(':').nth(0).unwrap());
+                                        if token_collection[element_nr].0 != v[possibility_nr][element_nr].split(':').nth(0).unwrap() {
+                                            println!("compared");
+                                            is_current_token_order_right = false;
+                                            break;
+                                        }
+                                        match &token_collection[element_nr].1 {
+                                            tokenizer::ValueEnum::String(tc) => {
+                                                println!("2.2: {} compared to {}", tc, v[possibility_nr][element_nr].split(':').nth(1).unwrap());
+                                                if tc != v[possibility_nr][element_nr].split(':').nth(1).unwrap() && v[possibility_nr][element_nr].split(':').nth(1).unwrap() != "?"{
+                                                    println!("compared");
+                                                    is_current_value_order_right = false;
+                                                    break;
+                                                }
+                                            },
+                                            tokenizer::ValueEnum::IntegerVector(_tc) => (),
+                                            tokenizer::ValueEnum::StringVector(_tc) => (),
+                                            tokenizer::ValueEnum::TokenVector(_tc) => ()
                                         }
                                     }
-                                    if current_option_passed {
-                                        one_option_passed = true;
+                                    if is_current_token_order_right {
+                                        is_one_token_order_right = true;
+                                        break;
+                                    }
+                                    if is_current_value_order_right {
+                                        is_one_value_order_right = true;
                                         break;
                                     }
                                 }
-                                if !(one_option_passed) {
+                                if !(is_one_token_order_right) {
                                     println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
+                                    return;
+                                }
+                                if !(is_one_value_order_right) {
+                                    println!("EXECUTION ERROR: VALUE ORDER FOR {} ISN'T RIGHT!", clean);
+                                    return;
                                 }
                             }
                         }

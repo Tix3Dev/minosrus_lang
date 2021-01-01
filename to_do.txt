@@ -1,1 +1,5 @@
 - implement verines in execution.rs
+
+- maybe print help -> e.g. when token order is wrong print the right
+
+- new commit: Added comments
