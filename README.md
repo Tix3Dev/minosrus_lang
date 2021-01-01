@@ -9,4 +9,3 @@ It's inspired by BASIC but also by new languages like Rust.
 In the future the interpreter will (eventually) be used for an OS.
 
 It's my first project in Rust.
-
