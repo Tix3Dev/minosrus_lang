@@ -285,11 +285,11 @@ pub fn exec(input: String) {
                         match value {
                             OrderEnum::SingleOption(v) => {
                                 if token_collection.len() < v.len() {
-                                    println!("there are less tokens than {} needs", clean);
+                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN {} NEEDS!", clean);
                                     return;
                                 }
                                 if token_collection.len() > v.len() {
-                                    println!("there are more tokens than {} needs", clean);
+                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN {} NEEDS!", clean);
                                     return;
                                 }
 
@@ -300,10 +300,9 @@ pub fn exec(input: String) {
                                         option_passed = false;
                                     }
                                 }
-                                if option_passed {
-                                    println!("token order passed");
-                                } else {
-                                    println!("token order not passed");
+                                if !(option_passed) {
+                                    println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
+                                    return;
                                 }
                             },
                             OrderEnum::MultipleOptions(v) => {
@@ -318,11 +317,11 @@ pub fn exec(input: String) {
                                     }
                                 }
                                 if too_few_tokens {
-                                    println!("there are less tokens than {} needs", clean);
+                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN {} NEEDS!", clean);
                                     return;
                                 }
                                 if too_many_tokens {
-                                    println!("there are more tokens than {} needs", clean);
+                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN {} NEEDS!", clean);
                                     return;
                                 }
                                 let mut one_option_passed = false;
@@ -338,16 +337,14 @@ pub fn exec(input: String) {
                                         break;
                                     }
                                 }
-                                if one_option_passed == true {
-                                    println!("token oder passed");
-                                } else {
-                                    println!("token order not passed");
+                                if !(one_option_passed) {
+                                    println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
                                 }
                             }
                         }
                     },
                     None => {
-                        println!("EXECUTION ERROR: FIRST PREDEFINED NAME IS ALWAYS NOT AT THE BEGINNING!");
+                        println!("EXECUTION ERROR: {} IS ALWAYS NOT AT THE BEGINNING!", clean);
                         return;
                     }
                 }
