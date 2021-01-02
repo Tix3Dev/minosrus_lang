@@ -12,7 +12,7 @@ pub fn exec(input: String) {
     let token_collection = tokenizer::make_tokens(input);
     println!("{:?}", token_collection);
 
-    // check for error
+    // check for syntax errors
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
         match value {
             tokenizer::ValueEnum::String(v) => {
@@ -37,7 +37,7 @@ pub fn exec(input: String) {
         }
     }
     
-    // order of predefined names for checking
+    // order of predefined names for checking and if the value is set the value
     let predefined_name_order = {
         let mut hashmap = HashMap::new();
 
@@ -232,41 +232,43 @@ pub fn exec(input: String) {
     let first_key_element = &token_collection[0].0;
     let first_value_element = &token_collection[0].1; 
 
-    // first execution error check - check if which predefined_name - check if order is right
+    // check if first token is a predefined name
     if first_key_element != "PREDEFINED_NAME" {
         println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
         return;
     } else {
+        // order of keys and values check
         match first_value_element {
             tokenizer::ValueEnum::String(clean) => {
                 match predefined_name_order.get(&clean.as_str()) {
                     Some(value) => {
+                        // check if the key of the first token has multiple options
                         match value {
                             OrderEnum::SingleOption(v) => {
+                                // length check - otherwise the indexing would panic
                                 if token_collection.len() < v.len() {
-                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN {} NEEDS!", clean);
+                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
                                     return;
                                 }
                                 if token_collection.len() > v.len() {
-                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN {} NEEDS!", clean);
+                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                                     return;
                                 }
-
-                                let mut is_classification_order_right = true;
+                                
+                                // analyse if order of key and value is right
+                                let mut is_key_order_right = true;
                                 let mut is_value_order_right = true;
 
                                 for element_nr in 0..v.len() {
-                                    println!("1.1: {} compared to {}", token_collection[element_nr].0, v[element_nr].split(':').nth(0).unwrap());
+                                    // check if key is right
                                     if token_collection[element_nr].0 != v[element_nr].split(':').nth(0).unwrap() {
-                                        println!("compared");
-                                        is_classification_order_right = false;
+                                        is_key_order_right= false;
                                         break;
                                     }
+                                    // check if value is right
                                     match &token_collection[element_nr].1 {
                                         tokenizer::ValueEnum::String(tc) => {
-                                            println!("1.2: {} compared to {}", tc, v[element_nr].split(':').nth(1).unwrap());
                                             if tc != v[element_nr].split(':').nth(1).unwrap() && v[element_nr].split(':').nth(1).unwrap() != "?" {
-                                                println!("compared");
                                                 is_value_order_right = false;
                                                 break; 
                                             }
@@ -276,16 +278,17 @@ pub fn exec(input: String) {
                                         tokenizer::ValueEnum::TokenVector(_tc) => ()
                                     }
                                 }
-                                if !(is_classification_order_right) {
-                                    println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
+                                if !(is_key_order_right) {
+                                    println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
                                     return;
                                 }
                                 if !(is_value_order_right) {
-                                    println!("EXECUTION ERROR: VALUE ORDER FOR {} ISN'T RIGHT!", clean);
+                                    println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
                                     return;
                                 }
                             },
                             OrderEnum::MultipleOptions(v) => {
+                                // length check - otherwise the indexing would panic
                                 let mut too_few_tokens = false;
                                 let mut too_many_tokens = false;
                                 for possibility_nr in 0..v.len() {
@@ -297,32 +300,32 @@ pub fn exec(input: String) {
                                     }
                                 }
                                 if too_few_tokens {
-                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN {} NEEDS!", clean);
+                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
                                     return;
                                 }
                                 if too_many_tokens {
-                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN {} NEEDS!", clean);
+                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                                     return;
                                 }
+
+                                // analyse if order of key and value is right
                                 let mut is_one_token_order_right = false;
                                 let mut is_one_value_order_right = false;
+                                // iterate trough possibilitys
                                 for possibility_nr in 0..v.len() {
                                     let mut is_current_token_order_right = true;
                                     let mut is_current_value_order_right = true;
+
                                     for element_nr in 0..v[possibility_nr].len() {
-                                        println!("2.1: {} compared to {}", token_collection[element_nr].0, v[possibility_nr][element_nr].split(':').nth(0).unwrap());
+                                        // check if key is right
                                         if token_collection[element_nr].0 != v[possibility_nr][element_nr].split(':').nth(0).unwrap() {
-                                            println!("compared");
                                             is_current_token_order_right = false;
-                                            break;
                                         }
+                                        // check if value is right
                                         match &token_collection[element_nr].1 {
                                             tokenizer::ValueEnum::String(tc) => {
-                                                println!("2.2: {} compared to {}", tc, v[possibility_nr][element_nr].split(':').nth(1).unwrap());
                                                 if tc != v[possibility_nr][element_nr].split(':').nth(1).unwrap() && v[possibility_nr][element_nr].split(':').nth(1).unwrap() != "?"{
-                                                    println!("compared");
                                                     is_current_value_order_right = false;
-                                                    break;
                                                 }
                                             },
                                             tokenizer::ValueEnum::IntegerVector(_tc) => (),
@@ -332,26 +335,25 @@ pub fn exec(input: String) {
                                     }
                                     if is_current_token_order_right {
                                         is_one_token_order_right = true;
-                                        break;
                                     }
                                     if is_current_value_order_right {
                                         is_one_value_order_right = true;
-                                        break;
                                     }
                                 }
+                                // check if just one order is right
                                 if !(is_one_token_order_right) {
-                                    println!("EXECUTION ERROR: TOKEN ORDER FOR {} ISN'T RIGHT!", clean);
+                                    println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
                                     return;
                                 }
                                 if !(is_one_value_order_right) {
-                                    println!("EXECUTION ERROR: VALUE ORDER FOR {} ISN'T RIGHT!", clean);
+                                    println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
                                     return;
                                 }
                             }
                         }
                     },
                     None => {
-                        println!("EXECUTION ERROR: {} IS ALWAYS NOT AT THE BEGINNING!", clean);
+                        println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
                         return;
                     }
                 }
