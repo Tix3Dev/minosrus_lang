@@ -1,3 +1,13 @@
-- implement verines in execution.rs
+- verines
+	implement verines in execution.rs
+	change verines in tokenizer; new thing that isn' checked with recursion: LET A = | 1 - 2 + 3 * 4 |
 
-- maybe print help -> e.g. when token order is wrong print the right
+- maybe print help -> e.g. when token order is wrong print the right and show where the error is
+	e.g. > PRINT "HELLo"
+		 -------------+
+
+- indentation
+	e.g. > IF 12 < 24 START
+		 	> BLA BLA
+
+- change operators (e.g. < is missing; split into comparing and +-*/ etc)
