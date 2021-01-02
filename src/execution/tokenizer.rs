@@ -142,8 +142,6 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         split_of_input.remove(split_of_input.len() - 1);
     }
 
-    println!("{:?}", split_of_input);
-    
     // used for the hashmap final_tokens -> classification of token
     let token_classification = vec![
         "PREDEFINED_NAME".to_string(),
@@ -272,7 +270,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 let mut current_element = String::new();
                 let mut first_quote = true;
                 let mut comma_count = 1;
-                
+
                 for character in array.chars() {
                     if character == '"' {
                         if comma_count == 1 {
