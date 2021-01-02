@@ -2,7 +2,7 @@
 	implement verines in execution.rs
 	change verines in tokenizer; new thing that isn' checked with recursion: LET A = | 1 - 2 + 3 * 4 |
 
-- maybe print help -> e.g. when token order is wrong print the right and show where the error is
+- maybe print help -> show where the error is
 	e.g. > PRINT "HELLo"
 		 -------------+
 
