@@ -9,5 +9,3 @@
 - indentation
 	e.g. > IF 12 < 24 START
 		 	> BLA BLA
-
-- change operators (e.g. < is missing; split into comparing and +-*/ etc)

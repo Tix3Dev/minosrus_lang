@@ -46,19 +46,19 @@ pub fn exec(input: String) {
             vec![
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
-                "OPERATOR:=", 
+                "EQUAL_SIGN:=", 
                 "STRING:?"
             ], 
             vec![
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
-                "OPERATOR:=", 
+                "EQUAL_SIGN:=", 
                 "INTEGER:?"
             ],
             vec![
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
-                "OPERATOR:=", 
+                "EQUAL_SIGN:=", 
                 "VARIABLE/FUNCTION_NAME:?"
             ],
 
@@ -98,21 +98,21 @@ pub fn exec(input: String) {
             vec![
                 "PREDEFINED_NAME:IF",
                 "STRING:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "STRING:?",
                 "PREDEFINED_NAME:START"
             ],
             vec![
                 "PREDEFINED_NAME:IF",
                 "INTEGER:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "INTEGER:?",
                 "PREDEFINED_NAME:START"
             ],
             vec![
                 "PREDEFINED_NAME:IF",
                 "VARIABLE/FUNCTION_NAME:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:START"
             ]
@@ -123,21 +123,21 @@ pub fn exec(input: String) {
             vec![
                 "PREDEFINED_NAME:WHILE",
                 "STRING:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "STRING:?",
                 "PREDEFINED_NAME:START"
             ],
             vec![
                 "PREDEFINED_NAME:WHILE",
                 "INTEGER:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "INTEGER:?",
                 "PREDEFINED_NAME:START"
             ],
             vec![
                 "PREDEFINED_NAME:WHILE",
                 "VARIABLE/FUNCTION_NAME:?",
-                "OPERATOR:?",
+                "COMPARING_OPERATOR:?",
                 "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:START"
             ]

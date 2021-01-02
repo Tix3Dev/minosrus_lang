@@ -145,7 +145,9 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     // used for the hashmap final_tokens -> classification of token
     let token_classification = vec![
         "PREDEFINED_NAME".to_string(),
-        "OPERATOR".to_string(),
+        "ARITHMETIC_OPERATOR".to_string(),
+        "COMPARING_OPERATOR".to_string(),
+        "EQUAL_SIGN".to_string(),
         "STRING".to_string(),
         "INTEGER".to_string(),
         "STRING_ARRAY".to_string(),
@@ -155,7 +157,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "VARIABLE/FUNCTION_NAME".to_string()
     ];
     
-    // used to check whether a token is ... or not
+    // used to check whether a token is a ... or not
     let predefined_names = vec![
         "LET".to_string(),
         "PRINT".to_string(),
@@ -178,17 +180,23 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "AT".to_string(),
         "LEN".to_string()
     ];
-    let operators = vec![
+    let arithmetic_operators = vec![
         "+".to_string(),
         "-".to_string(),
         "*".to_string(),
         "/".to_string(),
         "**".to_string(),
-        "//".to_string(),
-        "=".to_string(),
-        "==".to_string(),
-        "!=".to_string()
+        "//".to_string()
     ];
+    let comparing_operators = vec![
+        "==".to_string(),
+        "!=".to_string(),
+        "<".to_string(),
+        ">".to_string(),
+        "<=".to_string(),
+        ">=".to_string()
+    ];
+    let equal_sign = "=".to_string();
 
     // used for checking whether a name is valid or not
     let allowed_variable_function_characters = vec![
@@ -228,17 +236,25 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         if predefined_names.contains(part) {
             final_tokens.push((token_classification[0].to_string(), ValueEnum::String(part.to_string())));
         }
-        // operator check
-        else if operators.contains(part) {
+        // arithmetic_operator check
+        else if arithmetic_operators.contains(part) {
             final_tokens.push((token_classification[1].to_string(), ValueEnum::String(part.to_string())));
+        }
+        // comparing_operator check
+        else if comparing_operators.contains(part) {
+            final_tokens.push((token_classification[2].to_string(), ValueEnum::String(part.to_string())));
+        }
+        // equal_sign check
+        else if part == &equal_sign {
+            final_tokens.push((token_classification[3].to_string(), ValueEnum::String(part.to_string())));
         }
         // string check
         else if part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"' {
-            final_tokens.push((token_classification[2].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.to_string())));
         }
         // integer check
         else if part.parse::<i32>().is_ok() {
-            final_tokens.push((token_classification[3].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[5].to_string(), ValueEnum::String(part.to_string())));
         }
         // array check
         else if part.chars().nth(0).unwrap() == '[' && part.chars().rev().nth(0).unwrap() == ']' {
@@ -307,7 +323,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                     }
                 }
 
-                final_tokens.push((token_classification[4].to_string(), ValueEnum::StringVector(split_of_array)));
+                final_tokens.push((token_classification[6].to_string(), ValueEnum::StringVector(split_of_array)));
             }
             // integer elements
             else if part.chars().into_iter().any(|c| c.is_numeric()) {
@@ -378,7 +394,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                     }
                 }
 
-                final_tokens.push((token_classification[5].to_string(), ValueEnum::IntegerVector(split_of_array)));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::IntegerVector(split_of_array)));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ELEMENTS OF ARRAY DON'T SEEM TO BE STRINGS OR INTEGERS!".to_string())));
                 break;
@@ -413,12 +429,12 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
 
-            final_tokens.push((token_classification[6].to_string(), ValueEnum::TokenVector(split_of_verine)));
+            final_tokens.push((token_classification[8].to_string(), ValueEnum::TokenVector(split_of_verine)));
         }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else  {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -434,7 +450,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[10].to_string(), ValueEnum::String(part.to_string())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
