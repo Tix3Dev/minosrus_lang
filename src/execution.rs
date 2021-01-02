@@ -281,10 +281,26 @@ pub fn exec(input: String) {
                             }
                             if !(is_key_order_right) {
                                 println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                print!("HELP: RIGHT ORDER: '");
+                                for e_nr in 0..v.len() {
+                                    if e_nr == v.len() - 1 {
+                                        println!("{}'", v[e_nr].split(':').nth(0).unwrap());
+                                    } else {
+                                        print!("{}, ", v[e_nr].split(':').nth(0).unwrap());
+                                    }
+                                }
                                 return;
                             }
                             if !(is_value_order_right) {
                                 println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                print!("HELP: RIGHT ORDER: '");
+                                for e_nr in 0..v.len() {
+                                    if e_nr == v.len() - 1 {
+                                        println!("{}'", v[e_nr].split(':').nth(1).unwrap());
+                                    } else {
+                                        println!("{}, ", v[e_nr].split(':').nth(1).unwrap());
+                                    }
+                                }
                                 return;
                             }
                         },
@@ -344,10 +360,32 @@ pub fn exec(input: String) {
                             // check if just one order is right
                             if !(is_one_token_order_right) {
                                 println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
+                                for p_nr in 0..v.len() {
+                                    print!("{}: '", p_nr+1);
+                                    for e_nr in 0..v[p_nr].len() {
+                                        if e_nr == v[p_nr].len() - 1 {
+                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        } else {
+                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        }
+                                    }
+                                }
                                 return;
                             }
                             if !(is_one_value_order_right) {
                                 println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
+                                for p_nr in 0..v.len() {
+                                    print!("{}: '", p_nr+1);
+                                    for e_nr in 0..v[p_nr].len() {
+                                        if e_nr == v[p_nr].len() - 1 {
+                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        } else {
+                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        }
+                                    }
+                                }
                                 return;
                             }
                         }
