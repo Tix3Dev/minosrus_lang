@@ -1,6 +1,8 @@
 - verines
 	implement verines in execution.rs
-	change verines in tokenizer; new thing that isn' checked with recursion: LET A = | 1 - 2 + 3 * 4 |
+	verine in verine e.g. LET A = | GET FROM A AT | GET FROM A LEN | |
+	note: not allowed to use multiple verine; e.g. IF | GET FROM A AT 0 | == | GET FROM B AT 0 | START
+												   --> because tokenizer takes last and first verine together then second last and second and so on!
 
 - maybe print help -> show where the error is
 	e.g. > PRINT "HELLo"

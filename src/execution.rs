@@ -228,17 +228,58 @@ pub fn exec(input: String) {
 
         hashmap
     };
+    
+    let verine_starting_key = vec![
+        "PREDEFINED_NAME".to_string(),
+        "STRING".to_string(),
+        "INTEGER".to_string()
+    ];
 
+    // verine execution
+    if let Some((_, token_value)) = token_collection.iter().find(|(key, _)| key == &"VERINE") {
+        match token_value {
+            tokenizer::ValueEnum::String(_tv) => (),
+            tokenizer::ValueEnum::IntegerVector(_tv) => (),
+            tokenizer::ValueEnum::StringVector(_tv) => (),
+            tokenizer::ValueEnum::TokenVector(tv) => {
+                // check if key and value order is right
+                if verine_starting_key.contains(&tv[0].0) {
+                    for i in 0..tv.len() {
+                        match &tv[i].1 {
+                            tokenizer::ValueEnum::String(value) => {
+                                println!("key: {:?}", tv[i].0);
+                                println!("value: {:?}", value);
+                            },
+                            tokenizer::ValueEnum::IntegerVector(value) => {
+                                println!("key: {:?}", tv[i].0);
+                                println!("value: {:?}", value);
+                            },
+                            tokenizer::ValueEnum::StringVector(value) => {
+                                println!("key: {:?}", tv[i].0);
+                                println!("value: {:?}", value);
+                            },
+                            tokenizer::ValueEnum::TokenVector(_value) => {
+                                println!("no verine in verine supported");
+                            }
+                        }
+                    }
+                } else {
+                    println!("EXECUTION ERROR: A VERINE CAN'T START WITH THE FOLLOWING KEY: '{}'", tv[0].0);
+                }
+            }
+        }
+    }
+    
+    // *check order of keys and values* //
+    
     let first_key_element = &token_collection[0].0;
     let first_value_element = &token_collection[0].1; 
 
-    // check if first token is a predefined name
     if first_key_element != "PREDEFINED_NAME" {
         println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
         return;
     }
 
-    // check order of keys and values
     match first_value_element {
         tokenizer::ValueEnum::String(clean) => {
             match predefined_name_order.get(&clean.as_str()) {
