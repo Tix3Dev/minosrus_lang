@@ -1,4 +1,5 @@
 - verines
+	add predefined names
 	delete verine check
 	add errors to error_messages.txt
 	implement verines in execution.rs
