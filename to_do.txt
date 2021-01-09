@@ -1,4 +1,6 @@
 - verines
+	delete verine check
+	add errors to error_messages.txt
 	implement verines in execution.rs
 	verine in verine e.g. LET A = | GET FROM A AT | GET FROM A LEN | |
 	note: not allowed to use multiple verine; e.g. IF | GET FROM A AT 0 | == | GET FROM B AT 0 | START
