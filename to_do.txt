@@ -5,8 +5,12 @@
 	this error:
 		> LET A = |1+|5*5||
 		thread 'main' panicked at 'begin <= end (16 <= 15) when slicing `LET A = |1+|5*5||
-		`', src/execution/tokenizer.rs:blabla:138
+		`', src/execution/tokenizer.rs:251:138
 		note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+	this strange thing:
+		> LET A = |12+1|
+		["LET", "A", "=", "0"]
+		[("PREDEFINED_NAME", String("LET")), ("VARIABLE/FUNCTION_NAME", String("A")), ("EQUAL_SIGN", String("=")), ("INTEGER", String("0"))]
 
 - maybe print help -> show where the error is
 	e.g. > PRINT "HELLO"
