@@ -11,7 +11,7 @@ pub fn exec(input: String) {
     // tokenize the input
     let token_collection = tokenizer::make_tokens(input);
     println!("{:?}", token_collection);
-
+    
     // check for syntax errors
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
         match value {
@@ -20,8 +20,7 @@ pub fn exec(input: String) {
                 return;
             },
             tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => (),
-            tokenizer::ValueEnum::TokenVector(_v) => ()
+            tokenizer::ValueEnum::StringVector(_v) => ()
         }
     }
     // check for comments -> just make a newline
@@ -32,8 +31,7 @@ pub fn exec(input: String) {
                 return;
             },
             tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => (),
-            tokenizer::ValueEnum::TokenVector(_v) => ()
+            tokenizer::ValueEnum::StringVector(_v) => ()
         }
     }
     
@@ -235,41 +233,6 @@ pub fn exec(input: String) {
         "INTEGER".to_string()
     ];
 
-    // verine execution
-    if let Some((_, token_value)) = token_collection.iter().find(|(key, _)| key == &"VERINE") {
-        match token_value {
-            tokenizer::ValueEnum::String(_tv) => (),
-            tokenizer::ValueEnum::IntegerVector(_tv) => (),
-            tokenizer::ValueEnum::StringVector(_tv) => (),
-            tokenizer::ValueEnum::TokenVector(tv) => {
-                // check if key and value order is right
-                if verine_starting_key.contains(&tv[0].0) {
-                    for i in 0..tv.len() {
-                        match &tv[i].1 {
-                            tokenizer::ValueEnum::String(value) => {
-                                println!("key: {:?}", tv[i].0);
-                                println!("value: {:?}", value);
-                            },
-                            tokenizer::ValueEnum::IntegerVector(value) => {
-                                println!("key: {:?}", tv[i].0);
-                                println!("value: {:?}", value);
-                            },
-                            tokenizer::ValueEnum::StringVector(value) => {
-                                println!("key: {:?}", tv[i].0);
-                                println!("value: {:?}", value);
-                            },
-                            tokenizer::ValueEnum::TokenVector(_value) => {
-                                println!("no verine in verine supported");
-                            }
-                        }
-                    }
-                } else {
-                    println!("EXECUTION ERROR: A VERINE CAN'T START WITH THE FOLLOWING KEY: '{}'", tv[0].0);
-                }
-            }
-        }
-    }
-    
     // *check order of keys and values* //
     
     let first_key_element = &token_collection[0].0;
@@ -316,8 +279,7 @@ pub fn exec(input: String) {
                                         }
                                     },
                                     tokenizer::ValueEnum::IntegerVector(_tc) => (),
-                                    tokenizer::ValueEnum::StringVector(_tc) => (),
-                                    tokenizer::ValueEnum::TokenVector(_tc) => ()
+                                    tokenizer::ValueEnum::StringVector(_tc) => ()
                                 }
                             }
                             if !(is_key_order_right) {
@@ -387,8 +349,7 @@ pub fn exec(input: String) {
                                             }
                                         },
                                         tokenizer::ValueEnum::IntegerVector(_tc) => (),
-                                        tokenizer::ValueEnum::StringVector(_tc) => (),
-                                        tokenizer::ValueEnum::TokenVector(_tc) => ()
+                                        tokenizer::ValueEnum::StringVector(_tc) => ()
                                     }
                                 }
                                 if is_current_token_order_right {
@@ -439,8 +400,7 @@ pub fn exec(input: String) {
             }
         },
         tokenizer::ValueEnum::IntegerVector(_clean) => (),
-        tokenizer::ValueEnum::StringVector(_clean) => (),
-        tokenizer::ValueEnum::TokenVector(_clean) => ()
+        tokenizer::ValueEnum::StringVector(_clean) => ()
     }
 
     // * real execution part * //

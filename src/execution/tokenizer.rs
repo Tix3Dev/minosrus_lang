@@ -2,13 +2,98 @@
 pub enum ValueEnum {
     String(String),
     IntegerVector(Vec<i32>),
-    StringVector(Vec<String>),
-    TokenVector(Vec<(String, ValueEnum)>) // used for verines 
+    StringVector(Vec<String>)
 }
 
-pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
+
+    // used for the hashmap final_tokens -> classification of token
+    let token_classification = vec![
+        "PREDEFINED_NAME".to_string(),
+        "ARITHMETIC_OPERATOR".to_string(),
+        "COMPARING_OPERATOR".to_string(),
+        "EQUAL_SIGN".to_string(),
+        "STRING".to_string(),
+        "INTEGER".to_string(),
+        "STRING_ARRAY".to_string(),
+        "INTEGER_ARRAY".to_string(),
+        "COMMENT".to_string(),
+        "VARIABLE/FUNCTION_NAME".to_string()
+    ];
+    
+    // used to check whether a token is a ... or not
+    let predefined_names = vec![
+        "LET".to_string(),
+        "PRINT".to_string(),
+        "FN".to_string(),
+        "START".to_string(),
+        "END".to_string(),
+        "DO".to_string(),
+        "IF".to_string(),
+        "ELSE".to_string(),
+        "WHILE".to_string(),
+        "RESET".to_string(),
+        "PUSH".to_string(),
+        "POP".to_string(),
+        "INSERT".to_string(),
+        "REMOVE".to_string(),
+        "GET".to_string(),
+        "ONTO".to_string(),
+        "FROM".to_string(),
+        "INTO".to_string(),
+        "AT".to_string(),
+        "LEN".to_string()
+    ];
+    let arithmetic_operators = vec![
+        "+".to_string(),
+        "-".to_string(),
+        "*".to_string(),
+        "/".to_string(),
+        "**".to_string(),
+        "//".to_string()
+    ];
+    let comparing_operators = vec![
+        "==".to_string(),
+        "!=".to_string(),
+        "<".to_string(),
+        ">".to_string(),
+        "<=".to_string(),
+        ">=".to_string()
+    ];
+    let equal_sign = "=".to_string();
+
+    // used for checking whether a name is valid or not
+    let allowed_variable_function_characters = vec![
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+        'K',
+        'L',
+        'M',
+        'N',
+        'O',
+        'P',
+        'Q',
+        'R',
+        'S',
+        'T',
+        'U',
+        'V',
+        'W',
+        'X',
+        'Y',
+        'Z',
+        '_',
+    ];
 
     // used for checking whether the inner part of a string is valid or not
     let allowed_string_inner_part_characters = vec![
@@ -44,85 +129,156 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         '!',
         '?'
     ];
-
+   
     // check for one verine and if one exists replace input
     if input.contains('|') {
-        let input = input.as_str();
-        
+        let input_as_str = input.as_str();
+
         let mut verine_positions: Vec<usize> = vec![];
-        for (index, character) in input.chars().enumerate() {
-            // println!("{}, {}", index, character);
+        for (index, character) in input_as_str.chars().enumerate() {
             if character == '|' {
                 verine_positions.push(index);
             }
         }
+        if input_as_str.contains("\"") && verine_positions.len() != 2 {
+            println!("TWO | EXPECTED (FOR STRING VERINE)");
+        }
         if verine_positions.len() % 2 != 0 {
             println!("ERROR: EVERY | NEEDS A | !");
         }
-                
-        let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
-        let mut last_result: i32 = 0;
-        let mut current_slice = String::new();
-        for i in (0..verine_positions.len() / 2).rev() {
-            if i == verine_positions.len() / 2 - 1 {
-                current_slice = input[verine_positions[i]+1..verine_positions[last_pos]].to_string();   
-            } else {
-                current_slice = input[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string();
-            }
-            if current_slice.trim().is_empty() {
-                println!("ERROR: VERINE IS EMPTY");
-            }
-            
-            let arithmetic_operators = vec![
-                "+",
-                "-",
-                "*",
-                "/",
-                "**",
-                "//"
-            ];
-            
-            let mut last_character = "";
-            last_result = 0;
-            for (index, character) in current_slice.split_whitespace().collect::<Vec<&str>>().iter().enumerate() {
-                if character.parse::<i32>().is_ok() {
-                    if index == 0 {
-                        last_character = character;
-                        last_result += character.to_string().parse::<i32>().unwrap();
-                    } 
-                    else if arithmetic_operators.contains(&last_character) {
-                        match last_character {
-                            "+" => last_result += character.parse::<i32>().unwrap(),
-                            "-" => last_result -= character.parse::<i32>().unwrap(),
-                            "*" => last_result *= character.parse::<i32>().unwrap(),
-                            "/" => last_result /= character.parse::<i32>().unwrap(),
-                            "**" => last_result = last_result.pow(character.parse::<u32>().unwrap()),
-                            _ => ()
-                        }
-                        last_character = character;
-                    } else {
-                        println!("1: ORDER WRONG");
-                        break;
-                    }
-                }
-                if arithmetic_operators.contains(&character) {
-                    if index == 0 {
-                        println!("CAN' START WITH OPERATOR!");
-                    } else if index == input.len() - 1 {
-                        println!("CAN'T END WITH OPERATOR!");
-                    } else if last_character.parse::<i32>().is_ok() {
-                        last_character = character;
-                    } else {
-                        println!("2: ORDER WRONG");
-                        break;
-                    }
-                }
-            }
-
-            last_pos += 1;
+        if input_as_str[verine_positions[0]+1..verine_positions[1]].trim().is_empty() {
+            println!("ERROR: VERINE IS EMPTY!");
         }
+
+        if input[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].split_whitespace().any(|c| predefined_names.contains(&c.to_string())) {
+            println!("predefined_verine!");
+        }
+        else if input_as_str.contains("\"") {        
+            let verine = input_as_str[verine_positions[0]+1..verine_positions[1]-1].trim().to_string() + " ";
+            let mut split_of_string_verine: Vec<String> = vec![];
+            let mut current_token = String::new();
+            let mut last_character = 'a';
+            let mut string_started = false;
+            
+            for character in verine.chars() {
+                if character == ' ' {
+                    if current_token.starts_with('"') && !current_token.ends_with('"') {
+                        // space belongs to the string
+                        current_token.push(character);
+                    }
+                    else {
+                        // end of token
+                        if last_character != ' ' {
+                            split_of_string_verine.push(current_token);
+                            current_token = String::new();
+                        }
+                    }
+                } else {
+                    if character == '"' {
+                        if current_token.starts_with('"') {
+                            string_started = false;
+                        } 
+                    }
         
-        let input = input[0..verine_positions[0]].to_string() + &last_result.to_string() + &input[verine_positions[verine_positions.len()-1]+1..input.len()].to_string();
+                    if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
+                        println!("ERROR: INVALID CHARACTER INSIDE OF THE STRING!");
+                    }
+        
+                    if character == '"' {
+                        if !(current_token.starts_with('"')) {
+                            string_started = true;
+                        } 
+                    }
+        
+                    current_token.push(character);
+                }
+                last_character = character;
+            }
+            
+            let mut i = 0;
+            while i < split_of_string_verine.len() {
+                let part = &split_of_string_verine[i];
+                
+                if i % 2 == 0 {
+                    if !(part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"') {
+                        println!("ERROR: ORDER OF STRING VERINE IS WRONG!");
+                    }   
+                } else {
+                    if part != "+" {
+                        println!("ERROR: ORDER OF STRING VERINE IS WRONG!");
+                    }
+                }
+                
+                i += 1;
+            }
+            
+            let mut final_result = String::new();
+            for element in split_of_string_verine.iter().step_by(2) {
+                final_result.push_str(&element[1..element.len()-1]);   
+            }
+            
+            input = input_as_str[0..verine_positions[0]].to_string() + &final_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
+        }
+        else if input_as_str.chars().into_iter().any(|c| c.is_numeric()) {      
+            if input_as_str[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].chars().into_iter().any(|character| !(arithmetic_operators.contains(&character.to_string()) || character.is_numeric() || character == '|' || character == ' ')) {
+                println!("ERROR: INVALID CHARACTER IN VERINE (NUMBER VERINE EXPECTED!))");
+            }
+            
+            let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
+            let mut last_result: i32 = 0;
+            let mut current_slice = String::new();
+            for i in (0..verine_positions.len() / 2).rev() {
+                if i == verine_positions.len() / 2 - 1 {
+                    current_slice = input_as_str[verine_positions[i]+1..verine_positions[last_pos]].to_string();   
+                } else {
+                    current_slice = input_as_str[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string();
+                }
+                if current_slice.trim().is_empty() {
+                    println!("ERROR: VERINE IS EMPTY");
+                }
+                
+                let mut last_character = "";
+                last_result = 0;
+                for (index, character) in current_slice.split_whitespace().collect::<Vec<&str>>().iter().enumerate() {
+                    if character.parse::<i32>().is_ok() {
+                        if index == 0 {
+                            last_character = character;
+                            last_result += character.to_string().parse::<i32>().unwrap();
+                        } 
+                        else if arithmetic_operators.contains(&last_character.to_string()) {
+                            match last_character {
+                                "+" => last_result += character.parse::<i32>().unwrap(),
+                                "-" => last_result -= character.parse::<i32>().unwrap(),
+                                "*" => last_result *= character.parse::<i32>().unwrap(),
+                                "/" => last_result /= character.parse::<i32>().unwrap(),
+                                "**" => last_result = last_result.pow(character.parse::<u32>().unwrap()),
+                                _ => ()
+                            }
+                            last_character = character;
+                        } else {
+                            println!("1: ORDER WRONG");
+                            break;
+                        }
+                    }
+                    if arithmetic_operators.contains(&character.to_string()) {
+                        if index == 0 {
+                            println!("CAN' START WITH OPERATOR!");
+                        } else if index == input_as_str.len() - 1 {
+                            println!("CAN'T END WITH OPERATOR!");
+                        } else if last_character.parse::<i32>().is_ok() {
+                            last_character = character;
+                        } else {
+                            println!("2: ORDER WRONG");
+                            break;
+                        }
+                    }
+                }
+                
+                last_pos += 1;
+            }
+            
+            input = input_as_str[0..verine_positions[0]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
+        }
     }
 
     // split input into parts; strings don't get split; arrays don't get split
@@ -222,93 +378,6 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         split_of_input.remove(split_of_input.len() - 1);
     }
     println!("{:?}", split_of_input);
-
-    // used for the hashmap final_tokens -> classification of token
-    let token_classification = vec![
-        "PREDEFINED_NAME".to_string(),
-        "ARITHMETIC_OPERATOR".to_string(),
-        "COMPARING_OPERATOR".to_string(),
-        "EQUAL_SIGN".to_string(),
-        "STRING".to_string(),
-        "INTEGER".to_string(),
-        "STRING_ARRAY".to_string(),
-        "INTEGER_ARRAY".to_string(),
-        "VERINE".to_string(),
-        "COMMENT".to_string(),
-        "VARIABLE/FUNCTION_NAME".to_string()
-    ];
-    
-    // used to check whether a token is a ... or not
-    let predefined_names = vec![
-        "LET".to_string(),
-        "PRINT".to_string(),
-        "FN".to_string(),
-        "START".to_string(),
-        "END".to_string(),
-        "DO".to_string(),
-        "IF".to_string(),
-        "ELSE".to_string(),
-        "WHILE".to_string(),
-        "RESET".to_string(),
-        "PUSH".to_string(),
-        "POP".to_string(),
-        "INSERT".to_string(),
-        "REMOVE".to_string(),
-        "GET".to_string(),
-        "ONTO".to_string(),
-        "FROM".to_string(),
-        "INTO".to_string(),
-        "AT".to_string(),
-        "LEN".to_string()
-    ];
-    let arithmetic_operators = vec![
-        "+".to_string(),
-        "-".to_string(),
-        "*".to_string(),
-        "/".to_string(),
-        "**".to_string(),
-        "//".to_string()
-    ];
-    let comparing_operators = vec![
-        "==".to_string(),
-        "!=".to_string(),
-        "<".to_string(),
-        ">".to_string(),
-        "<=".to_string(),
-        ">=".to_string()
-    ];
-    let equal_sign = "=".to_string();
-
-    // used for checking whether a name is valid or not
-    let allowed_variable_function_characters = vec![
-        'A',
-        'B',
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'M',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z',
-        '_',
-    ];
 
     let mut i = 0;
     while i < split_of_input.len() {
@@ -481,43 +550,10 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 break;
             }
         }
-        /*
-        // verine check
-        else if part.chars().nth(0).unwrap() == '|' && part.chars().rev().nth(0).unwrap() == '|' {
-            let mut verine = part.clone();
-
-            // remove | and |
-            verine.remove(0);
-            verine.remove(verine.len() - 1);
-
-            // check if verine is empty
-            if verine.trim().is_empty() {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string()))); 
-                break;
-            }
-            
-            let split_of_verine: Vec<(String, ValueEnum)> = make_tokens(verine);
-
-            if let Some((_, value)) = split_of_verine.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
-                match value {
-                    ValueEnum::String(v) => {
-                        let error_message = "IN VERINE: ".to_string() + v;
-                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(error_message.to_string())));
-                        break;
-                    },
-                    ValueEnum::IntegerVector(_v) => (),
-                    ValueEnum::StringVector(_v) => (),
-                    ValueEnum::TokenVector(_v) => ()
-                }
-            }
-
-            final_tokens.push((token_classification[8].to_string(), ValueEnum::TokenVector(split_of_verine)));
-        }
-        */
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else  {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -533,7 +569,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[10].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(part.to_string())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;

@@ -1,14 +1,18 @@
 - verines
 	add predefined names
-	delete verine check
 	add errors to error_messages.txt
-	implement verines in execution.rs
-	verine in verine e.g. LET A = | GET FROM A AT | GET FROM A LEN | |
 	note: not allowed to use multiple verine; e.g. IF | GET FROM A AT 0 | == | GET FROM B AT 0 | START
-												   --> because tokenizer takes last and first verine together then second last and second and so on!
+		--> because tokenizer takes last and first verine together then second last and second and so on!
+
+-------------------------
+> LET A = |1+|5*5||
+thread 'main' panicked at 'begin <= end (16 <= 15) when slicing `LET A = |1+|5*5||
+`', src/execution/tokenizer.rs:157:138
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+-------------------------
 
 - maybe print help -> show where the error is
-	e.g. > PRINT "HELLo"
+	e.g. > PRINT "HELLO"
 		 -------------+
 
 - indentation
