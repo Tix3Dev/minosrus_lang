@@ -141,17 +141,20 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             }
         }
         if input_as_str.contains("\"") && verine_positions.len() != 2 {
-            println!("TWO | EXPECTED (FOR STRING VERINE)");
+            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TWO | EXPECTED (FOR STRING VERINE)!".to_string())));
+            return final_tokens;
         }
         if verine_positions.len() % 2 != 0 {
-            println!("ERROR: EVERY | NEEDS A | !");
+            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
+            return final_tokens;
         }
         if input_as_str[verine_positions[0]+1..verine_positions[1]].trim().is_empty() {
-            println!("ERROR: VERINE IS EMPTY!");
+            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string())));
+            return final_tokens;
         }
 
         if input[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].split_whitespace().any(|c| predefined_names.contains(&c.to_string())) {
-            println!("predefined_verine!");
+            println!("not implemented yet: predefined_verine!");
         }
         else if input_as_str.contains("\"") {        
             let verine = input_as_str[verine_positions[0]+1..verine_positions[1]-1].trim().to_string() + " ";
@@ -181,7 +184,8 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                     }
         
                     if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
-                        println!("ERROR: INVALID CHARACTER INSIDE OF THE STRING!");
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING (IN VERINE)!".to_string())));
+                        return final_tokens;
                     }
         
                     if character == '"' {
@@ -201,11 +205,13 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                 
                 if i % 2 == 0 {
                     if !(part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"') {
-                        println!("ERROR: ORDER OF STRING VERINE IS WRONG!");
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN STRING VERINE IS WRONG!".to_string())));
+                        return final_tokens;
                     }   
                 } else {
                     if part != "+" {
-                        println!("ERROR: ORDER OF STRING VERINE IS WRONG!");
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN STRING VERINE IS WRONG!".to_string())));
+                        return final_tokens;
                     }
                 }
                 
@@ -221,7 +227,8 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         }
         else if input_as_str.chars().into_iter().any(|c| c.is_numeric()) {      
             if input_as_str[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].chars().into_iter().any(|character| !(arithmetic_operators.contains(&character.to_string()) || character.is_numeric() || character == '|' || character == ' ')) {
-                println!("ERROR: INVALID CHARACTER IN VERINE (NUMBER VERINE EXPECTED!))");
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN NUMBER VERINE!".to_string())));
+                return final_tokens;
             }
             
             let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
@@ -232,9 +239,6 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                     current_slice = input_as_str[verine_positions[i]+1..verine_positions[last_pos]].to_string();   
                 } else {
                     current_slice = input_as_str[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string();
-                }
-                if current_slice.trim().is_empty() {
-                    println!("ERROR: VERINE IS EMPTY");
                 }
                 
                 let mut last_character = "";
@@ -255,21 +259,23 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                                 _ => ()
                             }
                             last_character = character;
-                        } else {
-                            println!("1: ORDER WRONG");
-                            break;
+                        } else 
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN NUMBER VERINE IS WRONG!".to_string())));
+                            return final_tokens;
                         }
                     }
                     if arithmetic_operators.contains(&character.to_string()) {
                         if index == 0 {
-                            println!("CAN' START WITH OPERATOR!");
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER VERINE CAN'T START WITH AN OPERATOR!".to_string())));
+                            return final_tokens;
                         } else if index == input_as_str.len() - 1 {
-                            println!("CAN'T END WITH OPERATOR!");
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER VERINE CAN'T END WITH AN OPERATOR!".to_string())));
+                            return final_tokens;
                         } else if last_character.parse::<i32>().is_ok() {
                             last_character = character;
                         } else {
-                            println!("2: ORDER WRONG");
-                            break;
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN NUMBER VERINE IS WRONG!".to_string())));
+                            return final_tokens;
                         }
                     }
                 }
