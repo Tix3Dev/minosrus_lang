@@ -133,13 +133,15 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
     // check for one verine and if one exists replace input
     if input.contains('|') {
         let input_as_str = input.as_str();
-
+        
+        // save | positions
         let mut verine_positions: Vec<usize> = vec![];
         for (index, character) in input_as_str.chars().enumerate() {
             if character == '|' {
                 verine_positions.push(index);
             }
         }
+        // needed error checks for further tokenizing
         if input_as_str.contains("\"") && verine_positions.len() != 2 {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TWO | EXPECTED (FOR STRING VERINE)!".to_string())));
             return final_tokens;
@@ -153,10 +155,13 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             return final_tokens;
         }
 
+        // predefined name verine
         if input[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].split_whitespace().any(|c| predefined_names.contains(&c.to_string())) {
             println!("not implemented yet: predefined_verine!");
         }
-        else if input_as_str.contains("\"") {        
+        // string verine
+        else if input_as_str.contains("\"") {
+            // make tokens
             let verine = input_as_str[verine_positions[0]+1..verine_positions[1]-1].trim().to_string() + " ";
             let mut split_of_string_verine: Vec<String> = vec![];
             let mut current_token = String::new();
@@ -199,6 +204,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                 last_character = character;
             }
             
+            // check if tokens are in right order
             let mut i = 0;
             while i < split_of_string_verine.len() {
                 let part = &split_of_string_verine[i];
@@ -223,14 +229,18 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                 final_result.push_str(&element[1..element.len()-1]);   
             }
             
+            // all went right -> change input
             input = input_as_str[0..verine_positions[0]].to_string() + &final_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
         }
+        // number verine
         else if input_as_str.chars().into_iter().any(|c| c.is_numeric()) {      
+            // check for invalid characters
             if input_as_str[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].chars().into_iter().any(|character| !(arithmetic_operators.contains(&character.to_string()) || character.is_numeric() || character == '|' || character == ' ')) {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN NUMBER VERINE!".to_string())));
                 return final_tokens;
             }
             
+            // go over each verine (start with the innermost) and caculate it's value; add each value to the final result (last_result)
             let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
             let mut last_result: i32 = 0;
             let mut current_slice = String::new();
@@ -283,6 +293,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                 last_pos += 1;
             }
             
+            // all went right -> change input
             input = input_as_str[0..verine_positions[0]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
         }
     }
