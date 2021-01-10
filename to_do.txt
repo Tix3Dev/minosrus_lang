@@ -5,7 +5,7 @@
 	this error:
 		> LET A = |1+|5*5||
 		thread 'main' panicked at 'begin <= end (16 <= 15) when slicing `LET A = |1+|5*5||
-		`', src/execution/tokenizer.rs:157:138
+		`', src/execution/tokenizer.rs:blabla:138
 		note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 - maybe print help -> show where the error is

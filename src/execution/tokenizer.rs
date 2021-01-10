@@ -269,7 +269,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                                 _ => ()
                             }
                             last_character = character;
-                        } else 
+                        } else { 
                             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN NUMBER VERINE IS WRONG!".to_string())));
                             return final_tokens;
                         }
@@ -572,7 +572,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             if final_tokens.len() == 0 {
                 final_tokens.push((token_classification[8].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
-            } else  {
+            } else {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
                break;
             }
