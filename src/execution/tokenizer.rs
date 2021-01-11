@@ -52,7 +52,6 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         "*".to_string(),
         "/".to_string(),
         "**".to_string(),
-        "//".to_string()
     ];
     let comparing_operators = vec![
         "==".to_string(),
