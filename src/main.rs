@@ -4,7 +4,7 @@ use std::io::{self, Write};
 
 fn main() {
     println!("EVERYTHING HAS TO BE UPPERCASE!");
-    println!("DON' USE VERINES! THEY AREN'T WORKING PROPERLY");
+    println!("DON'T USE VERINES! THEY AREN'T WORKING PROPERLY");
 
     loop {
         let mut input = String::new();

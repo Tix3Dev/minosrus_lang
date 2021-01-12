@@ -7,6 +7,14 @@ enum OrderEnum {
     MultipleOptions(Vec<Vec<&'static str>>)
 }
 
+enum VariableEnum {
+    String(String),
+    Integer(i32),
+    StringArray(Vec<String>),
+    IntegerArray(Vec<i32>),
+    VariableFunctionName(String)
+}
+
 pub fn exec(input: String) {
     // tokenize the input
     let token_collection = tokenizer::make_tokens(input);
@@ -19,8 +27,7 @@ pub fn exec(input: String) {
                 println!("SYNTAX ERROR: {}", v);
                 return;
             },
-            tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => ()
+            _ => ()
         }
     }
     // check for comments -> just make a newline
@@ -30,8 +37,7 @@ pub fn exec(input: String) {
                 println!("");
                 return;
             },
-            tokenizer::ValueEnum::IntegerVector(_v) => (),
-            tokenizer::ValueEnum::StringVector(_v) => ()
+            _ => ()
         }
     }
     
@@ -59,7 +65,18 @@ pub fn exec(input: String) {
                 "EQUAL_SIGN:=", 
                 "VARIABLE/FUNCTION_NAME:?"
             ],
-
+            vec![
+                "PREDEFINED_NAME:LET", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "EQUAL_SIGN:=", 
+                "STRING_VECTOR:?"
+            ],
+            vec![
+                "PREDEFINED_NAME:LET", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "EQUAL_SIGN:=", 
+                "INTEGER_VECTOR:?"
+            ],
         ]));
 
         hashmap.insert("PRINT", OrderEnum::MultipleOptions(
@@ -278,8 +295,7 @@ pub fn exec(input: String) {
                                             break; 
                                         }
                                     },
-                                    tokenizer::ValueEnum::IntegerVector(_tc) => (),
-                                    tokenizer::ValueEnum::StringVector(_tc) => ()
+                                    _ => ()
                                 }
                             }
                             if !(is_key_order_right) {
@@ -348,8 +364,7 @@ pub fn exec(input: String) {
                                                 is_current_value_order_right = false;
                                             }
                                         },
-                                        tokenizer::ValueEnum::IntegerVector(_tc) => (),
-                                        tokenizer::ValueEnum::StringVector(_tc) => ()
+                                        _ => ()
                                     }
                                 }
                                 if is_current_token_order_right {
@@ -399,11 +414,74 @@ pub fn exec(input: String) {
                 }
             }
         },
-        tokenizer::ValueEnum::IntegerVector(_clean) => (),
-        tokenizer::ValueEnum::StringVector(_clean) => ()
+        _ => ()
     }
 
     // * real execution part * //
+    
+    let mut global_variables: HashMap<String, VariableEnum> = HashMap::new();
+
+    match first_value_element {
+        tokenizer::ValueEnum::String(v) => {
+            if v == &"LET".to_string() {
+                let variable_name = {
+                    match &token_collection[1].1 {
+                        tokenizer::ValueEnum::String(current_v) => return current_v.as_str()[1..current_v.len()-1].to_string(),
+                        _ => ()
+                    };
+                }
+                match &token_collection[3].0 { // let a = HERE 
+                    tokenizer::ValueEnum::String(current_v) => {
+                        if current_v == &"STRING".to_string() {
+                            global_variables.insert(variable_name, /*it's value*/);
+                        }
+                        else if current_v == &"INTEGER".to_string() {
+                            //
+                        }
+                        else if current_v == &"VARIABLE/FUNCTION_NAME".to_string() {
+                            //
+                        }
+                        else if current_v == &"STRING_ARRAY".to_string() {
+                            //
+                        }
+                        else if current_v == &"INTEGER_ARRAY".to_string() {
+                            //
+                        }
+                }
+            }
+            else if v == &"PRINT".to_string() {
+                //
+            }
+            else if v == &"FN".to_string() {
+                //
+            }
+            else if v == &"DO".to_string() {
+                //
+            }
+            else if v == &"IF".to_string() {
+                //
+            }
+            else if v == &"WHILE".to_string() {
+                //
+            }
+            else if v == &"PUSH".to_string() {
+                //
+            }
+            else if v == &"POP".to_string() {
+                //
+            }
+            else if v == &"INSERT".to_string() {
+                //
+            }
+            else if v == &"REMOVE".to_string() {
+                //
+            }
+            else if v == &"GET".to_string() {
+                //
+            }
+        }, 
+        _ => ()
+    }
 }    
 
 pub fn reset() {
