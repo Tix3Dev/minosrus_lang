@@ -4,12 +4,12 @@ fn main() {
         "-".to_string(),
         "*".to_string(),
         "/".to_string(),
-        "**".to_string(),
+        "**".to_string()
     ];
     
-    let current_slice = "5*5";
+    let current_slice = "5 *5 ";
     let mut last_character = ' ';
-    let mut current_op = " ";
+    let mut current_op = String::new();
     let mut current_num = 0;
     let mut num_pos = 1;
     let mut last_result = 0;
@@ -38,36 +38,38 @@ fn main() {
                 if index == current_slice.len() - 1 {
                     println!("Can't end with operator");
                 }
-                if c == '*' {
-                    if !allowed_one_more_asterisk {
-                        println!("Invalid operator!");
+                if arithmetic_operators.contains(&last_character.to_string()) {
+                    if last_character != '*' && !allowed_one_more_asterisk {
+                        println!("Invalid operator");
                     }
-                    if last_character == '*' {
+                    else if last_character == '*' && c == '*' {
                         allowed_one_more_asterisk = false;
-                        current_op = "**".to_string();
-                    } else {
+                    }
+                    else if last_character != '*' && c == '*' {
                         allowed_one_more_asterisk = true;
-                        current_op = 
-                        continue;
                     }
                 } else {
-                    last_character = last_character.to_string();
+                    current_op = String::new();
                 }
+                current_op += &c.to_string();
                 
-                match last_character {
+                match current_op.as_str() {
                     "+" => last_result += current_num.to_string().parse::<i32>().unwrap(),
                     "-" => last_result -= current_num.to_string().parse::<i32>().unwrap(),
                     "*" => last_result *= current_num.to_string().parse::<i32>().unwrap(),
                     "/" => last_result /= current_num.to_string().parse::<i32>().unwrap(),
-                    "**" => last_result = last_result.pow(c.parse::<u32>().unwrap()),
+                    "**" => last_result = last_result.pow(c.to_string().parse::<u32>().unwrap()),
                     _ => ()
                 }
                 current_num = 1;
                 num_pos = 1;
-            } else {
+                current_op = String::new();
+            } 
+            else if c != ' ' {
                 println!("Invalid character in verine");
             }
         }
         last_character = c;
-    }   
+    }
+    println!("{}", last_result);
 }
