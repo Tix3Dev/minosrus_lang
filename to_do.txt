@@ -22,3 +22,5 @@
 		 	> BLA BLA
 
 - number arrays with negative numbers
+
+- show all error messages??
