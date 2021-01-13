@@ -7,15 +7,7 @@ enum OrderEnum {
     MultipleOptions(Vec<Vec<&'static str>>)
 }
 
-enum VariableEnum {
-    String(String),
-    Integer(i32),
-    StringArray(Vec<String>),
-    IntegerArray(Vec<i32>),
-    VariableFunctionName(String)
-}
-
-pub fn exec(input: String) {
+pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) {
     // tokenize the input
     let token_collection = tokenizer::make_tokens(input);
     println!("{:?}", token_collection);
@@ -69,13 +61,13 @@ pub fn exec(input: String) {
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
                 "EQUAL_SIGN:=", 
-                "STRING_VECTOR:?"
+                "STRING_ARRAY:?"
             ],
             vec![
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
                 "EQUAL_SIGN:=", 
-                "INTEGER_VECTOR:?"
+                "INTEGER_ARRAY:?"
             ],
         ]));
 
@@ -244,12 +236,6 @@ pub fn exec(input: String) {
         hashmap
     };
     
-    let verine_starting_key = vec![
-        "PREDEFINED_NAME".to_string(),
-        "STRING".to_string(),
-        "INTEGER".to_string()
-    ];
-
     // *check order of keys and values* //
     
     let first_key_element = &token_collection[0].0;
@@ -419,34 +405,29 @@ pub fn exec(input: String) {
 
     // * real execution part * //
     
-    let mut global_variables: HashMap<String, VariableEnum> = HashMap::new();
-
     match first_value_element {
         tokenizer::ValueEnum::String(v) => {
-            if v == &"LET".to_string() {
-                let variable_name = {
+            if v == &"LET".to_string() { // E.G. LET A = 123
+                let variable_name: String = {
                     match &token_collection[1].1 {
-                        tokenizer::ValueEnum::String(current_v) => return current_v.as_str()[1..current_v.len()-1].to_string(),
-                        _ => ()
-                    };
+                        tokenizer::ValueEnum::String(current_v) => current_v.to_string(),
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                    }
+                };
+                if &token_collection[3].0 == &"STRING".to_string() {
+                    global_variables.insert(variable_name, token_collection[3].1.clone());
                 }
-                match &token_collection[3].0 { // let a = HERE 
-                    tokenizer::ValueEnum::String(current_v) => {
-                        if current_v == &"STRING".to_string() {
-                            global_variables.insert(variable_name, /*it's value*/);
-                        }
-                        else if current_v == &"INTEGER".to_string() {
-                            //
-                        }
-                        else if current_v == &"VARIABLE/FUNCTION_NAME".to_string() {
-                            //
-                        }
-                        else if current_v == &"STRING_ARRAY".to_string() {
-                            //
-                        }
-                        else if current_v == &"INTEGER_ARRAY".to_string() {
-                            //
-                        }
+                else if &token_collection[3].0 == &"INTEGER".to_string() {
+                    global_variables.insert(variable_name, token_collection[3].1.clone());
+                }
+                else if &token_collection[3].0 == &"VARIABLE/FUNCTION_NAME".to_string() {
+                    global_variables.insert(variable_name, token_collection[3].1.clone());
+                }
+                else if &token_collection[3].0 == &"STRING_ARRAY".to_string() {
+                    global_variables.insert(variable_name, token_collection[3].1.clone());
+                }
+                else if &token_collection[3].0 == &"INTEGER_ARRAY".to_string() {
+                    global_variables.insert(variable_name, token_collection[3].1.clone());
                 }
             }
             else if v == &"PRINT".to_string() {
@@ -482,6 +463,8 @@ pub fn exec(input: String) {
         }, 
         _ => ()
     }
+
+    println!("{:?}", global_variables);
 }    
 
 pub fn reset() {

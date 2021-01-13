@@ -20,3 +20,5 @@
 - indentation
 	e.g. > IF 12 < 24 START
 		 	> BLA BLA
+
+- number arrays with negative numbers

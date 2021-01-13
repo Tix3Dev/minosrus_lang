@@ -1,8 +1,9 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ValueEnum {
     String(String),
-    IntegerVector(Vec<i32>),
-    StringVector(Vec<String>)
+    Integer(i32),
+    IntegerArray(Vec<i32>),
+    StringArray(Vec<String>)
 }
 
 pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
@@ -420,7 +421,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         }
         // integer check
         else if part.parse::<i32>().is_ok() {
-            final_tokens.push((token_classification[5].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[5].to_string(), ValueEnum::Integer(part.parse::<i32>().unwrap())));
         }
         // array check
         else if part.chars().nth(0).unwrap() == '[' && part.chars().rev().nth(0).unwrap() == ']' {
@@ -489,7 +490,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                     }
                 }
 
-                final_tokens.push((token_classification[6].to_string(), ValueEnum::StringVector(split_of_array)));
+                final_tokens.push((token_classification[6].to_string(), ValueEnum::StringArray(split_of_array)));
             }
             // integer elements
             else if part.chars().into_iter().any(|c| c.is_numeric()) {
@@ -560,7 +561,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                     }
                 }
 
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::IntegerVector(split_of_array)));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::IntegerArray(split_of_array)));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ELEMENTS OF ARRAY DON'T SEEM TO BE STRINGS OR INTEGERS!".to_string())));
                 break;
