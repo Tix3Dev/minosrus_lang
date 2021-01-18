@@ -516,12 +516,17 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
                 
                 for character in array.chars() {
                     if character == '-' {
-                        if array.chars().nth(current_position+1).unwrap().is_numeric() && (current_position != 0 && !(array.chars().nth(current_position-1).unwrap().is_numeric())) {
+                        if !(array.chars().nth(current_position+1).unwrap().is_numeric()) {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                        }
+                        else if current_position != 0 {
+                            if array.chars().nth(current_position-1).unwrap().is_numeric() {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                            }
+                        } else {
                             current_number.push(character);
                             number_started = true;
                             valid_element = true;
-                        } else {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ooof INVALID CHARACTER IN ARRAY!".to_string())));
                         }
                     }
                     else if character.is_numeric() {
