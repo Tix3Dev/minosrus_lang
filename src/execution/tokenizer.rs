@@ -417,7 +417,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         }
         // string check
         else if part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"' {
-            final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.as_str()[1..part.len()-1].to_string())));
         }
         // integer check
         else if part.parse::<i32>().is_ok() {

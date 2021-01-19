@@ -21,6 +21,11 @@
 	e.g. > IF 12 < 24 START
 		 	> BLA BLA
 
-- number arrays with negative numbers
-
 - show all error messages??
+
+- implement test cases (tokenizing)
+
+- evaluate the values of variables so that this would work
+	LET A = "MOIN"
+	IF A == "LOL" START
+  also printing the value of a variable doesn't work (PRINT A)
