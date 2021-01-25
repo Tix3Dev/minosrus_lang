@@ -9,8 +9,8 @@ enum OrderEnum {
 
 pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) {
     // tokenize the input
-    let token_collection = tokenizer::make_tokens(input);
-    println!("{:?}", token_collection);
+    let mut token_collection = tokenizer::make_tokens(input);
+    println!("token_collection: {:?}", token_collection);
     
     // check for syntax errors
     if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -19,7 +19,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 println!("SYNTAX ERROR: {}", v);
                 return;
             },
-            _ => ()
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
         }
     }
     // check for comments -> just make a newline
@@ -29,10 +29,20 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 println!("");
                 return;
             },
-            _ => ()
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED") 
         }
     }
-    
+    // check for reset
+    match &token_collection[0].1 {
+        tokenizer::ValueEnum::String(v) => {
+            if v == "RESET" && token_collection.len() == 1 {
+                let mut global_variables: HashMap<String, tokenizer::ValueEnum> = HashMap::new();
+                return;
+            }
+        },
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+    }
+
     // order of predefined names for checking and if the value is set the value
     let predefined_name_order = {
         let mut hashmap = HashMap::new();
@@ -55,12 +65,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 "PREDEFINED_NAME:LET", 
                 "VARIABLE/FUNCTION_NAME:?", 
                 "EQUAL_SIGN:=", 
-                "VARIABLE/FUNCTION_NAME:?"
-            ],
-            vec![
-                "PREDEFINED_NAME:LET", 
-                "VARIABLE/FUNCTION_NAME:?", 
-                "EQUAL_SIGN:=", 
                 "STRING_ARRAY:?"
             ],
             vec![
@@ -68,7 +72,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 "VARIABLE/FUNCTION_NAME:?", 
                 "EQUAL_SIGN:=", 
                 "INTEGER_ARRAY:?"
-            ],
+            ]
         ]));
 
         hashmap.insert("PRINT", OrderEnum::MultipleOptions(
@@ -80,11 +84,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
             vec![
                 "PREDEFINED_NAME:PRINT", 
                 "INTEGER:?"
-            ], 
-            vec![
-                "PREFEINDED_NAME:PRINT", 
-                "VARIABLE/FUNCTION_NAME:?"
-            ]
+            ] 
         ]));
 
         hashmap.insert("FN", OrderEnum::SingleOption(
@@ -115,13 +115,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 "COMPARING_OPERATOR:?",
                 "INTEGER:?",
                 "PREDEFINED_NAME:START"
-            ],
-            vec![
-                "PREDEFINED_NAME:IF",
-                "VARIABLE/FUNCTION_NAME:?",
-                "COMPARING_OPERATOR:?",
-                "VARIABLE/FUNCTION_NAME:?",
-                "PREDEFINED_NAME:START"
             ]
         ]));
 
@@ -140,13 +133,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 "COMPARING_OPERATOR:?",
                 "INTEGER:?",
                 "PREDEFINED_NAME:START"
-            ],
-            vec![
-                "PREDEFINED_NAME:WHILE",
-                "VARIABLE/FUNCTION_NAME:?",
-                "COMPARING_OPERATOR:?",
-                "VARIABLE/FUNCTION_NAME:?",
-                "PREDEFINED_NAME:START"
             ]
         ]));
 
@@ -163,16 +149,10 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 "INTEGER:?",
                 "PREDEFINED_NAME:ONTO",
                 "VARIABLE/FUNCTION_NAME:?"
-            ],
-            vec![
-                "PREDEFINED_NAME:PUSH",
-                "VARIABLE/FUNCTION_NAME:?",
-                "PREDEFINED_NAME:ONTO",
-                "VARIABLE/FUNCTION_NAME:?"
             ]
         ]));
 
-        hashmap.insert("POP", OrderEnum::SingleOption (
+        hashmap.insert("POP", OrderEnum::SingleOption(
         vec![
             "PREDEFINED_NAME:POP",
             "PREDEFINED_NAME:FROM",
@@ -192,14 +172,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
             vec![
                 "PREDEFINED_NAME:INSERT",
                 "INTEGER:?",
-                "PREDEFINED_NAME:INTO",
-                "VARIABLE/FUNCTION_NAME:?",
-                "PREDEFINED_NAME:AT",
-                "INTEGER:?"
-            ],
-            vec![
-                "PREDEFINED_NAME:INSERT",
-                "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:INTO",
                 "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:AT",
@@ -236,21 +208,121 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
         hashmap
     };
     
+    // used for checking whether the inner part of a string is valid or not
+    let allowed_string_inner_part_characters = vec![
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+        'K',
+        'L',
+        'M',
+        'N',
+        'O',
+        'P',
+        'Q',
+        'R',
+        'S',
+        'T',
+        'U',
+        'V',
+        'W',
+        'X',
+        'Y',
+        'Z',
+        ',',
+        '.',
+        ':',
+        '!',
+        '?'
+    ];
+
+    
     // *check order of keys and values* //
     
     let first_key_element = &token_collection[0].0;
-    let first_value_element = &token_collection[0].1; 
 
     if first_key_element != "PREDEFINED_NAME" {
         println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
         return;
+    } 
+
+    // evaluate value for print, if, while, push, insert
+    if token_collection.len() < 1 {
+        let mut variable_token = token_collection[1].clone();
+        match &token_collection[0].1 {
+            tokenizer::ValueEnum::String(clean) => {
+                match predefined_name_order.get(&clean.as_str()) {
+                    Some(value) => {
+                        match value {
+                            OrderEnum::MultipleOptions(v) => {
+                                match &token_collection[0].1 {
+                                    tokenizer::ValueEnum::String(fv) => {
+                                        if fv == "PRINT" {
+                                            if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
+                                                match global_variables.get(fv) {
+                                                    Some(value_of_variable) => { 
+                                                        match value_of_variable {
+                                                            tokenizer::ValueEnum::String(v) => {
+                                                                variable_token.0 = "STRING".to_string();
+                                                                variable_token.1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                            },
+                                                            tokenizer::ValueEnum::Integer(v) => {
+                                                                variable_token.0 = "INTEGER".to_string();
+                                                                // variable_token.1 = tokenizer::ValueEnum::Integer(v.parse::<i32>().unwrap());   
+                                                                println!("vvvvvvvvv :::: {:?}", v);
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                        }
+                                                    },
+                                                    None => {
+                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else if fv == "IF" {
+                                            //
+                                        }
+                                        else if fv == "WHILE" {
+                                            //
+                                        }
+                                        else if fv == "PUSH" {
+                                            //
+                                        }
+                                        else if fv == "INSERT" {
+                                            //
+                                        }
+                                    },
+                                    _ => ()
+                                }
+                            },
+                            _ => ()
+                        }
+                    },
+                    None => {
+                        println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
+                        return;
+                    }
+                }
+            },
+            _ => ()
+        }
+
+        token_collection[1] = variable_token;
     }
 
-    match first_value_element {
+    match &token_collection[0].1 {
         tokenizer::ValueEnum::String(clean) => {
             match predefined_name_order.get(&clean.as_str()) {
                 Some(value) => {
-                    // check if the key of the first token has multiple options
+                    // check if the key of the first token has multiple options 
                     match value {
                         OrderEnum::SingleOption(v) => {
                             // length check - otherwise the indexing would panic
@@ -262,7 +334,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                 println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                                 return;
                             }
-                            
+
                             // analyse if order of key and value is right
                             let mut is_key_order_right = true;
                             let mut is_value_order_right = true;
@@ -281,7 +353,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                             break; 
                                         }
                                     },
-                                    _ => ()
+                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
                                 }
                             }
                             if !(is_key_order_right) {
@@ -329,7 +401,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                 println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                                 return;
                             }
-
+ 
                             // analyse if order of key and value is right
                             let mut is_one_token_order_right = false;
                             let mut is_one_value_order_right = false;
@@ -400,12 +472,12 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 }
             }
         },
-        _ => ()
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
     }
 
     // * real execution part * //
     
-    match first_value_element {
+    match &token_collection[0].1 {
         tokenizer::ValueEnum::String(v) => {
             if v == &"LET".to_string() { // E.G. LET A = 123
                 let variable_name: String = {
@@ -494,10 +566,10 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 //
             }
         }, 
-        _ => ()
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
     }
 
-    println!("{:?}", global_variables);
+    println!("global_variables: {:?}", global_variables);
 }    
 
 pub fn reset() {
