@@ -254,7 +254,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
     } 
 
     // evaluate value for print, if, while, push, insert
-    if token_collection.len() < 1 {
+    if token_collection.len() > 0 {
         let mut variable_token = token_collection[1].clone();
         match &token_collection[0].1 {
             tokenizer::ValueEnum::String(clean) => {
@@ -266,24 +266,28 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                     tokenizer::ValueEnum::String(fv) => {
                                         if fv == "PRINT" {
                                             if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
-                                                match global_variables.get(fv) {
-                                                    Some(value_of_variable) => { 
-                                                        match value_of_variable {
-                                                            tokenizer::ValueEnum::String(v) => {
-                                                                variable_token.0 = "STRING".to_string();
-                                                                variable_token.1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                match &token_collection[1].1 {
+                                                    tokenizer::ValueEnum::String(variable_name) => {
+                                                        match global_variables.get(variable_name) {
+                                                            Some(value_of_variable) => { 
+                                                                match value_of_variable {
+                                                                    tokenizer::ValueEnum::String(v) => {
+                                                                        variable_token.0 = "STRING".to_string();
+                                                                        variable_token.1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                                    },
+                                                                    tokenizer::ValueEnum::Integer(v) => {
+                                                                        variable_token.0 = "INTEGER".to_string();
+                                                                        variable_token.1 = tokenizer::ValueEnum::Integer(*v);   
+                                                                    },
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                }
                                                             },
-                                                            tokenizer::ValueEnum::Integer(v) => {
-                                                                variable_token.0 = "INTEGER".to_string();
-                                                                // variable_token.1 = tokenizer::ValueEnum::Integer(v.parse::<i32>().unwrap());   
-                                                                println!("vvvvvvvvv :::: {:?}", v);
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                            None => {
+                                                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                            }
                                                         }
                                                     },
-                                                    None => {
-                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
-                                                    }
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
                                                 }
                                             }
                                         }
@@ -317,6 +321,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
 
         token_collection[1] = variable_token;
     }
+    println!("token_collection after manipulation: {:?}", token_collection);
 
     match &token_collection[0].1 {
         tokenizer::ValueEnum::String(clean) => {

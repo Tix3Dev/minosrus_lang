@@ -31,3 +31,5 @@
   also printing the value of a variable doesn't work (PRINT A)
 
 - remove the unreachable! except for let a = { unreachable! }
+
+- make this match statements look less awful xD
