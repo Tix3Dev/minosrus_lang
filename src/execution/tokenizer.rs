@@ -35,7 +35,6 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         "IF".to_string(),
         "ELSE".to_string(),
         "WHILE".to_string(),
-        "RESET".to_string(),
         "PUSH".to_string(),
         "POP".to_string(),
         "INSERT".to_string(),
@@ -45,7 +44,9 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         "FROM".to_string(),
         "INTO".to_string(),
         "AT".to_string(),
-        "LEN".to_string()
+        "LEN".to_string(),
+        "RESET".to_string(),
+        "STOP".to_string()
     ];
     let arithmetic_operators = vec![
         "+".to_string(),

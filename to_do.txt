@@ -25,4 +25,4 @@
 
 - implement test cases (tokenizing)
 
-- remove the unreachable! except for let a = { unreachable! }
+- fix warning line 247 tokenizer

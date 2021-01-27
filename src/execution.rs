@@ -1,6 +1,7 @@
 pub mod tokenizer;
 
 use std::collections::HashMap;
+use std::process;
 
 enum OrderEnum {
     SingleOption(Vec<&'static str>),
@@ -36,8 +37,17 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
     match &token_collection[0].1 {
         tokenizer::ValueEnum::String(v) => {
             if v == "RESET" && token_collection.len() == 1 {
-                let mut global_variables: HashMap<String, tokenizer::ValueEnum> = HashMap::new();
+                *global_variables = HashMap::new();
                 return;
+            }
+        },
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+    }
+    // check for reset
+    match &token_collection[0].1 {
+        tokenizer::ValueEnum::String(v) => {
+            if v == "STOP" && token_collection.len() == 1 {
+                process::exit(1);
             }
         },
         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -208,42 +218,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
         hashmap
     };
     
-    // used for checking whether the inner part of a string is valid or not
-    let allowed_string_inner_part_characters = vec![
-        'A',
-        'B',
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'M',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z',
-        ',',
-        '.',
-        ':',
-        '!',
-        '?'
-    ];
 
-    
     // *check order of keys and values* //
     
     let first_key_element = &token_collection[0].0;
@@ -469,7 +444,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
 
         token_collection = token_collection_clone;
     }
-    println!("token_collection after manipulation: {:?}", token_collection);
 
     match &token_collection[0].1 {
         tokenizer::ValueEnum::String(clean) => {
@@ -724,11 +698,3 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
 
     println!("global_variables: {:?}", global_variables);
 }    
-
-pub fn reset() {
-    //
-}
-
-pub fn stop() {
-    //
-}
