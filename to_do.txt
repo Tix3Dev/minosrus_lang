@@ -25,9 +25,4 @@
 
 - implement test cases (tokenizing)
 
-- evaluate the values of variables so that this would work
-	LET A = "MOIN"
-	IF A == "LOL" START
-  also printing the value of a variable doesn't work (PRINT A)
-
 - remove the unreachable! except for let a = { unreachable! }
