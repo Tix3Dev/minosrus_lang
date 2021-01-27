@@ -345,7 +345,57 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
 
                                         }
                                         else if fv == "WHILE" {
-                                            //
+                                            if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
+                                                match &token_collection[1].1 {
+                                                    tokenizer::ValueEnum::String(variable_name) => {
+                                                        match global_variables.get(variable_name) {
+                                                            Some(value_of_variable) => { 
+                                                                match value_of_variable {
+                                                                    tokenizer::ValueEnum::String(v) => {
+                                                                        token_collection_clone[1].0 = "STRING".to_string();
+                                                                        token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                                    },
+                                                                    tokenizer::ValueEnum::Integer(v) => {
+                                                                        token_collection_clone[1].0 = "INTEGER".to_string();
+                                                                        token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
+                                                                    },
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                }
+                                                            },
+                                                            None => {
+                                                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                            }
+                                                        }
+                                                    },
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                }
+                                            }
+                                            if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
+                                                match &token_collection[3].1 {
+                                                    tokenizer::ValueEnum::String(variable_name) => {
+                                                        match global_variables.get(variable_name) {
+                                                            Some(value_of_variable) => { 
+                                                                match value_of_variable {
+                                                                    tokenizer::ValueEnum::String(v) => {
+                                                                        token_collection_clone[3].0 = "STRING".to_string();
+                                                                        token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                                    },
+                                                                    tokenizer::ValueEnum::Integer(v) => {
+                                                                        token_collection_clone[3].0 = "INTEGER".to_string();
+                                                                        token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
+                                                                    },
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                }
+                                                            },
+                                                            None => {
+                                                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                            }
+                                                        }
+                                                    },
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                }
+                                            }
+
                                         }
                                         else if fv == "PUSH" {
                                             //
