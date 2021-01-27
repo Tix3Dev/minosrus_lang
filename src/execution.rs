@@ -19,7 +19,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 println!("SYNTAX ERROR: {}", v);
                 return;
             },
-            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
     // check for comments -> just make a newline
@@ -29,7 +29,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 println!("");
                 return;
             },
-            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED") 
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!") 
         }
     }
     // check for reset
@@ -40,7 +40,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 return;
             }
         },
-        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
     }
 
     // order of predefined names for checking and if the value is set the value
@@ -279,7 +279,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].0 = "INTEGER".to_string();
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -287,7 +287,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
                                         }
@@ -306,7 +306,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].0 = "INTEGER".to_string();
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -314,7 +314,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
                                             if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
@@ -331,7 +331,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[3].0 = "INTEGER".to_string();
                                                                         token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -339,7 +339,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
 
@@ -359,7 +359,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].0 = "INTEGER".to_string();
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -367,7 +367,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
                                             if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
@@ -384,7 +384,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[3].0 = "INTEGER".to_string();
                                                                         token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -392,7 +392,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
 
@@ -412,7 +412,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].0 = "INTEGER".to_string();
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
-                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                 }
                                                             },
                                                             None => {
@@ -420,7 +420,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }
                                         }
@@ -447,7 +447,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                             }
                                                         }
                                                     },
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                 }
                                             }    
                                         }
@@ -506,7 +506,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                             break; 
                                         }
                                     },
-                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                                    _ => () 
                                 }
                             }
                             if !(is_key_order_right) {
@@ -625,7 +625,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 }
             }
         },
-        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
     }
 
     // * real execution part * //
@@ -636,7 +636,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 let variable_name: String = {
                     match &token_collection[1].1 {
                         tokenizer::ValueEnum::String(current_v) => current_v.to_string(),
-                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
                 };
                 if &token_collection[3].0 == &"STRING".to_string() {
@@ -669,7 +669,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                         match &value {
                                             tokenizer::ValueEnum::String(final_value) => final_value.to_string(),
                                             tokenizer::ValueEnum::Integer(final_value) => final_value.to_string(),
-                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED") 
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!") 
                                         }
                                     }
                                     None => {
@@ -681,7 +681,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                             }
                         },
                         tokenizer::ValueEnum::Integer(stuff) => stuff.to_string(),
-                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
                 };
                 if was_there_an_error {
@@ -719,7 +719,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 //
             }
         }, 
-        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
     }
 
     println!("global_variables: {:?}", global_variables);
