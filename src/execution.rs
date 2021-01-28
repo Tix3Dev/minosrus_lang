@@ -288,7 +288,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -316,7 +317,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                 }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -347,7 +349,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                 }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -375,7 +378,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                  }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -406,7 +410,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                 }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -436,7 +441,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                     _ => {
                                                                         println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         return;
-                                                                    }                                                                 }
+                                                                    }
+                                                                }
                                                             },
                                                             None => {
                                                                 println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
@@ -694,7 +700,49 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 //
             }
             else if v == &"PUSH".to_string() {
-                //
+                match &token_collection[3].1 {
+                    tokenizer::ValueEnum::String(stuff) => {
+                        match global_variables.get(stuff) {
+                            Some(value) => {
+                                match &value {
+                                    tokenizer::ValueEnum::IntegerArray(_) => {
+                                        match &token_collection[1].1 {
+                                            tokenizer::ValueEnum::Integer(stuff_to_push) => {
+                                                global_variables.get_mut(stuff).unwrap().push(stuff_to_push); // doesn't work
+                                                // *my_map.get_mut("a").unwrap() += 10;
+                                            }
+                                            _ => {
+                                                println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER ONTO A INTEGER ARRAY!");
+                                                return;
+                                            }
+                                        }
+                                    },
+                                    tokenizer::ValueEnum::StringArray(_) => {
+                                        match &token_collection[1].1 {
+                                            tokenizer::ValueEnum::Integer(stuff_to_push) => {
+                                                global_variables.get_mut(stuff).unwrap().push(stuff_to_push);
+                                            }
+                                            _ => {
+                                                println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER ONTO A INTEGER ARRAY!");
+                                                return;
+                                            }
+                                        }
+                                    },
+                                    _ => {
+                                        println!("EXECUTION  ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!");
+                                        return;
+                                    }
+
+                                }
+                            },
+                            None => {
+                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                return;
+                            }
+                        }
+                    },
+                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                }
             }
             else if v == &"POP".to_string() {
                 //
