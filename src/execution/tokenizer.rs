@@ -244,13 +244,12 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             // go over each verine (start with the innermost) and caculate it's value; add each value to the final result (last_result)
             let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
             let mut last_result: i32 = 0;
-            let mut current_slice = String::new();
             for i in (0..verine_positions.len() / 2).rev() {
-                if i == verine_positions.len() / 2 - 1 {
-                    current_slice = input_as_str[verine_positions[i]+1..verine_positions[last_pos]].to_string();   
+                let current_slice = if i == verine_positions.len() / 2 - 1 {
+                    input_as_str[verine_positions[i]+1..verine_positions[last_pos]].to_string()   
                 } else {
-                    current_slice = input_as_str[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string();
-                }
+                    input_as_str[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string()
+                };
                 
                 let mut last_character = "";
                 last_result = 0;

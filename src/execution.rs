@@ -652,7 +652,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 }
             }
             else if v == &"PRINT".to_string() {
-                let mut was_there_an_error = false;
                 let stuff_to_print: String = {
                     match &token_collection[1].1 { 
                         tokenizer::ValueEnum::String(stuff) => {
@@ -670,8 +669,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                     }
                                     None => {
                                         println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                        was_there_an_error = true;
-                                        stuff.to_string()
+                                        return;
                                     }
                                 }
                             }
@@ -680,10 +678,6 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
                 };
-                if was_there_an_error {
-                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff_to_print);
-                    return;
-                }
 
                 println!("{}", stuff_to_print);
             }
