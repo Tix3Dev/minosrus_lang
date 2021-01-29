@@ -43,7 +43,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
         },
         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
     }
-    // check for reset
+    // check for stop 
     match &token_collection[0].1 {
         tokenizer::ValueEnum::String(v) => {
             if v == "STOP" && token_collection.len() == 1 {
