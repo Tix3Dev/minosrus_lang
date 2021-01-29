@@ -748,7 +748,35 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 }
             }
             else if v == &"POP".to_string() {
-                //
+                match &token_collection[2].1 {
+                    tokenizer::ValueEnum::String(stuff) => {
+                        match global_variables.get(stuff) {
+                            Some(value) => {
+                                match &value {
+                                    tokenizer::ValueEnum::IntegerArray(i_vec) => {
+                                        let mut i_vec_clone = i_vec.clone();
+                                        i_vec_clone.pop();
+                                        *global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
+                                    },
+                                    tokenizer::ValueEnum::StringArray(s_vec) => {
+                                        let mut s_vec_clone = s_vec.clone();
+                                        s_vec_clone.pop();
+                                        *global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
+                                    },
+                                    _ => {
+                                        println!("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!");
+                                        return;
+                                    }
+                                }
+                            },
+                            None => {
+                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                return;
+                            }
+                        }
+                    },
+                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                }
             }
             else if v == &"INSERT".to_string() {
                 //
