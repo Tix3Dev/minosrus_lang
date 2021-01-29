@@ -797,7 +797,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                 }
                                             },
                                             _ => {
-                                                println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER ONTO A INTEGER ARRAY!");
+                                                println!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
                                                 return;
                                             }
                                         }
@@ -815,13 +815,13 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                 }
                                             },
                                             _ => {
-                                                println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER ONTO A INTEGER ARRAY!");
+                                                println!("EXECUTION ERROR: YOU HAVE TO INSERT AN STRING INTO A STRING ARRAY!");
                                                 return;
                                             }
                                         }
                                     },
                                     _ => {
-                                        println!("EXECUTION ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!");
+                                        println!("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!");
                                         return;
                                     }
                                 }
@@ -837,7 +837,43 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
 
             }
             else if v == &"REMOVE".to_string() {
-                //
+                match &token_collection[2].1 {
+                    tokenizer::ValueEnum::String(stuff) => {
+                        match global_variables.get(stuff) {
+                            Some(value) => {
+                                match &value {
+                                    tokenizer::ValueEnum::IntegerArray(i_vec) => {
+                                        match &token_collection[4].1 {
+                                            tokenizer::ValueEnum::Integer(index_where_to_remove) => {
+                                                let mut i_vec_clone = i_vec.clone();
+                                                i_vec_clone.remove(*index_where_to_remove as usize);
+                                                *global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
+                                            },
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                        }
+                                    },
+                                    tokenizer::ValueEnum::StringArray(s_vec) => {
+                                        match &token_collection[4].1 {
+                                            tokenizer::ValueEnum::Integer(index_where_to_remove) => {
+                                                let mut s_vec_clone = s_vec.clone();
+                                                s_vec_clone.remove(*index_where_to_remove as usize);
+                                                *global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
+                                            },
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!") 
+                                        }
+                                    },
+                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                }
+                            },
+                            None => {
+                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                return;
+                            }
+                        }
+                    },
+                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                }
+
             }
             else if v == &"GET".to_string() {
                 //
