@@ -24,3 +24,7 @@
 - show all error messages??
 
 - implement test cases (tokenizing)
+
+- update error messages
+
+- change fn exec to impl exec with struct for "global" variables (like block code)
