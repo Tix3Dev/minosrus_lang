@@ -8,7 +8,19 @@ enum OrderEnum {
     MultipleOptions(Vec<Vec<&'static str>>)
 }
 
-pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) {
+fn add_indentation(indentation: &mut String) {
+    indentation.push_str("    ");
+}
+
+fn subtract_indentation(indentation: &mut String) {
+    if indentation.to_string() == "    ".to_string() {
+        *indentation = "".to_string();
+    } else {
+        *indentation = indentation[..4].to_string();
+    }
+}
+
+pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>, indentation: &mut String, block_code: &mut Vec<Vec<(String, tokenizer::ValueEnum)>>, functions: &mut HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>, current_block_type: &mut (&str, &str)) {
     // tokenize the input
     let mut token_collection = tokenizer::make_tokens(input);
     println!("token_collection: {:?}", token_collection);
@@ -51,6 +63,47 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
             }
         },
         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+    }
+
+    if indentation.to_string() != "".to_string() {
+        // check for end 
+        match &token_collection[0].1 {
+            tokenizer::ValueEnum::String(v) => {
+                // indentation stuff
+                if v == "FN" || v == "IF" || v == "WHILE" {
+                    add_indentation(indentation);
+                }
+                else if v == "END" && token_collection.len() == 1 {
+                    subtract_indentation(indentation);
+                    if indentation.to_string() == "".to_string() {
+                        println!("stuff would get now executed");
+                        if current_block_type.0 == "normal" {
+                            current_block_type.0 = "";
+                            *block_code = Vec::new();
+                        }
+                        else if current_block_type.0 == "function" {
+                            current_block_type.0 = "";
+                            current_block_type.1 = "";
+                            *functions = HashMap::new();
+                        }
+                    }
+                }
+                
+                // saving stuff
+                if current_block_type.0 == "normal" {
+                    if v == "FN" {
+                        println!("FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                        return;
+                    }
+                    block_code.push(token_collection.clone());
+                }
+                else if current_block_type.0 == "function" {
+                    functions.get_mut(current_block_type.1).unwrap().push(token_collection.clone());
+                }
+                
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        }
     }
 
     // order of predefined names for checking and if the value is set the value
@@ -688,16 +741,29 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 println!("{}", stuff_to_print);
             }
             else if v == &"FN".to_string() {
-                //
+                match &token_collection[1].1 {
+                    tokenizer::ValueEnum::String(fn_name) => {
+                        functions.insert(fn_name.to_string(), vec![token_collection.clone()]);
+                        current_block_type.0 = "function";
+                        current_block_type.1 = fn_name.as_str();
+                    },
+                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                }
+                add_indentation(indentation);
             }
             else if v == &"DO".to_string() {
                 //
             }
             else if v == &"IF".to_string() {
-                //
+                block_code.push(token_collection);
+                current_block_type.0 = "normal";
+                add_indentation(indentation);
+
             }
             else if v == &"WHILE".to_string() {
-                //
+                block_code.push(token_collection);
+                current_block_type.0 = "normal";
+                add_indentation(indentation);
             }
             else if v == &"PUSH".to_string() {
                 match &token_collection[3].1 {
