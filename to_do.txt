@@ -24,5 +24,3 @@
 - show all error messages??
 
 - implement test cases (tokenizing)
-
-- fix warning line 247 tokenizer
