@@ -17,12 +17,6 @@
 		 -------------+
 )
 
-- indentation
-	e.g. > IF 12 < 24 START
-		 	> BLA BLA
-
-- show all error messages??
-
 - implement test cases (tokenizing)
 
 - update error messages
