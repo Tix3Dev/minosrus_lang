@@ -21,4 +21,6 @@
 
 - update error messages
 
+- problem with multiple code blocks inside of each other because there is no indentation
+
 - change fn exec to impl exec with struct for "global" variables (like block code)
