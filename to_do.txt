@@ -22,5 +22,3 @@
 - problem with multiple code blocks inside of each other because there is no indentation
 
 - what if code block is empty? just if, while, fn and end 
-
-- change fn exec to impl exec with struct for "global" variables (like block code)
