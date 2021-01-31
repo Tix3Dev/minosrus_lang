@@ -70,10 +70,18 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
         match &token_collection[0].1 {
             tokenizer::ValueEnum::String(v) => {
                 // indentation stuff
-                if v == "FN" || v == "IF" || v == "WHILE" {
+                if v == "IF" || v == "WHILE" {
                     add_indentation(indentation);
                 }
-                else if v == "END" && token_collection.len() == 1 && indentation.to_string() == "    " {
+                else if v == "FN" {
+                    if current_block_type.0 != "normal" {
+                        add_indentation(indentation);
+                    } else {
+                        println!("FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                        return;
+                    }
+                }
+                else if v == "END" && token_collection.len() == 1 {
                     subtract_indentation(indentation);
                     if indentation.to_string() == "".to_string() {
                         if current_block_type.0 == "normal" {
