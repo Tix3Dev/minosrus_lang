@@ -28,7 +28,7 @@ impl ExecData {
             indentation: "".to_string(),
             block_code: Vec::new(),
             functions: HashMap::new(),
-            current_block_type: ("".to_string(), "".to_string()
+            current_block_type: ("".to_string(), "".to_string())
         }
     }
 }
@@ -45,13 +45,13 @@ fn main() {
     loop {
         let mut input = String::new();
 
-        print!("{}> ", indentation);
+        print!("{}> ", exec_data_variable.indentation);
         let _ = io::stdout().flush(); // needed because of the print! macro
 
         match io::stdin().read_line(&mut input) { // reading input
             Ok(_) => {
                 if !(input.trim().to_string().is_empty()) {
-                    execution::exec(input, exec_data_variable);
+                    exec_data_variable.exec(input);
                 }
             },
 
