@@ -21,7 +21,7 @@ fn main() {
     let mut functions: HashMap<String, Vec<Vec<(String, execution::tokenizer::ValueEnum)>>> = HashMap::new(); 
 
     // keep track of the current block code type (normal or functions)
-    let mut current_block_type = ("", "");
+    let mut current_block_type = ("".to_string(), "".to_string());
 
     // one loop iteration = one prompt (" >")
     loop {

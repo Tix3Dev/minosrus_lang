@@ -20,7 +20,7 @@ fn subtract_indentation(indentation: &mut String) {
     }
 }
 
-pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>, indentation: &mut String, block_code: &mut Vec<Vec<(String, tokenizer::ValueEnum)>>, functions: &mut HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>, current_block_type: &mut (&str, &str)) {
+pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>, indentation: &mut String, block_code: &mut Vec<Vec<(String, tokenizer::ValueEnum)>>, functions: &mut HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>, current_block_type: &mut (String, String)) {
     // tokenize the input
     let mut token_collection = tokenizer::make_tokens(input);
     println!("token_collection: {:?}", token_collection);
@@ -73,18 +73,19 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 if v == "FN" || v == "IF" || v == "WHILE" {
                     add_indentation(indentation);
                 }
-                else if v == "END" && token_collection.len() == 1 {
+                else if v == "END" && token_collection.len() == 1 && indentation.to_string() == "    " {
                     subtract_indentation(indentation);
                     if indentation.to_string() == "".to_string() {
-                        println!("stuff would get now executed");
                         if current_block_type.0 == "normal" {
-                            current_block_type.0 = "";
+                            println!("stuff would get now executed");
+                            println!("block_code: {:?}", block_code);
+                            current_block_type.0 = "".to_string();
                             *block_code = Vec::new();
                         }
                         else if current_block_type.0 == "function" {
-                            current_block_type.0 = "";
-                            current_block_type.1 = "";
-                            *functions = HashMap::new();
+                            println!("function_code: {:?}", functions);
+                            current_block_type.0 = "".to_string();
+                            current_block_type.1 = "".to_string();
                         }
                     }
                 }
@@ -98,12 +99,14 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                     block_code.push(token_collection.clone());
                 }
                 else if current_block_type.0 == "function" {
-                    functions.get_mut(current_block_type.1).unwrap().push(token_collection.clone());
+                    functions.get_mut(&current_block_type.1).unwrap().push(token_collection.clone());
                 }
                 
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
+
+        return;
     }
 
     // order of predefined names for checking and if the value is set the value
@@ -339,13 +342,13 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
                                                             },
                                                             None => {
-                                                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                                println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 return;
                                                             }
                                                         }
@@ -368,7 +371,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
@@ -400,7 +403,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
@@ -429,7 +432,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
@@ -461,7 +464,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
@@ -492,7 +495,7 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                                                                         token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);   
                                                                     },
                                                                     _ => {
-                                                                        println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
+                                                                        println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         return;
                                                                     }
                                                                 }
@@ -744,8 +747,8 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
                 match &token_collection[1].1 {
                     tokenizer::ValueEnum::String(fn_name) => {
                         functions.insert(fn_name.to_string(), vec![token_collection.clone()]);
-                        current_block_type.0 = "function";
-                        current_block_type.1 = fn_name.as_str();
+                        current_block_type.0 = "function".to_string();
+                        current_block_type.1 = fn_name.to_string();
                     },
                     _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                 }
@@ -756,13 +759,13 @@ pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::Val
             }
             else if v == &"IF".to_string() {
                 block_code.push(token_collection);
-                current_block_type.0 = "normal";
+                current_block_type.0 = "normal".to_string();
                 add_indentation(indentation);
 
             }
             else if v == &"WHILE".to_string() {
                 block_code.push(token_collection);
-                current_block_type.0 = "normal";
+                current_block_type.0 = "normal".to_string();
                 add_indentation(indentation);
             }
             else if v == &"PUSH".to_string() {
