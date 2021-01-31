@@ -20,7 +20,7 @@ fn subtract_indentation(indentation: &mut String) {
     }
 }
 
-pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>, indentation: &mut String, block_code: &mut Vec<Vec<(String, tokenizer::ValueEnum)>>, functions: &mut HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>, current_block_type: &mut (String, String)) {
+pub fn exec(input: String, exec_data_variable) {
     // tokenize the input
     let mut token_collection = tokenizer::make_tokens(input);
     println!("token_collection: {:?}", token_collection);

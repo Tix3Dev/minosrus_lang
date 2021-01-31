@@ -22,13 +22,13 @@ pub struct ExecData {
 }
 
 impl ExecData {
-    pub fn new(a, b, c, d, e) -> Self {
+    pub fn new() -> Self {
         Self {
-            global_variables: a,
-            indentation: b,
-            block_code: c,
-            functions: d,
-            current_block_type: e
+            global_variables: HashMap::new(),
+            indentation: "".to_string(),
+            block_code: Vec::new(),
+            functions: HashMap::new(),
+            current_block_type: ("".to_string(), "".to_string()
         }
     }
 }
@@ -39,7 +39,7 @@ fn main() {
     println!("DON'T USE VERINES! THEY AREN'T WORKING PROPERLY");
 
     // make ExecData instance
-    let mut exec_data_variable = ExecData::new(HashMap::new(), "".to_string(), Vec::new(), HashMap::new(), ("".to_string(), "".to_string()));
+    let mut exec_data_variable = ExecData::new();
 
     // one loop iteration = one prompt (" >")
     loop {
