@@ -19,8 +19,6 @@
 
 - implement test cases (tokenizing)
 
-- update error messages
-
 - problem with multiple code blocks inside of each other because there is no indentation
 
 - what if code block is empty? just if, while, fn and end 
