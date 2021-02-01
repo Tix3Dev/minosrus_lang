@@ -1,6 +1,5 @@
-pub mod tokenizer;
-
 use crate::ExecData;
+use crate::tokenizer;
 
 use std::collections::HashMap;
 use std::process;

@@ -1,4 +1,5 @@
 mod execution;
+mod tokenizer;
 
 use std::io::{self, Write};
 use std::collections::HashMap;
@@ -6,16 +7,16 @@ use std::collections::HashMap;
 // here are all variables for exec saved
 pub struct ExecData {
     // here are all the global variables stored; not changed after one loop iteration
-    pub global_variables: HashMap<String, execution::tokenizer::ValueEnum>,
+    pub global_variables: HashMap<String, tokenizer::ValueEnum>,
     
     // save state of indentation
     pub indentation: String,
 
     // here is all block code saved (except for function code)
-    pub block_code: Vec<Vec<(String, execution::tokenizer::ValueEnum)>>,
+    pub block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>,
 
     // here are all functions saved 
-    pub functions: HashMap<String, Vec<Vec<(String, execution::tokenizer::ValueEnum)>>>,
+    pub functions: HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>,
 
     // keep track of the current block code type (normal or functions)
     pub current_block_type: (String, String)
