@@ -22,14 +22,13 @@ fn subtract_indentation(indentation: &mut String) {
 }
 
 impl ExecData {
-    pub fn exec(&mut self, token_collection: &mut Vec<(String, tokenizer::ValueEnum)>) {
+    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) {
         let global_variables = &mut self.global_variables;
         let indentation = &mut self.indentation;
         let block_code = &mut self.block_code;
         let functions = &mut self.functions;
         let current_block_type = &mut self.current_block_type;
         
-        // tokenize the input
         let mut token_collection = token_collection.clone();
         println!("token_collection: {:?}", token_collection);
         
@@ -792,8 +791,12 @@ impl ExecData {
                         tokenizer::ValueEnum::String(function_name) => {
                             match functions.get(function_name) {
                                 Some(function_code_block) => {
-                                    // execute_code_block()
                                     println!("function {} would get now executed", function_name);
+                                    println!("execution starts now");
+                                    for line in function_code_block.iter().skip(1) {
+                                        self.exec(line.to_vec());
+                                    }
+                                    println!("execution ends now");
                                 },
                                 None => {
                                     println!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
