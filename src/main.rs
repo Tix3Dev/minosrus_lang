@@ -1,4 +1,5 @@
 mod execution;
+mod verine_expression;
 
 use std::io::{self, Write};
 use std::collections::HashMap;
