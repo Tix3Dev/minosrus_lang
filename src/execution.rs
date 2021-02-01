@@ -97,6 +97,19 @@ impl ExecData {
                                 // check if it is if or while
                                 // make a if or while statement (careful that the variables are able to change)
                                 // and in it a for loop over each line and execute it
+                                
+                                match &block_code[0][0].1 {
+                                    tokenizer::ValueEnum::String(first_predefined_name) => {
+                                        if first_predefined_name == "IF" {
+                                            println!("it is if");
+                                        }
+                                        else if first_predefined_name == "WHILE" {
+                                            println!("it is while");
+                                        }
+                                    },
+                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                }
+ 
                                 println!("execution stops");
                                 println!("block_code: {:?}", block_code);
                                 current_block_type.0 = "".to_string();
