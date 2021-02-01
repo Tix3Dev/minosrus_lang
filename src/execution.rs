@@ -22,7 +22,7 @@ fn subtract_indentation(indentation: &mut String) {
 }
 
 impl ExecData {
-    pub fn exec(&mut self, input: String) {
+    pub fn exec(&mut self, token_collection: &mut Vec<(String, tokenizer::ValueEnum)>) {
         let global_variables = &mut self.global_variables;
         let indentation = &mut self.indentation;
         let block_code = &mut self.block_code;
@@ -30,7 +30,7 @@ impl ExecData {
         let current_block_type = &mut self.current_block_type;
         
         // tokenize the input
-        let mut token_collection = tokenizer::make_tokens(input);
+        let mut token_collection = token_collection.clone();
         println!("token_collection: {:?}", token_collection);
         
         // check for syntax errors
@@ -93,7 +93,11 @@ impl ExecData {
                         subtract_indentation(indentation);
                         if indentation.to_string() == "".to_string() {
                             if current_block_type.0 == "normal" {
-                                println!("stuff would get now executed");
+                                println!("stuff gets executed now; start");
+                                // check if it is if or while
+                                // make a if or while statement (careful that the variables are able to change)
+                                // and in it a for loop over each line and execute it
+                                println!("execution stops");
                                 println!("block_code: {:?}", block_code);
                                 current_block_type.0 = "".to_string();
                                 *block_code = Vec::new();

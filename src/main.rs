@@ -52,7 +52,7 @@ fn main() {
         match io::stdin().read_line(&mut input) { // reading input
             Ok(_) => {
                 if !(input.trim().to_string().is_empty()) {
-                    exec_data_variable.exec(input);
+                    exec_data_variable.exec(tokenizer::make_tokens(input));
                 }
             },
 
