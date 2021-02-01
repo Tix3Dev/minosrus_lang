@@ -772,7 +772,21 @@ impl ExecData {
                     add_indentation(indentation);
                 }
                 else if v == &"DO".to_string() {
-                    //
+                    match &token_collection[1].1 {
+                        tokenizer::ValueEnum::String(function_name) => {
+                            match functions.get(function_name) {
+                                Some(function_code_block) => {
+                                    // execute_code_block()
+                                    println!("function {} would get now executed", function_name);
+                                },
+                                None => {
+                                    println!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
+                                    return;
+                                }
+                            }
+                        },
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                    }
                 }
                 else if v == &"IF".to_string() {
                     block_code.push(token_collection);
