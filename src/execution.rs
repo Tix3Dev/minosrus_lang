@@ -793,8 +793,9 @@ impl ExecData {
                                 Some(function_code_block) => {
                                     println!("function {} would get now executed", function_name);
                                     println!("execution starts now");
+                                    let mut code_block_exec_data_variable = ExecData::new();
                                     for line in function_code_block.iter().skip(1) {
-                                        self.exec(line.to_vec());
+                                        code_block_exec_data_variable.exec(line.to_vec());
                                     }
                                     println!("execution ends now");
                                 },
