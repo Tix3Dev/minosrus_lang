@@ -21,6 +21,13 @@ fn subtract_indentation(indentation: &mut String) {
     }
 }
 
+fn execute_block_code(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
+    let mut code_block_exec_data_variable = ExecData::new();
+    for line in block_code.iter().skip(1) {
+        code_block_exec_data_variable.exec(line.to_vec());
+    }
+}
+
 impl ExecData {
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) {
         let global_variables = &mut self.global_variables;
@@ -106,12 +113,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a == b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec()); 
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a == b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -121,12 +128,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a != b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a != b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -136,12 +143,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a < b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a < b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -151,12 +158,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a > b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a > b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -166,12 +173,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a <= b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a <= b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -181,12 +188,12 @@ impl ExecData {
                                                         match (&block_code[0][1].1, &block_code[0][3].1) {
                                                             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
                                                                 if a >= b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
                                                                 if a >= b {
-                                                                    println!("yayyy it works");
+                                                                    execute_block_code(block_code.to_vec());
                                                                 }
                                                             },
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -892,10 +899,7 @@ impl ExecData {
                                 Some(function_code_block) => {
                                     println!("function {} would get now executed", function_name);
                                     println!("execution starts now");
-                                    let mut code_block_exec_data_variable = ExecData::new();
-                                    for line in function_code_block.iter().skip(1) {
-                                        code_block_exec_data_variable.exec(line.to_vec());
-                                    }
+                                    execute_block_code(function_code_block.to_vec()); 
                                     println!("execution ends now");
                                 },
                                 None => {
