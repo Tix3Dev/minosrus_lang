@@ -23,4 +23,6 @@
 
 - what if code block is empty? just if, while, fn and end 
 
+- check for no fn in fn
+
 - implement else for if
