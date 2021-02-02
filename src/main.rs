@@ -44,6 +44,7 @@ fn main() {
 
     // one loop iteration = one prompt (" >")
     loop {
+        let mut valid_input = true;
         let mut input = String::new();
 
         print!("{}> ", exec_data_variable.indentation);
@@ -52,7 +53,16 @@ fn main() {
         match io::stdin().read_line(&mut input) { // reading input
             Ok(_) => {
                 if !(input.trim().to_string().is_empty()) {
-                    exec_data_variable.exec(tokenizer::make_tokens(input));
+                    for character in input.chars() {
+                        if character.is_lowercase() {
+                            println!("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
+                            valid_input = false;
+                            break;
+                        }
+                    }
+                    if valid_input {
+                        exec_data_variable.exec(tokenizer::make_tokens(input));
+                    }
                 }
             },
 

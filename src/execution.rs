@@ -125,12 +125,16 @@ impl ExecData {
                     // saving stuff
                     if current_block_type.0 == "normal" {
                         if v == "FN" {
-                            println!("FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                            println!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
                             return;
                         }
                         block_code.push(token_collection.clone());
                     }
                     else if current_block_type.0 == "function" {
+                        if v == "FN" {
+                            println!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                            return;
+                        }
                         functions.get_mut(&current_block_type.1).unwrap().push(token_collection.clone());
                     }
                     
