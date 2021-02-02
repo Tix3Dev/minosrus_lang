@@ -100,7 +100,102 @@ impl ExecData {
                                 match &block_code[0][0].1 {
                                     tokenizer::ValueEnum::String(first_predefined_name) => {
                                         if first_predefined_name == "IF" {
-                                            println!("it is if");
+                                            match &block_code[0][2].1 {
+                                                tokenizer::ValueEnum::String(operator) => {
+                                                    if operator == "==" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a == b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a == b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+                                                    }
+                                                    else if operator == "!=" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a != b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a != b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+                                                    }
+                                                    else if operator == "<" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a < b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a < b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+                                                    }
+                                                    else if operator == ">" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a > b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a > b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+                                                    }
+                                                    else if operator == "<=" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a <= b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a <= b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+                                                    }
+                                                    else if operator == ">=" {
+                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
+                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                                                                if a >= b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                                                                if a >= b {
+                                                                    println!("yayyy it works");
+                                                                }
+                                                            },
+                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                        } 
+
+                                                    }
+                                                },
+                                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                            }
                                         }
                                         else if first_predefined_name == "WHILE" {
                                             println!("it is while");
