@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use crate::execution::tokenizer;
 use crate::verine_expression::Tokenizer;
 
 #[derive(Debug, Clone)]
@@ -8,7 +11,7 @@ pub enum ValueEnum {
     StringArray(Vec<String>),
 }
 
-pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
@@ -165,6 +168,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         let mut tokens = {
             Tokenizer::new(&input_as_str[from..to]).tokenize()
         };
+        assert!(!tokens.is_empty());
 
         use crate::verine_expression::Token;
         use crate::verine_expression::Operator;
@@ -173,67 +177,147 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
         };
 
-        while tokens.len() > 1 {
-            // We only support binary operations for now
-            if tokens.len() < 3 {
-                push_error("Invalid expression");
-                return final_tokens;
-            }
-            let left_operand = &tokens[0];
-            let operator = &tokens[1];
-            let right_operand = &tokens[2];
+        let mut evaluate_to = |result: &str| {
+            input.replace_range(from - 1..=to, result);
+        };
 
-            let result = match (left_operand, right_operand) {
-                (Token::Number(l), Token::Number(r)) => {
-                    // Supposing they are integers for now
-                    let l = l.parse::<i32>();
-                    let r = r.parse::<i32>();
+        match tokens.first().unwrap() {
+            // Number computation or string interpolation
+            Token::Number(_) | Token::String(_) => {
+                while tokens.len() > 1 {
+                    // We only support binary operations for now
+                    if let [left, Token::Operator(op), right, ..] = tokens.as_slice() {
+                        let result = match (left, right) {
+                            (Token::Number(l), Token::Number(r)) => {
+                                // Supposing they are integers for now
+                                let l = l.parse::<i32>();
+                                let r = r.parse::<i32>();
 
-                    if let (Ok(l), Ok(r)) = (l, r) {
-                        match operator {
-                            // Ugly
-                            // We should maybe store a number inside Token::Number but it's good enough for now
-                            Token::Operator(Operator::Plus) => Ok(Token::Number((l + r).to_string())),
-                            Token::Operator(Operator::Minus) => Ok(Token::Number((l - r).to_string())),
-                            Token::Operator(Operator::Asterisk) => Ok(Token::Number((l * r).to_string())),
-                            Token::Operator(Operator::Slash) => Ok(Token::Number((l / r).to_string())),
-                            _ => Err("Invalid operator"),
+                                if let (Ok(l), Ok(r)) = (l, r) {
+                                    match op {
+                                        // Ugly
+                                        // We should maybe store a number inside Token::Number but it's good enough for now
+                                        Operator::Plus => Ok(Token::Number((l + r).to_string())),
+                                        Operator::Minus => Ok(Token::Number((l - r).to_string())),
+                                        Operator::Asterisk => Ok(Token::Number((l * r).to_string())),
+                                        Operator::Slash => Ok(Token::Number((l / r).to_string())),
+                                    }
+                                } else {
+                                    Err("Parsing error")
+                                }
+                            }
+                            (Token::String(l), Token::String(r)) => {
+                                match op {
+                                    Operator::Plus => Ok(Token::String(format!("{}{}", l, r))),
+                                    _ => Err("Invalid operator"),
+                                }
+                            }
+                            _ => Err("Invalid operands"),
+                        };
+
+                        match result {
+                            Ok(token) => {
+                                // Replace the first 3 tokens with the result of them
+                                tokens.remove(0);
+                                tokens.remove(0);
+                                tokens[0] = token;
+                            },
+                            Err(message) => {
+                                push_error(message);
+                                return final_tokens;
+                            }
                         }
                     } else {
-                        Err("Parsing error")
+                        push_error("Invalid expression");
+                        return final_tokens;
                     }
                 }
-                (Token::String(l), Token::String(r)) => {
-                    match operator {
-                        Token::Operator(Operator::Plus) => Ok(Token::String(format!("{}{}", l, r))),
-                        _ => Err("Invalid operator"),
+
+                // At the end, everything was calculated into one final token
+                assert_eq!(tokens.len(), 1);
+                match &tokens[0] {
+                    Token::String(string) => {
+                        evaluate_to(&format!("\"{}\"", string));
+                    }
+                    Token::Number(number) => {
+                        evaluate_to(number);
+                    }
+                    _ => {
+                        push_error("Invalid expression");
+                        return final_tokens;
                     }
                 }
-                _ => Err("Invalid operands"),
-            };
+            }
+            // GET FROM VAR [AT X | LEN]
+            Token::GET => {
+                use Token::*;
+                match tokens.as_slice() {
+                    [GET, FROM, Id(var), AT, Number(index)] => {
+                        let var_token = if let Some(var_token) = global_variables.get(var) {
+                            var_token
+                        } else {
+                            push_error(&format!("Variable '{}' does not exist", var));
+                            return final_tokens;
+                        };
 
-            match result {
-                Ok(token) => {
-                    // Replace the first 3 tokens with the result of them
-                    tokens.remove(0);
-                    tokens.remove(0);
-                    tokens[0] = token;
-                },
-                Err(message) => {
-                    push_error(message);
-                    return final_tokens;
+                        let index = if let Ok(index) = index.parse::<usize>() {
+                            index
+                        } else {
+                            push_error(&format!("'{}' is not a valid index", var));
+                            return final_tokens;
+                        };
+
+                        match var_token {
+                            ValueEnum::StringArray(var) => {
+                                if let Some(var) = var.get(index) {
+                                    evaluate_to(var);
+                                } else {
+                                    push_error("Index out of bounds");
+                                    return final_tokens;
+                                }
+                            }
+                            ValueEnum::IntegerArray(var) => {
+                                if let Some(var) = var.get(index) {
+                                    evaluate_to(&var.to_string());
+                                } else {
+                                    push_error("Index out of bounds");
+                                    return final_tokens;
+                                }
+                            }
+                            ValueEnum::String(var) => {
+                                if let Some(char) = var.chars().nth(index) {
+                                    evaluate_to(&format!("\"{}\"", char));
+                                } else {
+                                    push_error("Index out of bounds");
+                                    return final_tokens;
+                                };
+                            }
+                            _ => {
+                                push_error(&format!("'{}' cannot be indexed", var));
+                                return final_tokens;
+                            }
+                        }
+                    }
+                    [GET, FROM, Id(var), LEN] => {
+                        let var_token = if let Some(var_token) = global_variables.get(var) {
+                            var_token
+                        } else {
+                            push_error(&format!("Variable '{}' does not exist", var));
+                            return final_tokens;
+                        };
+
+                        evaluate_to(&match var_token {
+                            ValueEnum::StringArray(var) => var.len(),
+                            ValueEnum::IntegerArray(var) => var.len(),
+                            ValueEnum::String(var) => var.len(),
+                            _ => {
+                                push_error(&format!("'{}' does not have a length", var));
+                                return final_tokens;
+                            }
+                        }.to_string())
+                    }
+                    _ => {}
                 }
-            }
-        }
-
-        // At the end, everything was calculated into one final token
-        assert_eq!(tokens.len(), 1);
-        match &tokens[0] {
-            Token::String(string) => {
-                input.replace_range(from - 1..=to, &format!("\"{}\"", string));
-            }
-            Token::Number(number) => {
-                input.replace_range(from - 1..=to, number);
             }
             _ => {
                 push_error("Invalid expression");
@@ -703,3 +787,5 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
 
     return final_tokens;
 }
+
+fn evaluate_computation(tokens:)

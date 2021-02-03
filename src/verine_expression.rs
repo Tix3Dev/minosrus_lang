@@ -7,6 +7,10 @@ pub enum Token {
     Number(String),
     String(String),
     Operator(Operator),
+    GET,
+    FROM,
+    LEN,
+    AT,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -32,12 +36,14 @@ impl Token {
         if symbol.starts_with(|c: char| c.is_numeric()) {
             Token::Number(symbol.to_string())
         } else {
-            Token::Id(symbol.to_string())
+            match symbol {
+                "GET" => Token::GET,
+                "FROM" => Token::FROM,
+                "LEN" => Token::LEN,
+                "AT" => Token::AT,
+                _ => Token::Id(symbol.to_string()),
+            }
         }
-    }
-
-    pub fn is_evaluable(&self) -> bool {
-        matches!(self, Token::Number(_) | Token::String(_) | Token::Id(_))
     }
 }
 

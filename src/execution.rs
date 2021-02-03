@@ -10,7 +10,7 @@ enum OrderEnum {
 
 pub fn exec(input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) {
     // tokenize the input
-    let mut token_collection = tokenizer::make_tokens(input);
+    let mut token_collection = tokenizer::make_tokens(input, global_variables);
     println!("token_collection: {:?}", token_collection);
     
     // check for syntax errors
