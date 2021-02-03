@@ -161,14 +161,11 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             return final_tokens;
         }
 
-        dbg!(&verine_positions);
-
+        let (from, to) = (verine_positions[0] + 1, verine_positions[1]);
         let mut tokens = {
-            let (from, to) = (verine_positions[0] + 1, verine_positions[1]);
             Tokenizer::new(&input_as_str[from..to]).tokenize()
         };
 
-        dbg!(&tokens);
         use crate::verine_expression::Token;
         use crate::verine_expression::Operator;
 
@@ -233,10 +230,10 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         assert_eq!(tokens.len(), 1);
         match &tokens[0] {
             Token::String(string) => {
-                dbg!(&string);
+                input.replace_range(from - 1..=to, &format!("\"{}\"", string));
             }
             Token::Number(number) => {
-                dbg!(&number);
+                input.replace_range(from - 1..=to, number);
             }
             _ => {
                 push_error("Invalid expression");
