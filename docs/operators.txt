@@ -1,0 +1,16 @@
+- There are arithmetic operators and comparing operators
+
+Arithmetic operators:
+	+    | Addition
+	-    | Subtraction
+	*    | Multiplication
+	/    | Division
+	**   | Power
+
+Comparing operators:
+	==   | Equal
+	!=   | Not equal
+	<    | Less than
+	>    | Greater than
+	<=   | Less than or equal
+	>=   | Greater than or equal
