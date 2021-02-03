@@ -21,6 +21,4 @@
 
 - problem with multiple code blocks inside of each other because there is no indentation
 
-- implement else for if
-
 - better number check (e.g. LET A = 122222222222222222222222222222222222222 won't say that it is a too big number)
