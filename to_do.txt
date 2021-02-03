@@ -20,3 +20,5 @@
 - implement test cases (tokenizing)
 
 - implement WHILE execution
+
+- GET at the end of execution.rs -> some warning that GET cant be at the beginning or something; GET is only used in verines
