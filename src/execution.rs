@@ -256,7 +256,6 @@ impl ExecData {
                                             }
                                         }
                                         else if first_predefined_name == "WHILE" {
-                                            //
                                         }
                                     },
                                     _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -503,7 +502,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                     return;
                                                                 }
                                                             }
@@ -563,7 +562,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                     return;
                                                                 }
                                                             }
@@ -658,7 +657,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                     return;
                                                                 }
                                                             }
@@ -689,7 +688,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", v[0][1].split(':').nth(1).unwrap());
+                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                     return;
                                                                 }
                                                             }
