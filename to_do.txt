@@ -19,6 +19,4 @@
 
 - implement test cases (tokenizing)
 
-- problem with multiple code blocks inside of each other because there is no indentation
-
 - implement WHILE execution

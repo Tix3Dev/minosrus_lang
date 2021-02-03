@@ -79,6 +79,7 @@ impl ExecData {
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
 
+        // check for code block stuff
         if indentation.to_string() != "".to_string() {
             match &token_collection[0].1 {
                 tokenizer::ValueEnum::String(v) => {
@@ -262,7 +263,7 @@ impl ExecData {
                         }
                     }
                     
-                    // saving stuff
+                    // saving code block stuff
                     if current_block_type.0 == "normal" {
                         if v == "FN" {
                             println!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
