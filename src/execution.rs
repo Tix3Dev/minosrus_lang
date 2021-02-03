@@ -28,6 +28,125 @@ fn execute_block_code(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
     }
 }
 
+fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) -> bool {
+    if operator == "==" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a == b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a == b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    }
+    else if operator == "!=" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a != b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a != b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    }
+    else if operator == "<" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a < b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a < b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    }
+    else if operator == ">" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a > b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a > b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    }
+    else if operator == "<=" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a <= b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a <= b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    }
+    else if operator == ">=" {
+        match (&block_code[0][1].1, &block_code[0][3].1) {
+            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
+                if a >= b {
+                    true
+                } else {
+                    false
+                }
+            },
+            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
+                if a >= b {
+                    true
+                } else {
+                    false
+                }
+            },
+            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        } 
+    } else {
+        unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!");
+    }
+}
+
 impl ExecData {
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) {
         let global_variables = &mut self.global_variables;
@@ -126,128 +245,18 @@ impl ExecData {
                                                     if !(is_there_else_block) {
                                                         if_part = block_code.to_vec();
                                                     }
-
-                                                    if operator == "==" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a == b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a == b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-                                                    }
-                                                    else if operator == "!=" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a != b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a != b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-                                                    }
-                                                    else if operator == "<" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a < b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a < b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-                                                    }
-                                                    else if operator == ">" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a > b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a > b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-                                                    }
-                                                    else if operator == "<=" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a <= b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a <= b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-                                                    }
-                                                    else if operator == ">=" {
-                                                        match (&block_code[0][1].1, &block_code[0][3].1) {
-                                                            (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                                                                if a >= b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                                                                if a >= b {
-                                                                    execute_block_code(if_part[1..].to_vec());
-                                                                } else if is_there_else_block {
-                                                                    execute_block_code(else_part);
-                                                                }
-                                                            },
-                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                        } 
-
+                                                    
+                                                    if check_block_code_condition(operator.to_string(), block_code.to_vec()) {
+                                                        execute_block_code(if_part[1..].to_vec());
+                                                    } else if is_there_else_block {
+                                                        execute_block_code(else_part);
                                                     }
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                             }
                                         }
                                         else if first_predefined_name == "WHILE" {
-                                            println!("it is while");
+                                            //
                                         }
                                     },
                                     _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -564,6 +573,7 @@ impl ExecData {
                                                 }
 
                                             }
+                                            /*
                                             else if fv == "WHILE" {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
@@ -625,6 +635,7 @@ impl ExecData {
                                                 }
 
                                             }
+                                            */
                                             else if fv == "PUSH" {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
