@@ -30,3 +30,7 @@ Arrays:
 - Manipulating: INSERT 121 INTO A AT 0
 - Manipulating: REMOVE FROM A AT 1
 - Note: Can't print an array; just elements
+
+Comments:
+- e.g. # HELLO, I AM A COMMENT
+- Semantics: The # is always at the beginning of a line; everything after it gets ignored
