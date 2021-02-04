@@ -19,6 +19,4 @@
 
 - implement test cases (tokenizing)
 
-- GET at the end of execution.rs -> some warning that GET cant be at the beginning or something; GET is only used in verines
-
 - check if WHILE key and value order is right without causing problems bcuz WHILE 12 < 122 works eventhough START works!

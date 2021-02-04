@@ -531,22 +531,6 @@ impl ExecData {
                 "INTEGER:?"
             ]));
 
-            hashmap.insert("GET", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:GET",
-                    "PREDEFINED_NAME:FROM",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:AT",
-                    "INTEGER:?"
-                ],
-                vec![ // LEN
-                    "PREDEFINED_NAME:GET",
-                    "PREDEFINED_NAME:FROM",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:LEN"
-                ]
-            ]));
 
             hashmap
         };
