@@ -25,4 +25,4 @@
 
 - Variable evaluation for arrays
 
-- Check if _ is a valid character for variable function names (if it works)
+- Once READLN is implemented add it to examples (actually document everything that is new)
