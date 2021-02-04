@@ -45,6 +45,9 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         "INTO".to_string(),
         "AT".to_string(),
         "LEN".to_string(),
+        "READLN".to_string(),
+        "STRING_FROM".to_string(),
+        "INTEGER_FROM".to_string(),
         "RESET".to_string(),
         "STOP".to_string()
     ];
