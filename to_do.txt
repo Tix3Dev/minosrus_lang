@@ -23,6 +23,4 @@
 
 - GET at the end of execution.rs -> some warning that GET cant be at the beginning or something; GET is only used in verines
 
-- Variable evaluation for arrays
-
 - Once READLN is implemented add it to examples (actually document everything that is new)
