@@ -40,7 +40,9 @@ COUNTER: 5
 
 ## Installing
 
-You can simply clone the repository and execute it via ```cargo run```
+You can simply clone this repository via ```https://github.com/Tix3Dev/minosrus_lang```.
+You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
+Finally you can execute the project with ```cargo run```.
 
 ----
 
