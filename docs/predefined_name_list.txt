@@ -100,3 +100,38 @@ List (of those that are at the beginning):
 	RESET -> reset environment (everything that is saved gets deleted)
 	STOP -> stop interpreter
 )
+
+List (of those that are in verines):
+- GET
+	- Used to get something; either case 1(length of a string/array) or case 2(character/element)
+	- case 1: GET FROM A LEN
+	- case 2: GET FROM A AT 0
+
+	- Example:
+		> LET A = "HELLO"
+		> LET LEN_OF_STRING = | GET FROM A LEN |
+		> LET B = [12, 34, 56, 78]
+		> LET FIRST_ELEMENT = | GET FROM B AT 0 |
+
+- READLN
+	- Used to get user input
+	- Always used with STRING_FROM OR INTEGER_FROM
+
+	- Example:
+		> LET USER_INPUT = | STRING_FROM READLN |
+
+- STRING_FROM
+	- Used to convert a integer to a string
+	- Throws an EXECUTION ERROR if the given type isn't a integer
+
+	- Example:
+		> LET A = 123
+		> LET A_AS_STRING = | STRING_FROM A |
+
+- INTEGER_FROM
+	- Used to convert a string (which consists of digits) to a integer
+	- Throws an EXECUTION ERROR if the given type isn't a string or can't be converted (because it includes invalid characters)
+
+	- Example:
+		> LET A = "123"
+		> LET A_AS_INTEGER = | INTEGER_FROM A |
