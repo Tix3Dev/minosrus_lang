@@ -34,3 +34,8 @@ Arrays:
 Comments:
 - e.g. # HELLO, I AM A COMMENT
 - Semantics: The # is always at the beginning of a line; everything after it gets ignored
+
+Verines:
+- e.g. | 12 ** 2 + 6 |
+- Semantics: The inner part of a verine gets evaluated and will have one value.
+- Note: You can use this everywhere where you would normally write a string or an integer.
