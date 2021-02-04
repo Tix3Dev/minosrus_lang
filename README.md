@@ -8,6 +8,14 @@ It's inspired by BASIC but also by new languages like Rust. In the future the in
 
 ----
 
+## Installing
+
+- You can simply clone this repository via ```https://github.com/Tix3Dev/minosrus_lang```.
+- You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
+- Finally you can execute the project with ```cargo run```.
+
+----
+
 ## Examples
 
 Repl:
@@ -38,11 +46,9 @@ COUNTER: 5
 
 ----
 
-## Installing
+## Documentation
 
-- You can simply clone this repository via ```https://github.com/Tix3Dev/minosrus_lang```.
-- You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
-- Finally you can execute the project with ```cargo run```.
+To get a better understanding of the language, you might consider looking at the documentation. You will also find some examples there. Here is the link to the [docs](https://github.com/Tix3Dev/minosrus_lang/tree/master/docs).
 
 ----
 
