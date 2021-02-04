@@ -469,7 +469,41 @@ impl ExecData {
                     "COMPARING_OPERATOR:?",
                     "INTEGER:?",
                     "PREDEFINED_NAME:START"
-                ]
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
             ]));
 
             hashmap.insert("PUSH", OrderEnum::MultipleOptions(
@@ -758,7 +792,6 @@ impl ExecData {
         }
 
         match &token_collection[0].1 {
-            tokenizer::ValueEnum::String(clean) if clean == "WHILE" => (),
             tokenizer::ValueEnum::String(clean) => {
                 match predefined_name_order.get(&clean.as_str()) {
                     Some(value) => {
