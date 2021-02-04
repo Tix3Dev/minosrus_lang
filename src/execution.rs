@@ -544,7 +544,7 @@ impl ExecData {
             return;
         } 
 
-        // evaluate value for print, if, while, push, insert
+        // evaluate value for LET, PRINT, IF, PUSH, INSERT
         if token_collection.len() > 0 {
             let mut token_collection_clone = token_collection.clone();
             match &token_collection[0].1 {
@@ -555,6 +555,41 @@ impl ExecData {
                                 OrderEnum::MultipleOptions(_v) => {
                                     match &token_collection[0].1 {
                                         tokenizer::ValueEnum::String(fv) => {
+                                            if fv == "LET" {
+                                                if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
+                                                    match &token_collection[3].1 {
+                                                        tokenizer::ValueEnum::String(variable_name) => {
+                                                            match global_variables.get(variable_name) {
+                                                                Some(value_of_variable) => { 
+                                                                    match value_of_variable {
+                                                                        tokenizer::ValueEnum::String(v) => {
+                                                                            token_collection_clone[3].0 = "STRING".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string()); 
+                                                                        },
+                                                                        tokenizer::ValueEnum::Integer(v) => {
+                                                                            token_collection_clone[3].0 = "INTEGER".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);   
+                                                                        },
+                                                                        tokenizer::ValueEnum::IntegerArray(v) => {
+                                                                            token_collection_clone[3].0 = "INTEGER_ARRAY".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::IntegerArray(v.to_vec()); 
+                                                                        },
+                                                                        tokenizer::ValueEnum::StringArray(v) => {
+                                                                            token_collection_clone[3].0 = "STRING_ARRAY".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::StringArray(v.to_vec());
+                                                                        }
+                                                                    }
+                                                                },
+                                                                None => {
+                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return;
+                                                                }
+                                                            }
+                                                        },
+                                                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                    }
+                                                }
+                                            }
                                             if fv == "PRINT" {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
