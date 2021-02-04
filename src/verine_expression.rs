@@ -1,4 +1,4 @@
-use std::iter::Enumerate;
+use std::iter::{Enumerate, Peekable};
 use std::str::Chars;
 
 #[derive(Debug, Clone)]
@@ -33,15 +33,25 @@ impl Token {
     }
 
     pub fn from_symbol(symbol: &str) -> Self {
-        if symbol.starts_with(|c: char| c.is_numeric()) {
-            Token::Number(symbol.to_string())
-        } else {
-            match symbol {
-                "GET" => Token::GET,
-                "FROM" => Token::FROM,
-                "LEN" => Token::LEN,
-                "AT" => Token::AT,
-                _ => Token::Id(symbol.to_string()),
+        match symbol {
+            "GET" => Token::GET,
+            "FROM" => Token::FROM,
+            "LEN" => Token::LEN,
+            "AT" => Token::AT,
+            _ => {
+                let mut it = symbol.chars();
+                let (first, second) = (it.next(), it.next());
+
+                let is_number = match (first, second) {
+                    (Some(sign), Some(digit)) if (sign == '+' || sign == '-') && digit.is_ascii_digit() => true,
+                    (Some(digit), ..) if digit.is_ascii_digit() => true,
+                    _ => false,
+                };
+                if is_number {
+                    Token::Number(symbol.to_string())
+                } else {
+                    Token::Id(symbol.to_string())
+                }
             }
         }
     }
@@ -60,7 +70,7 @@ pub struct Tokenizer<'a> {
 
     tokens: Vec<Token>,
 
-    it: Enumerate<Chars<'a>>,
+    it: Peekable<Enumerate<Chars<'a>>>,
     current_character: Option<(usize, char)>,
 }
 
@@ -74,7 +84,7 @@ impl<'a> Tokenizer<'a> {
 
             tokens: vec![],
 
-            it: source.chars().enumerate(),
+            it: source.chars().enumerate().peekable(),
             current_character: None,
         };
         this.current_character = this.it.next();
@@ -111,6 +121,12 @@ impl<'a> Tokenizer<'a> {
             }
 
             match c {
+                '+' | '-' if self.it.peek().filter(|v| v.1.is_ascii_digit()).is_some() => {
+                    if self.starting_new_token {
+                        self.current_token_start_index = i;
+                        self.starting_new_token = false;
+                    }
+                }
                 // Special characters and operators that terminate a token
                 '+' | '-' | '*' | '/' => {
                     self.end_current_token();

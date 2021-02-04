@@ -787,5 +787,3 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
 
     return final_tokens;
 }
-
-fn evaluate_computation(tokens:)
