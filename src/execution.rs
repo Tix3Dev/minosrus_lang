@@ -21,14 +21,7 @@ fn subtract_indentation(indentation: &mut String) {
     }
 }
 
-fn execute_block_code(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
-    let mut code_block_exec_data_variable = ExecData::new();
-    for line in block_code.iter() {
-        code_block_exec_data_variable.exec(line.to_vec());
-    }
-}
-
-fn execute_block_code_while(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, global_variables: HashMap<String, tokenizer::ValueEnum>) -> HashMap<String, tokenizer::ValueEnum> {
+fn execute_block_code(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, global_variables: HashMap<String, tokenizer::ValueEnum>) -> HashMap<String, tokenizer::ValueEnum> {
     let mut code_block_exec_data_variable = ExecData::new();
     code_block_exec_data_variable.global_variables = global_variables;
     for line in block_code.iter() {
@@ -321,9 +314,9 @@ impl ExecData {
                                                     }
                                                     
                                                     if check_block_code_condition(operator.to_string(), block_code.to_vec()) {
-                                                        execute_block_code(if_part[1..].to_vec());
+                                                        *global_variables = execute_block_code(if_part[1..].to_vec(), global_variables.clone());
                                                     } else if is_there_else_block {
-                                                        execute_block_code(else_part);
+                                                        *global_variables = execute_block_code(else_part, global_variables.clone());
                                                     }
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -342,7 +335,7 @@ impl ExecData {
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
-                                                            *global_variables = execute_block_code_while(block_code[1..].to_vec(), global_variables.clone());
+                                                            *global_variables = execute_block_code(block_code[1..].to_vec(), global_variables.clone());
                                                         }
                                                     }
                                                 },
@@ -997,7 +990,7 @@ impl ExecData {
                                 Some(function_code_block) => {
                                     println!("function {} would get now executed", function_name);
                                     println!("execution starts now");
-                                    execute_block_code(function_code_block[1..].to_vec()); 
+                                    *global_variables = execute_block_code(function_code_block[1..].to_vec(), global_variables.clone()); 
                                     println!("execution ends now");
                                 },
                                 None => {
