@@ -6,6 +6,11 @@ A simple interpreter in form of a repl for my own programming language called mi
 
 It's inspired by BASIC but also by new languages like Rust. In the future the interpreter will (eventually) be used for an OS. And it's my first project in Rust.
 
+Short Paradigm:
+- Imperative
+- Procedural
+- Structured
+
 ----
 
 ## Installing
