@@ -1,0 +1,15 @@
+Repl:
+
+> LET A = | 12 + 12 |
+> LET B = [12, 34, 56, 78, 90]
+> LET C = | GET FROM B AT 0 |
+> LET D = | GET FROM B LEN |
+> PRINT A
+> PRINT C
+> PRINT D
+
+Output:
+
+24
+12
+5

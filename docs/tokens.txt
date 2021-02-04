@@ -1,0 +1,41 @@
+Predefined names:
+- e.g. LET or TRUE
+- Semantics: Predefined keywords 
+
+
+Operators:
+- e.g. = or + or ==
+- Semantics: In charge for arithmetic operations and for conditions
+
+
+Variable/function names:
+- e.g. FOO but not 1337
+- Semantics: Custom words for saving stuff
+
+Strings:
+- e.g. "HELLO WORLD?"
+- Semantics: Data type
+			 Single characters or multiple characters
+
+Integers:
+- e.g. 352 or -72727
+- Semantics: Data type
+			 Numbers which are always signed and 32 bit -> i32
+
+Arrays:
+- e.g. [21, -211, 3828]
+- Semantics: Multiple strings or integers of the same type; dynamic
+- Manipulating: PUSH 121 ONTO A
+- Manipulating: POP FROM A
+- Manipulating: INSERT 121 INTO A AT 0
+- Manipulating: REMOVE FROM A AT 1
+- Note: Can't print an array; just elements
+
+Comments:
+- e.g. # HELLO, I AM A COMMENT
+- Semantics: The # is always at the beginning of a line; everything after it gets ignored
+
+Verines:
+- e.g. | 12 ** 2 + 6 |
+- Semantics: The inner part of a verine gets evaluated and will have one value.
+- Note: You can use this everywhere where you would normally write a string or an integer.

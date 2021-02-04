@@ -1,0 +1,102 @@
+- Predefined names are keywords of minosrus lang
+- Every line starts with a predefined name
+- There are predefined names, such as ONTO, that can't be at the beginning of a line
+
+List (of those that are at the beginning):
+- LET
+	- Used to give a variable a value
+	- All variables are global
+	
+	- Example:
+		> LET A = 123
+
+- PRINT
+	- Used to print a value
+	- Can only print strings and integers
+
+	- Example:
+		> PRINT "HELLO WORLD"
+
+- FN
+	- Used to create a function
+	- Functions don't have parameters/return values because all variables are global
+
+	- Example:
+		> FN MAIN START
+			> PRINT "HELLO FROM FUNCTION"
+			> END
+
+- DO
+	- Used to execute a function
+	- No parameters can be passed
+
+	- Example (see "FN" example):
+		> DO MAIN
+
+- IF
+	- Used for control flow
+	- Compares left to right
+	
+	- Example:
+		> IF 12 < 122 START
+			> PRINT "HELLO"
+			> END
+
+- ELSE
+	- Used for control flow
+	- Works only with IF
+
+	- Example:
+		> IF 12 > 122 START
+			> PRINT "HELLO"
+			> ELSE
+			> PRINT "OH NOOO"
+			> END
+
+- WHILE
+	- Used for control flow
+	- Executes code block as long as the condition is true
+
+	- Example:
+		> LET COUNTER = 1
+		> WHILE COUNTER <= 10 START
+			> PRINT COUNTER
+			> LET COUNTER = | COUNTER + 1 |
+			> END
+
+- PUSH
+	- Used to put either strings or integers on an array
+	- Puts string/integer at the end of the array
+	
+	- Example:
+		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
+		> PUSH "RICK" ONTO A
+
+- POP
+	- Used to remove the last element of an array
+	- If array is empty, nothing happens
+
+	- Example:
+		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
+		> POP FROM A
+
+- INSERT
+	- Used to put either strings or integers on an array
+	- Puts string/integer at position X
+
+	- Example:
+		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
+		> INSERT "RICK" INTO A AT 1
+
+- REMOVE
+	- Used to remove a string or an integer from an array
+	- It removes it at position X
+
+	- Example:
+		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
+		> REMOVE FROM A AT 1
+
+(
+	RESET -> reset environment (everything that is saved gets deleted)
+	STOP -> stop interpreter
+)
