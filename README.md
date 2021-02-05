@@ -49,6 +49,8 @@ COUNTER: 4
 COUNTER: 5
 ```
 
+For more examples have a look at the [examples](https://github.com/Tix3Dev/minosrus_lang/tree/master/examples) folder.
+
 ----
 
 ## Documentation
