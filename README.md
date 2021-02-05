@@ -1,6 +1,6 @@
 # minosrus_lang
 
-**DISCLAIMER: This project is still in development.**
+**DISCLAIMER: This project is still in development. That means some examples don't work yet**
 
 A simple interpreter in form of a repl for my own programming language called minosrus_lang. 
 
