@@ -197,18 +197,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     if operator == "==" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a == b {
-                    true
-                } else {
-                    false
-                }
+                a == b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a == b {
-                    true
-                } else {
-                    false
-                }
+                a == b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -216,18 +208,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     else if operator == "!=" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a != b {
-                    true
-                } else {
-                    false
-                }
+                a != b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a != b {
-                    true
-                } else {
-                    false
-                }
+                a != b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -235,18 +219,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     else if operator == "<" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a < b {
-                    true
-                } else {
-                    false
-                }
+                a < b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a < b {
-                    true
-                } else {
-                    false
-                }
+                a < b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -254,18 +230,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     else if operator == ">" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a > b {
-                    true
-                } else {
-                    false
-                }
+                a > b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a > b {
-                    true
-                } else {
-                    false
-                }
+                a > b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -273,18 +241,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     else if operator == "<=" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a <= b {
-                    true
-                } else {
-                    false
-                }
+                a <= b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a <= b {
-                    true
-                } else {
-                    false
-                }
+                a <= b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -292,18 +252,10 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
     else if operator == ">=" {
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => {
-                if a >= b {
-                    true
-                } else {
-                    false
-                }
+                a >= b
             },
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => {
-                if a >= b {
-                    true
-                } else {
-                    false
-                }
+                a >= b
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         } 
@@ -765,7 +717,6 @@ impl ExecData {
                                                         match &line[0].1 {
                                                             tokenizer::ValueEnum::String(first_token) => {
                                                                 if first_token == "ELIF" {
-                                                                    println!("we str nowwwwwwww in elif");
                                                                     is_there_elif_block = true;
                                                                     where_is_elif_block = line_position;
                                                                     
@@ -773,7 +724,6 @@ impl ExecData {
                                                                     if !(is_key_and_value_order_right(line.to_vec(), predefined_name_order.clone())) {
                                                                         return;
                                                                     }
-                                                                    println!("we are still in elifffffffffffffffffff");
 
                                                                     // evaluate left and right side of elif
                                                                     let mut line_clone = line.clone();
