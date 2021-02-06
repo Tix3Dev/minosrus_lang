@@ -304,9 +304,10 @@ impl ExecData {
                                                         match &line[0].1 {
                                                             tokenizer::ValueEnum::String(first_token) => {
                                                                 if first_token == "ELIF" {
-                                                                    // is_there_elif_block = true
-                                                                    // where_is_elif_block = line_position
-                                                                    //
+                                                                    is_there_elif_block = true;
+                                                                    where_is_elif_block = line_position;
+                                                                    
+                                                                    // evaluate left and right side of elif
                                                                     // check key and value order -> important to print error if it's false
                                                                     // 
                                                                     // if check_block_code_condition(operator.to_string(), block_code.to_vec())
