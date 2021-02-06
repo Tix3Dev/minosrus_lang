@@ -1,22 +1,8 @@
-- verines - wait a bit - i had enough - someone will contribute :)
-	add predefined names
-	note: not allowed to use multiple verine; e.g. IF | GET FROM A AT 0 | == | GET FROM B AT 0 | START
-		--> because tokenizer takes last and first verine together then second last and second and so on!
-	this error:
-		> LET A = |1+|5*5||
-		thread 'main' panicked at 'begin <= end (16 <= 15) when slicing `LET A = |1+|5*5||
-		`', src/execution/tokenizer.rs:251:138
-		note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-	this strange thing:
-		> LET A = |12+1|
-		["LET", "A", "=", "0"]
-		[("PREDEFINED_NAME", String("LET")), ("VARIABLE/FUNCTION_NAME", String("A")), ("EQUAL_SIGN", String("=")), ("INTEGER", String("0"))]
-
 ( - maybe print help -> show where the error is
 	e.g. > PRINT "HELLO"
 		 -------------+
 )
 
-- implement test cases (tokenizing)
+( - implement test cases (tokenizing) )
 
-- check if WHILE key and value order is right without causing problems bcuz WHILE 12 < 122 works eventhough START works!
+- arrays that can contain different types -> empty arrays are possible

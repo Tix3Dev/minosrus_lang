@@ -135,3 +135,39 @@ List (of those that are in verines):
 	- Example:
 		> LET A = "123"
 		> LET A_AS_INTEGER = | INTEGER_FROM A |
+
+List (of those that are in code blocks):
+- END
+	- Used to go back an indentation
+	
+	- Example:
+		> FN PRINT_HELLO START
+			> PRINT "HELLO"
+			> END
+
+- ELIF
+	- Used to evaluate with a condition when IF returns false
+	- Optional
+
+	- Example:
+		> LET NUM = 7
+		> IF NUM < 5 START
+			> PRINT "NUM IS SMALLER THAN 5"
+			> ELIF NUM > 5 START
+			> PRINT "NUM IS BIGGER THAN 5"
+			> END
+
+- ELSE
+	- Used to evaluate without a condition when IF or ELIF returns false
+	- Optional
+
+	- Example:
+		> LET NUM = 5
+		> IF NUM < 5 START
+			> PRINT "NUM IS SMALLER THAN 5"
+			> ELIF NUM > 5 START
+			> PRINT "NUM IS BIGGER THAN 5"
+			> ELSE
+			> PRINT "NUM IS 5"
+			> END
+
