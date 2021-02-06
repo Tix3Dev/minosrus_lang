@@ -19,6 +19,8 @@ Short Paradigm:
 - You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
 - Finally you can execute the project with ```cargo run```.
 
+**IMPORTANT: If you decided to try this out, and you get this error: ```SOMEHOW THIS SHOULDN'T BE PRINTED!```, please create a new issue and post your input + the output. Thank you!**
+
 ----
 
 ## Examples
