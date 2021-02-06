@@ -5,6 +5,12 @@
 
 ( - implement test cases (tokenizing) )
 
+- big problem: IF [12, 323, 45, 1252] == "LOL" START panics because of the array BECAUSE KEY/VALUE ORDER DOESN'T GET CHECKED
+	-> is it necessary to hard code every possibility and evaluate it after check (without changing to much (AST's))?
+		-> would be at least less confusing because currently if we write LET A = IF (throws an error) it says it can only be a string, integer or vec but it doesn't say variable/function name which it theoretically should
+		
+		-> if we change it, let's do it the checking part and the evaluation part in two functions so they can be reused for ELIF which needs order check and evaluation 
+
 - what about ELIF
 
 - arrays that can contain different types -> empty arrays are possible
