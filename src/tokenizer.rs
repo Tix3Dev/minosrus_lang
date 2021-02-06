@@ -34,6 +34,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         "DO".to_string(),
         "IF".to_string(),
         "ELSE".to_string(),
+        "ELIF".to_string(),
         "WHILE".to_string(),
         "PUSH".to_string(),
         "POP".to_string(),

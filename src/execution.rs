@@ -273,7 +273,7 @@ impl ExecData {
                         add_indentation(indentation);
                     }
                     else if v == "FN" {
-                        if current_block_type.0 != "normal" {
+                        if current_block_type.0 == "" {
                             add_indentation(indentation);
                         } else {
                             println!("FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
@@ -290,16 +290,32 @@ impl ExecData {
                                             match &block_code[0][2].1 {
                                                 tokenizer::ValueEnum::String(operator) => {
                                                     let mut if_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![]; 
-                                                    let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![]; 
+                                                    let mut elif_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![]; 
+                                                    let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![];
+
+                                                    let mut is_there_elif_block = false;
+                                                    let mut is_elif_block_true = false;
+                                                    let mut where_is_elif_block = 0;
+
                                                     let mut is_there_else_block = false;
+                                                    let mut where_is_else_block = 0;
+
                                                     for (line_position, line) in block_code.iter().enumerate() {
                                                         match &line[0].1 {
                                                             tokenizer::ValueEnum::String(first_token) => {
+                                                                if first_token == "ELIF" {
+                                                                    // is_there_elif_block = true
+                                                                    // where_is_elif_block = line_position
+                                                                    //
+                                                                    // check key and value order -> important to print error if it's false
+                                                                    // 
+                                                                    // if check_block_code_condition(operator.to_string(), block_code.to_vec())
+                                                                    //     is_elif_block_true = true
+                                                                }
                                                                 if first_token == "ELSE" {
                                                                     if line.len() == 1 {
-                                                                        if_part = block_code[..line_position].to_vec();
-                                                                        else_part = block_code[line_position+1..].to_vec();
                                                                         is_there_else_block = true;
+                                                                        where_is_else_block = line_position;
                                                                     } else {
                                                                         println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN ELSE NEEDS!");
                                                                         return;
@@ -309,13 +325,33 @@ impl ExecData {
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
                                                         }
                                                     }
-                                                    if !(is_there_else_block) {
-                                                        if_part = block_code.to_vec();
+                                                    if is_there_elif_block && is_there_else_block {
+                                                        if_part = block_code[..where_is_elif_block];
+                                                        elif_part = block_code[where_is_elif_block+1..where_is_else_block];
+                                                        else_part = block_code[where_is_else_block+1..];
                                                     }
+                                                    else if is_there_elif_block {
+                                                        if_part = block_code[..where_is_elif_block];
+                                                        elif_part = block_code[where_is_elif_block+1..];
+                                                    }
+                                                    else if is_there_else_block {
+                                                        if_part = block_code[..where_is_else_block];
+                                                        else_part = block_code[where_is_else_block+1..];
+                                                    } else {
+                                                        if_part = block_code[1..];
+                                                    }
+
+                                                    println!("if_part: {:?}", if_part);
+                                                    println!("elif_part: {:?}", elif_part);
+                                                    println!("else_part: {:?}", else_part);
                                                     
                                                     if check_block_code_condition(operator.to_string(), block_code.to_vec()) {
-                                                        *global_variables = execute_block_code(if_part[1..].to_vec(), global_variables.clone());
-                                                    } else if is_there_else_block {
+                                                        *global_variables = execute_block_code(if_part.to_vec(), global_variables.clone());
+                                                    }
+                                                    else if is_there_elif_block && is_elif_block_true {
+                                                        *global_variables = execute_block_code(elif_part.to_vec(), global_variables.clone());
+                                                    }
+                                                    else if is_there_else_block {
                                                         *global_variables = execute_block_code(else_part, global_variables.clone());
                                                     }
                                                 },
@@ -365,10 +401,7 @@ impl ExecData {
                         block_code.push(token_collection.clone());
                     }
                     else if current_block_type.0 == "function" {
-                        if v == "FN" {
-                            println!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
-                            return;
-                        }
+                        // function in function already checked
                         functions.get_mut(&current_block_type.1).unwrap().push(token_collection.clone());
                     }
                     
