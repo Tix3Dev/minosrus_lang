@@ -4,6 +4,7 @@ use crate::tokenizer;
 use std::collections::HashMap;
 use std::process;
 
+#[derive(Clone)]
 enum OrderEnum {
     SingleOption(Vec<&'static str>),
     MultipleOptions(Vec<Vec<&'static str>>)
@@ -20,6 +21,168 @@ fn subtract_indentation(indentation: &mut String) {
         *indentation = indentation[..4].to_string();
     }
 }
+
+fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, predefined_name_order: HashMap<&str, OrderEnum>) -> bool { 
+    match &line[0].1 {
+        tokenizer::ValueEnum::String(clean) => {
+            match predefined_name_order.get(&clean.as_str()) {
+                Some(value) => {
+                    // check if the key of the first token has multiple options 
+                    match value {
+                        OrderEnum::SingleOption(v) => {
+                            // length check - otherwise the indexing would panic
+                            if line.len() < v.len() {
+                                println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
+                                return false;
+                            }
+                            if line.len() > v.len() {
+                                println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
+                                return false;
+                            }
+
+                            // analyse if order of key and value is right
+                            let mut is_key_order_right = true;
+                            let mut is_value_order_right = true;
+
+                            for element_nr in 0..v.len() {
+                                // check if key is right
+                                if line[element_nr].0 != v[element_nr].split(':').nth(0).unwrap() {
+                                    is_key_order_right= false;
+                                    break;
+                                }
+                                // check if value is right
+                                match &line[element_nr].1 {
+                                    tokenizer::ValueEnum::String(tc) => {
+                                        if tc != v[element_nr].split(':').nth(1).unwrap() && v[element_nr].split(':').nth(1).unwrap() != "?" {
+                                            is_value_order_right = false;
+                                            break; 
+                                        }
+                                    },
+                                    _ => () 
+                                }
+                            }
+                            if !(is_key_order_right) {
+                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                print!("HELP: RIGHT ORDER: '");
+                                for e_nr in 0..v.len() {
+                                    if e_nr == v.len() - 1 {
+                                        println!("{}'", v[e_nr].split(':').nth(0).unwrap());
+                                    } else {
+                                        print!("{}, ", v[e_nr].split(':').nth(0).unwrap());
+                                    }
+                                }
+                                return false;
+                            }
+                            if !(is_value_order_right) {
+                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                print!("HELP: RIGHT ORDER: '");
+                                for e_nr in 0..v.len() {
+                                    if e_nr == v.len() - 1 {
+                                        println!("{}'", v[e_nr].split(':').nth(1).unwrap());
+                                    } else {
+                                        println!("{}, ", v[e_nr].split(':').nth(1).unwrap());
+                                    }
+                                }
+                                return false;
+                            }
+                        },
+                        OrderEnum::MultipleOptions(v) => {
+                            // length check - otherwise the indexing would panic
+                            let mut too_few_tokens = false;
+                            let mut too_many_tokens = false;
+                            for possibility_nr in 0..v.len() {
+                                if line.len() < v[possibility_nr].len() {
+                                    too_few_tokens = true;
+                                }
+                                if line.len() > v[possibility_nr].len() {
+                                    too_many_tokens = true;
+                                }
+                            }
+                            if too_few_tokens {
+                                println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
+                                return false;
+                            }
+                            if too_many_tokens {
+                                println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
+                                return false;
+                            }
+ 
+                            // analyse if order of key and value is right
+                            let mut is_one_token_order_right = false;
+                            let mut is_one_value_order_right = false;
+                            // iterate trough possibilitys
+                            for possibility_nr in 0..v.len() {
+                                let mut is_current_token_order_right = true;
+                                let mut is_current_value_order_right = true;
+
+                                for element_nr in 0..v[possibility_nr].len() {
+                                    // check if key is right
+                                    if line[element_nr].0 != v[possibility_nr][element_nr].split(':').nth(0).unwrap() {
+                                        is_current_token_order_right = false;
+                                    }
+                                    // check if value is right
+                                    match &line[element_nr].1 {
+                                        tokenizer::ValueEnum::String(tc) => {
+                                            if tc != v[possibility_nr][element_nr].split(':').nth(1).unwrap() && v[possibility_nr][element_nr].split(':').nth(1).unwrap() != "?"{
+                                                is_current_value_order_right = false;
+                                            }
+                                        },
+                                        _ => ()
+                                    }
+                                }
+                                if is_current_token_order_right {
+                                    is_one_token_order_right = true;
+                                }
+                                if is_current_value_order_right {
+                                    is_one_value_order_right = true;
+                                }
+                            }
+                            // print help - show all possible orders 
+                            if !(is_one_token_order_right) {
+                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
+                                for p_nr in 0..v.len() {
+                                    print!("{}: '", p_nr+1);
+                                    for e_nr in 0..v[p_nr].len() {
+                                        if e_nr == v[p_nr].len() - 1 {
+                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        } else {
+                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        }
+                                    }
+                                }
+                                return false;
+                            }
+                            if !(is_one_value_order_right) {
+                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
+                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
+                                for p_nr in 0..v.len() {
+                                    print!("{}: '", p_nr+1);
+                                    for e_nr in 0..v[p_nr].len() {
+                                        if e_nr == v[p_nr].len() - 1 {
+                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        } else {
+                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
+                                        }
+                                    }
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                },
+                None => {
+                    println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
+                    return false;
+                }
+            }
+        },
+        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+    }
+
+    return true;
+}
+
 
 fn execute_block_code(block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, global_variables: HashMap<String, tokenizer::ValueEnum>) -> HashMap<String, tokenizer::ValueEnum> {
     let mut code_block_exec_data_variable = ExecData::new();
@@ -264,6 +427,305 @@ impl ExecData {
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
+        
+        // order of predefined names for checking and if the value is set the value
+        let predefined_name_order = {
+            let mut hashmap = HashMap::new();
+
+            hashmap.insert("LET", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:LET", 
+                    "VARIABLE/FUNCTION_NAME:?", 
+                    "EQUAL_SIGN:=", 
+                    "STRING:?"
+                ], 
+                vec![
+                    "PREDEFINED_NAME:LET", 
+                    "VARIABLE/FUNCTION_NAME:?", 
+                    "EQUAL_SIGN:=", 
+                    "INTEGER:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:LET", 
+                    "VARIABLE/FUNCTION_NAME:?", 
+                    "EQUAL_SIGN:=", 
+                    "STRING_ARRAY:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:LET", 
+                    "VARIABLE/FUNCTION_NAME:?", 
+                    "EQUAL_SIGN:=", 
+                    "INTEGER_ARRAY:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:LET", 
+                    "VARIABLE/FUNCTION_NAME:?", 
+                    "EQUAL_SIGN:=", 
+                    "VARIABLE/FUNCTION_NAME:?"
+                ]
+            ]));
+
+            hashmap.insert("PRINT", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:PRINT", 
+                    "STRING:?"
+                ], 
+                vec![
+                    "PREDEFINED_NAME:PRINT", 
+                    "INTEGER:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:PRINT", 
+                    "VARIABLE/FUNCTION_NAME:?"
+                ], 
+            ]));
+
+            hashmap.insert("FN", OrderEnum::SingleOption(
+            vec![
+                "PREDEFINED_NAME:FN", 
+                "VARIABLE/FUNCTION_NAME:?", 
+                "PREDEFINED_NAME:START"
+            ]));
+
+            hashmap.insert("DO", OrderEnum::SingleOption(
+            vec![
+                "PREDEFINED_NAME:DO", 
+                "VARIABLE/FUNCTION_NAME:?", 
+            ]));
+
+            hashmap.insert("IF", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:IF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ]
+            ]));
+
+            hashmap.insert("ELIF", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:ELIF",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ]
+            ]));
+
+
+            hashmap.insert("WHILE", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "STRING:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "INTEGER:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "STRING:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:START"
+                ],
+                vec![
+                    "PREDEFINED_NAME:WHILE",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "COMPARING_OPERATOR:?",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:START"
+                ]
+            ]));
+
+            hashmap.insert("PUSH", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:PUSH",
+                    "STRING:?",
+                    "PREDEFINED_NAME:ONTO",
+                    "VARIABLE/FUNCTION_NAME:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:PUSH",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:ONTO",
+                    "VARIABLE/FUNCTION_NAME:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:PUSH",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:ONTO",
+                    "VARIABLE/FUNCTION_NAME:?"
+                ]
+            ]));
+
+            hashmap.insert("POP", OrderEnum::SingleOption(
+            vec![
+                "PREDEFINED_NAME:POP",
+                "PREDEFINED_NAME:FROM",
+                "VARIABLE/FUNCTION_NAME:?"
+            ]));
+
+            hashmap.insert("INSERT", OrderEnum::MultipleOptions(
+            vec![
+                vec![
+                    "PREDEFINED_NAME:INSERT",
+                    "STRING:?",
+                    "PREDEFINED_NAME:INTO",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:AT",
+                    "INTEGER:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:INSERT",
+                    "INTEGER:?",
+                    "PREDEFINED_NAME:INTO",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:AT",
+                    "INTEGER:?"
+                ],
+                vec![
+                    "PREDEFINED_NAME:INSERT",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:INTO",
+                    "VARIABLE/FUNCTION_NAME:?",
+                    "PREDEFINED_NAME:AT",
+                    "INTEGER:?"
+                ]
+            ]));
+
+            hashmap.insert("REMOVE", OrderEnum::SingleOption(
+            vec![
+                "PREDEFINED_NAME:REMOVE",
+                "PREDEFINED_NAME:FROM",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "INTEGER:?"
+            ]));
+
+
+            hashmap
+        };
+
+
 
         // check for code block stuff
         if indentation.to_string() != "".to_string() {
@@ -289,9 +751,8 @@ impl ExecData {
                                         if first_predefined_name == "IF" {
                                             match &block_code[0][2].1 {
                                                 tokenizer::ValueEnum::String(operator) => {
-                                                    let mut if_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![]; 
-                                                    let mut elif_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![]; 
-                                                    let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![];
+                                                    let mut elif_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new(); 
+                                                    let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
 
                                                     let mut is_there_elif_block = false;
                                                     let mut is_elif_block_true = false;
@@ -304,14 +765,87 @@ impl ExecData {
                                                         match &line[0].1 {
                                                             tokenizer::ValueEnum::String(first_token) => {
                                                                 if first_token == "ELIF" {
+                                                                    println!("we str nowwwwwwww in elif");
                                                                     is_there_elif_block = true;
                                                                     where_is_elif_block = line_position;
                                                                     
+                                                                    // check key and value order
+                                                                    if !(is_key_and_value_order_right(line.to_vec(), predefined_name_order.clone())) {
+                                                                        return;
+                                                                    }
+                                                                    println!("we are still in elifffffffffffffffffff");
+
                                                                     // evaluate left and right side of elif
-                                                                    // check key and value order -> important to print error if it's false
-                                                                    // 
-                                                                    // if check_block_code_condition(operator.to_string(), block_code.to_vec())
-                                                                    //     is_elif_block_true = true
+                                                                    let mut line_clone = line.clone();
+
+                                                                    if line[1].0 == "VARIABLE/FUNCTION_NAME" {
+                                                                        match &line[1].1 {
+                                                                            tokenizer::ValueEnum::String(variable_name) => {
+                                                                                match global_variables.get(variable_name) {
+                                                                                    Some(value_of_variable) => {
+                                                                                        match value_of_variable {
+                                                                                            tokenizer::ValueEnum::String(v) => {
+                                                                                                line_clone[1].0 = "STRING".to_string();
+                                                                                                line_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
+                                                                                            },
+                                                                                            tokenizer::ValueEnum::Integer(v) => {
+                                                                                                line_clone[1].0 = "INTEGER".to_string();
+                                                                                                line_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                                            },
+                                                                                            _ => {
+                                                                                                println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                                                return;
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    None => {
+                                                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                                        return;
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                                        }
+                                                                    }
+                                                                    if line[3].0 == "VARIABLE/FUNCTION_NAME" {
+                                                                        match &line[3].1 {
+                                                                            tokenizer::ValueEnum::String(variable_name) => {
+                                                                                match global_variables.get(variable_name) {
+                                                                                    Some(value_of_variable) => {
+                                                                                        match value_of_variable {
+                                                                                            tokenizer::ValueEnum::String(v) => {
+                                                                                                line_clone[3].0 = "STRING".to_string();
+                                                                                                line_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
+                                                                                            },
+                                                                                            tokenizer::ValueEnum::Integer(v) => {
+                                                                                                line_clone[3].0 = "INTEGER".to_string();
+                                                                                                line_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                                            },
+                                                                                            _ => {
+                                                                                                println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                                                return;
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    None => {
+                                                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                                        return;
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                                        }
+                                                                    }
+
+                                                                    // check if elif condition is true
+                                                                    match &line[2].1 {
+                                                                        tokenizer::ValueEnum::String(elif_operator) => {
+                                                                            if check_block_code_condition(elif_operator.to_string(), vec![line_clone]) {
+                                                                                is_elif_block_true = true;
+                                                                            }
+                                                                        },
+                                                                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                                    }
                                                                 }
                                                                 if first_token == "ELSE" {
                                                                     if line.len() == 1 {
@@ -326,26 +860,23 @@ impl ExecData {
                                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED")
                                                         }
                                                     }
-                                                    if is_there_elif_block && is_there_else_block {
-                                                        if_part = block_code[..where_is_elif_block];
-                                                        elif_part = block_code[where_is_elif_block+1..where_is_else_block];
-                                                        else_part = block_code[where_is_else_block+1..];
+                                                    let if_part = if is_there_elif_block && is_there_else_block {
+                                                        elif_part = block_code[where_is_elif_block+1..where_is_else_block].to_vec();
+                                                        else_part = block_code[where_is_else_block+1..].to_vec();
+                                                        block_code[..where_is_elif_block].to_vec()
                                                     }
                                                     else if is_there_elif_block {
-                                                        if_part = block_code[..where_is_elif_block];
-                                                        elif_part = block_code[where_is_elif_block+1..];
+                                                        elif_part = block_code[where_is_elif_block+1..].to_vec();
+                                                        block_code[..where_is_elif_block].to_vec()
                                                     }
                                                     else if is_there_else_block {
-                                                        if_part = block_code[..where_is_else_block];
-                                                        else_part = block_code[where_is_else_block+1..];
+                                                        else_part = block_code[where_is_else_block+1..].to_vec();
+                                                        block_code[..where_is_else_block].to_vec()
                                                     } else {
-                                                        if_part = block_code[1..];
-                                                    }
+                                                        block_code[1..].to_vec()
+                                                    };
 
-                                                    println!("if_part: {:?}", if_part);
-                                                    println!("elif_part: {:?}", elif_part);
-                                                    println!("else_part: {:?}", else_part);
-                                                    
+
                                                     if check_block_code_condition(operator.to_string(), block_code.to_vec()) {
                                                         *global_variables = execute_block_code(if_part.to_vec(), global_variables.clone());
                                                     }
@@ -411,200 +942,22 @@ impl ExecData {
             }
 
             return;
-        }
-
-        // order of predefined names for checking and if the value is set the value
-        let predefined_name_order = {
-            let mut hashmap = HashMap::new();
-
-            hashmap.insert("LET", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:LET", 
-                    "VARIABLE/FUNCTION_NAME:?", 
-                    "EQUAL_SIGN:=", 
-                    "STRING:?"
-                ], 
-                vec![
-                    "PREDEFINED_NAME:LET", 
-                    "VARIABLE/FUNCTION_NAME:?", 
-                    "EQUAL_SIGN:=", 
-                    "INTEGER:?"
-                ],
-                vec![
-                    "PREDEFINED_NAME:LET", 
-                    "VARIABLE/FUNCTION_NAME:?", 
-                    "EQUAL_SIGN:=", 
-                    "STRING_ARRAY:?"
-                ],
-                vec![
-                    "PREDEFINED_NAME:LET", 
-                    "VARIABLE/FUNCTION_NAME:?", 
-                    "EQUAL_SIGN:=", 
-                    "INTEGER_ARRAY:?"
-                ]
-            ]));
-
-            hashmap.insert("PRINT", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:PRINT", 
-                    "STRING:?"
-                ], 
-                vec![
-                    "PREDEFINED_NAME:PRINT", 
-                    "INTEGER:?"
-                ] 
-            ]));
-
-            hashmap.insert("FN", OrderEnum::SingleOption(
-            vec![
-                "PREDEFINED_NAME:FN", 
-                "VARIABLE/FUNCTION_NAME:?", 
-                "PREDEFINED_NAME:START"
-            ]));
-
-            hashmap.insert("DO", OrderEnum::SingleOption(
-            vec![
-                "PREDEFINED_NAME:DO", 
-                "VARIABLE/FUNCTION_NAME:?", 
-            ]));
-
-            hashmap.insert("IF", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:IF",
-                    "STRING:?",
-                    "COMPARING_OPERATOR:?",
-                    "STRING:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:IF",
-                    "INTEGER:?",
-                    "COMPARING_OPERATOR:?",
-                    "INTEGER:?",
-                    "PREDEFINED_NAME:START"
-                ]
-            ]));
-
-            hashmap.insert("WHILE", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "STRING:?",
-                    "COMPARING_OPERATOR:?",
-                    "STRING:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "INTEGER:?",
-                    "COMPARING_OPERATOR:?",
-                    "INTEGER:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "STRING:?",
-                    "COMPARING_OPERATOR:?",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "INTEGER:?",
-                    "COMPARING_OPERATOR:?",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "COMPARING_OPERATOR:?",
-                    "STRING:?",
-                    "PREDEFINED_NAME:START"
-                ],
-                vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "COMPARING_OPERATOR:?",
-                    "INTEGER:?",
-                    "PREDEFINED_NAME:START"
-                ],vec![
-                    "PREDEFINED_NAME:WHILE",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "COMPARING_OPERATOR:?",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:START"
-                ],
-            ]));
-
-            hashmap.insert("PUSH", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:PUSH",
-                    "STRING:?",
-                    "PREDEFINED_NAME:ONTO",
-                    "VARIABLE/FUNCTION_NAME:?"
-                ],
-                vec![
-                    "PREDEFINED_NAME:PUSH",
-                    "INTEGER:?",
-                    "PREDEFINED_NAME:ONTO",
-                    "VARIABLE/FUNCTION_NAME:?"
-                ]
-            ]));
-
-            hashmap.insert("POP", OrderEnum::SingleOption(
-            vec![
-                "PREDEFINED_NAME:POP",
-                "PREDEFINED_NAME:FROM",
-                "VARIABLE/FUNCTION_NAME:?"
-            ]));
-
-            hashmap.insert("INSERT", OrderEnum::MultipleOptions(
-            vec![
-                vec![
-                    "PREDEFINED_NAME:INSERT",
-                    "STRING:?",
-                    "PREDEFINED_NAME:INTO",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:AT",
-                    "INTEGER:?"
-                ],
-                vec![
-                    "PREDEFINED_NAME:INSERT",
-                    "INTEGER:?",
-                    "PREDEFINED_NAME:INTO",
-                    "VARIABLE/FUNCTION_NAME:?",
-                    "PREDEFINED_NAME:AT",
-                    "INTEGER:?"
-                ]
-            ]));
-
-            hashmap.insert("REMOVE", OrderEnum::SingleOption(
-            vec![
-                "PREDEFINED_NAME:REMOVE",
-                "PREDEFINED_NAME:FROM",
-                "VARIABLE/FUNCTION_NAME:?",
-                "PREDEFINED_NAME:AT",
-                "INTEGER:?"
-            ]));
+        }        
 
 
-            hashmap
-        };
-        
-
-        // *check order of keys and values* //
-        
+        // *check order of keys and values + evaluation* //
+                
         let first_key_element = &token_collection[0].0;
 
         if first_key_element != "PREDEFINED_NAME" {
             println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
             return;
         } 
+
+        // check if key and value order is right
+        if !(is_key_and_value_order_right(token_collection.to_vec(), predefined_name_order.clone())) {
+            return;
+        }
 
         // evaluate value for LET, PRINT, IF, PUSH, INSERT
         if token_collection.len() > 0 {
@@ -825,162 +1178,6 @@ impl ExecData {
             token_collection = token_collection_clone;
         }
 
-        match &token_collection[0].1 {
-            tokenizer::ValueEnum::String(clean) => {
-                match predefined_name_order.get(&clean.as_str()) {
-                    Some(value) => {
-                        // check if the key of the first token has multiple options 
-                        match value {
-                            OrderEnum::SingleOption(v) => {
-                                // length check - otherwise the indexing would panic
-                                if token_collection.len() < v.len() {
-                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
-                                    return;
-                                }
-                                if token_collection.len() > v.len() {
-                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
-                                    return;
-                                }
-
-                                // analyse if order of key and value is right
-                                let mut is_key_order_right = true;
-                                let mut is_value_order_right = true;
-
-                                for element_nr in 0..v.len() {
-                                    // check if key is right
-                                    if token_collection[element_nr].0 != v[element_nr].split(':').nth(0).unwrap() {
-                                        is_key_order_right= false;
-                                        break;
-                                    }
-                                    // check if value is right
-                                    match &token_collection[element_nr].1 {
-                                        tokenizer::ValueEnum::String(tc) => {
-                                            if tc != v[element_nr].split(':').nth(1).unwrap() && v[element_nr].split(':').nth(1).unwrap() != "?" {
-                                                is_value_order_right = false;
-                                                break; 
-                                            }
-                                        },
-                                        _ => () 
-                                    }
-                                }
-                                if !(is_key_order_right) {
-                                    println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                    print!("HELP: RIGHT ORDER: '");
-                                    for e_nr in 0..v.len() {
-                                        if e_nr == v.len() - 1 {
-                                            println!("{}'", v[e_nr].split(':').nth(0).unwrap());
-                                        } else {
-                                            print!("{}, ", v[e_nr].split(':').nth(0).unwrap());
-                                        }
-                                    }
-                                    return;
-                                }
-                                if !(is_value_order_right) {
-                                    println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                    print!("HELP: RIGHT ORDER: '");
-                                    for e_nr in 0..v.len() {
-                                        if e_nr == v.len() - 1 {
-                                            println!("{}'", v[e_nr].split(':').nth(1).unwrap());
-                                        } else {
-                                            println!("{}, ", v[e_nr].split(':').nth(1).unwrap());
-                                        }
-                                    }
-                                    return;
-                                }
-                            },
-                            OrderEnum::MultipleOptions(v) => {
-                                // length check - otherwise the indexing would panic
-                                let mut too_few_tokens = false;
-                                let mut too_many_tokens = false;
-                                for possibility_nr in 0..v.len() {
-                                    if token_collection.len() < v[possibility_nr].len() {
-                                        too_few_tokens = true;
-                                    }
-                                    if token_collection.len() > v[possibility_nr].len() {
-                                        too_many_tokens = true;
-                                    }
-                                }
-                                if too_few_tokens {
-                                    println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
-                                    return;
-                                }
-                                if too_many_tokens {
-                                    println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
-                                    return;
-                                }
-     
-                                // analyse if order of key and value is right
-                                let mut is_one_token_order_right = false;
-                                let mut is_one_value_order_right = false;
-                                // iterate trough possibilitys
-                                for possibility_nr in 0..v.len() {
-                                    let mut is_current_token_order_right = true;
-                                    let mut is_current_value_order_right = true;
-
-                                    for element_nr in 0..v[possibility_nr].len() {
-                                        // check if key is right
-                                        if token_collection[element_nr].0 != v[possibility_nr][element_nr].split(':').nth(0).unwrap() {
-                                            is_current_token_order_right = false;
-                                        }
-                                        // check if value is right
-                                        match &token_collection[element_nr].1 {
-                                            tokenizer::ValueEnum::String(tc) => {
-                                                if tc != v[possibility_nr][element_nr].split(':').nth(1).unwrap() && v[possibility_nr][element_nr].split(':').nth(1).unwrap() != "?"{
-                                                    is_current_value_order_right = false;
-                                                }
-                                            },
-                                            _ => ()
-                                        }
-                                    }
-                                    if is_current_token_order_right {
-                                        is_one_token_order_right = true;
-                                    }
-                                    if is_current_value_order_right {
-                                        is_one_value_order_right = true;
-                                    }
-                                }
-                                // check if just one order is right
-                                if !(is_one_token_order_right) {
-                                    println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                    println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
-                                    for p_nr in 0..v.len() {
-                                        print!("{}: '", p_nr+1);
-                                        for e_nr in 0..v[p_nr].len() {
-                                            if e_nr == v[p_nr].len() - 1 {
-                                                println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                            } else {
-                                                print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                            }
-                                        }
-                                    }
-                                    return;
-                                }
-                                if !(is_one_value_order_right) {
-                                    println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                    println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
-                                    for p_nr in 0..v.len() {
-                                        print!("{}: '", p_nr+1);
-                                        for e_nr in 0..v[p_nr].len() {
-                                            if e_nr == v[p_nr].len() - 1 {
-                                                println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                            } else {
-                                                print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                            }
-                                        }
-                                    }
-                                    return;
-                                }
-                            }
-                        }
-                    },
-                    None => {
-                        println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
-                        return;
-                    }
-                }
-            },
-            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-        }
 
         // * real execution part * //
         
@@ -1255,9 +1452,6 @@ impl ExecData {
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
 
-                }
-                else if v == &"GET".to_string() {
-                    //
                 }
             }, 
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
