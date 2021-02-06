@@ -788,7 +788,7 @@ impl ExecData {
                                                                     }
 
                                                                     // check if elif condition is true
-                                                                    match &line[2].1 {
+                                                                    match &line_clone[2].1 {
                                                                         tokenizer::ValueEnum::String(elif_operator) => {
                                                                             if check_block_code_condition(elif_operator.to_string(), vec![line_clone]) {
                                                                                 is_elif_block_true = true;
