@@ -62,27 +62,11 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                                 }
                             }
                             if !(is_key_order_right) {
-                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                print!("HELP: RIGHT ORDER: '");
-                                for e_nr in 0..v.len() {
-                                    if e_nr == v.len() - 1 {
-                                        println!("{}'", v[e_nr].split(':').nth(0).unwrap());
-                                    } else {
-                                        print!("{}, ", v[e_nr].split(':').nth(0).unwrap());
-                                    }
-                                }
+                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean); 
                                 return false;
                             }
                             if !(is_value_order_right) {
-                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                print!("HELP: RIGHT ORDER: '");
-                                for e_nr in 0..v.len() {
-                                    if e_nr == v.len() - 1 {
-                                        println!("{}'", v[e_nr].split(':').nth(1).unwrap());
-                                    } else {
-                                        println!("{}, ", v[e_nr].split(':').nth(1).unwrap());
-                                    }
-                                }
+                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean); 
                                 return false;
                             }
                         },
@@ -140,32 +124,10 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                             // print help - show all possible orders
                             if !(is_one_token_order_right) {
                                 println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
-                                for p_nr in 0..v.len() {
-                                    print!("{}: '", p_nr+1);
-                                    for e_nr in 0..v[p_nr].len() {
-                                        if e_nr == v[p_nr].len() - 1 {
-                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                        } else {
-                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                        }
-                                    }
-                                }
                                 return false;
                             }
                             if !(is_one_value_order_right) {
                                 println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                println!("HELP: RIGHT ORDER FOR POSSIBILITY NR. :");
-                                for p_nr in 0..v.len() {
-                                    print!("{}: '", p_nr+1);
-                                    for e_nr in 0..v[p_nr].len() {
-                                        if e_nr == v[p_nr].len() - 1 {
-                                            println!("{}'", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                        } else {
-                                            print!("{}, ", v[p_nr][e_nr].split(':').nth(0).unwrap());
-                                        }
-                                    }
-                                }
                                 return false;
                             }
                         }
@@ -637,6 +599,12 @@ impl ExecData {
                     "VARIABLE/FUNCTION_NAME:?",
                     "PREDEFINED_NAME:AT",
                     "INTEGER:?"
+                ]));
+
+            hashmap.insert("HELP_FOR", OrderEnum::SingleOption(
+                vec![
+                    "PREDEFINED_NAME:HELP_FOR",
+                    "PREDEFINED_NAME:?",
                 ]));
 
 
@@ -1369,6 +1337,47 @@ impl ExecData {
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
 
+                }
+                else if v == &"HELP_FOR".to_string() {
+                    match &token_collection[1].1 {
+                        tokenizer::ValueEnum::String(keyword) => {
+                            match predefined_name_order.get(&keyword.as_str()) {
+                                Some(order_collection) => {
+                                    match order_collection {
+                                        OrderEnum::SingleOption(v) => {
+                                            println!("-SINGLE OPTION-");
+                                            print!("1: '");
+                                            for e_nr in 0..v.len() {
+                                                if e_nr == v.len() - 1 {
+                                                    println!("{}'", v[e_nr]);
+                                                } else {
+                                                    print!("{}, ", v[e_nr]);
+                                                }
+                                            }
+                                        },
+                                        OrderEnum::MultipleOptions(v) => {
+                                            println!("-MULTIPLE OPTIONS-");
+                                            for p_nr in 0..v.len() {
+                                                print!("{}: '", p_nr+1);
+                                                for e_nr in 0..v[p_nr].len() {
+                                                    if e_nr == v[p_nr].len() - 1 {
+                                                        println!("{}'", v[p_nr][e_nr]);
+                                                    } else {
+                                                        print!("{}, ", v[p_nr][e_nr]);
+                                                    }
+                                                }
+                                            }
+                                        }    
+                                    }
+                                },
+                                None => {
+                                    println!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword);
+                                    return;
+                                }
+                            }
+                        },
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                    }
                 }
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
