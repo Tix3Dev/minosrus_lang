@@ -6,6 +6,3 @@
 ( - implement test cases (tokenizing) )
 
 - arrays that can contain different types -> empty arrays are possible
-
-- new keyword: HELP_FOR
-	- instead of printing all possible orders when an error is thrown
