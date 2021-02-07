@@ -442,7 +442,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         // array check
         else if part.chars().nth(0).unwrap() == '[' && part.chars().rev().nth(0).unwrap() == ']' {
             let mut array = part.clone();
-        
+             
             // remove [ and ]
             array.remove(0);
             array.remove(array.len() - 1);
@@ -455,16 +455,17 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
             
             // check if there is a comma at the beginning or at the end - otherwise wrong error message would occur
             if array.trim().chars().nth(0).unwrap() == ',' {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT THE BEGINNING OF THE ARRAY; NOT ALLOWED!".to_string())));
                 break;
             }
             if array.trim().chars().rev().nth(0).unwrap() == ',' {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT THE END OF THE ARRAY; NOT ALLOWED!".to_string())));
                 break;
             } else {
                 array.push(',');
             }
         
+            // acutal spliting
             let mut split_of_array: Vec<ArrayTypesEnum> = vec![];
             let mut current_element = String::new();
             let mut is_string_active = false;
@@ -472,9 +473,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
             let mut valid_for_next_element = true;
         
             for (position, character) in array.chars().enumerate() {
-                println!("{}", character);
                 if is_string_active && character != '"' && position == array.len() - 1 {
-                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING ISN'T CLOSED!".to_string())));
+                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING IN THE ARRAY ISN'T CLOSED!".to_string())));
                     break;
                 }
                 if character == '"' {
@@ -483,7 +483,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                         is_string_active = true;
                     }
                     else if is_integer_active {
-                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
                         break;
                     }
                     else if is_string_active {
@@ -500,7 +500,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                             current_element.push(character);
                             is_integer_active = true;
                         } else {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
                             break;
                         }
                     }
@@ -510,7 +510,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                         if !(valid_for_next_element) {
                             valid_for_next_element = true;
                         } else {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TO MANY COMMAS!".to_string())));
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY COMMAS IN THE ARRAY!".to_string())));
                             break;
                         }
                     }
@@ -538,14 +538,14 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                             is_integer_active = true;
                         } else {
                             if character != ' ' {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
                                 break;   
                             }
                         }
                     }
                     else if is_string_active {
                         if !(allowed_string_inner_part_characters.contains(&character)) {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING IN THE ARRAY!".to_string())));
                             break;
                         }
                         current_element.push(character);
@@ -567,7 +567,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                                 }
                             }
                         } else {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
                             break;
                         }
                     }
