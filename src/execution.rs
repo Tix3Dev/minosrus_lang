@@ -330,13 +330,7 @@ impl ExecData {
                         "PREDEFINED_NAME:LET",
                         "VARIABLE/FUNCTION_NAME:?",
                         "EQUAL_SIGN:=",
-                        "STRING_ARRAY:?"
-                    ],
-                    vec![
-                        "PREDEFINED_NAME:LET",
-                        "VARIABLE/FUNCTION_NAME:?",
-                        "EQUAL_SIGN:=",
-                        "INTEGER_ARRAY:?"
+                        "ARRAY:?"
                     ],
                     vec![
                         "PREDEFINED_NAME:LET",
@@ -869,13 +863,9 @@ impl ExecData {
                                                                             token_collection_clone[3].0 = "INTEGER".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
-                                                                        tokenizer::ValueEnum::IntegerArray(v) => {
-                                                                            token_collection_clone[3].0 = "INTEGER_ARRAY".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::IntegerArray(v.to_vec());
-                                                                        },
-                                                                        tokenizer::ValueEnum::StringArray(v) => {
-                                                                            token_collection_clone[3].0 = "STRING_ARRAY".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::StringArray(v.to_vec());
+                                                                        tokenizer::ValueEnum::Array(v) => {
+                                                                            token_collection_clone[3].0 = "ARRAY".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Array(v.to_vec());
                                                                         }
                                                                     }
                                                                 },
@@ -1083,10 +1073,7 @@ impl ExecData {
                     else if &token_collection[3].0 == &"VARIABLE/FUNCTION_NAME".to_string() {
                         self.global_variables.insert(variable_name, token_collection[3].1.clone());
                     }
-                    else if &token_collection[3].0 == &"STRING_ARRAY".to_string() {
-                        self.global_variables.insert(variable_name, token_collection[3].1.clone());
-                    }
-                    else if &token_collection[3].0 == &"INTEGER_ARRAY".to_string() {
+                    else if &token_collection[3].0 == &"ARRAY".to_string() {
                         self.global_variables.insert(variable_name, token_collection[3].1.clone());
                     }
                 }
@@ -1168,28 +1155,20 @@ impl ExecData {
                             match self.global_variables.get(stuff) {
                                 Some(value) => {
                                     match &value {
-                                        tokenizer::ValueEnum::IntegerArray(i_vec) => {
-                                            match &token_collection[1].1 {
-                                                tokenizer::ValueEnum::Integer(stuff_to_push) => {
-                                                    let mut i_vec_clone = i_vec.clone();
-                                                    i_vec_clone.push(*stuff_to_push);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
-                                                }
-                                                _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER ONTO A INTEGER ARRAY!");
-                                                    return;
-                                                }
-                                            }
-                                        },
-                                        tokenizer::ValueEnum::StringArray(s_vec) => {
+                                        tokenizer::ValueEnum::Array(vec) => {
                                             match &token_collection[1].1 {
                                                 tokenizer::ValueEnum::String(stuff_to_push) => {
-                                                    let mut s_vec_clone = s_vec.clone();
-                                                    s_vec_clone.push(stuff_to_push.to_string());
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
-                                                }
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.push(tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                                },
+                                                tokenizer::ValueEnum::Integer(stuff_to_push) => {
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.push(tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                                },
                                                 _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO PUSH AN STRING ONTO A STRING ARRAY!");
+                                                    println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER OR A STRING ONTO AN ARRAY!");
                                                     return;
                                                 }
                                             }
@@ -1216,15 +1195,10 @@ impl ExecData {
                             match self.global_variables.get(stuff) {
                                 Some(value) => {
                                     match &value {
-                                        tokenizer::ValueEnum::IntegerArray(i_vec) => {
-                                            let mut i_vec_clone = i_vec.clone();
-                                            i_vec_clone.pop();
-                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
-                                        },
-                                        tokenizer::ValueEnum::StringArray(s_vec) => {
-                                            let mut s_vec_clone = s_vec.clone();
-                                            s_vec_clone.pop();
-                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
+                                        tokenizer::ValueEnum::Array(vec) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone.pop();
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                         },
                                         _ => {
                                             println!("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!");
@@ -1247,38 +1221,31 @@ impl ExecData {
                             match self.global_variables.get(stuff) {
                                 Some(value) => {
                                     match &value {
-                                        tokenizer::ValueEnum::IntegerArray(i_vec) => {
-                                            match &token_collection[1].1 {
-                                                tokenizer::ValueEnum::Integer(stuff_to_push) => {
-                                                    match &token_collection[5].1 {
-                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
-                                                            let mut i_vec_clone = i_vec.clone();
-                                                            i_vec_clone.insert(*index_where_to_insert as usize, *stuff_to_push);
-                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
-                                                        },
-                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
-                                                    }
-                                                },
-                                                _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
-                                                    return;
-                                                }
-                                            }
-                                        },
-                                        tokenizer::ValueEnum::StringArray(s_vec) => {
+                                        tokenizer::ValueEnum::Array(vec) => {
                                             match &token_collection[1].1 {
                                                 tokenizer::ValueEnum::String(stuff_to_push) => {
                                                     match &token_collection[5].1 {
                                                         tokenizer::ValueEnum::Integer(index_where_to_insert) => {
-                                                            let mut s_vec_clone = s_vec.clone();
-                                                            s_vec_clone.insert(*index_where_to_insert as usize, stuff_to_push.to_string());
-                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
+                                                            let mut vec_clone = vec.clone();
+                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
+                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                         },
                                                         _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
                                                     }
                                                 },
+                                                tokenizer::ValueEnum::Integer(stuff_to_push) => {
+                                                    match &token_collection[5].1 {
+                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
+                                                            let mut vec_clone = vec.clone();
+                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
+                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                                        },
+                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
+                                                    }
+                                                },
+
                                                 _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO INSERT AN STRING INTO A STRING ARRAY!");
+                                                    println!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
                                                     return;
                                                 }
                                             }
@@ -1305,22 +1272,12 @@ impl ExecData {
                             match self.global_variables.get(stuff) {
                                 Some(value) => {
                                     match &value {
-                                        tokenizer::ValueEnum::IntegerArray(i_vec) => {
+                                        tokenizer::ValueEnum::Array(vec) => {
                                             match &token_collection[4].1 {
                                                 tokenizer::ValueEnum::Integer(index_where_to_remove) => {
-                                                    let mut i_vec_clone = i_vec.clone();
-                                                    i_vec_clone.remove(*index_where_to_remove as usize);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::IntegerArray(i_vec_clone);
-                                                },
-                                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                            }
-                                        },
-                                        tokenizer::ValueEnum::StringArray(s_vec) => {
-                                            match &token_collection[4].1 {
-                                                tokenizer::ValueEnum::Integer(index_where_to_remove) => {
-                                                    let mut s_vec_clone = s_vec.clone();
-                                                    s_vec_clone.remove(*index_where_to_remove as usize);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::StringArray(s_vec_clone);
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.remove(*index_where_to_remove as usize);
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                             }
