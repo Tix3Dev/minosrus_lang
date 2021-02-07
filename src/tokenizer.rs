@@ -1,9 +1,13 @@
 #[derive(Debug, Clone)]
+pub enum ArrayTypesEnum {
+    String(String),
+    Integer(i32)
+}
+#[derive(Debug, Clone)]
 pub enum ValueEnum {
     String(String),
     Integer(i32),
-    IntegerArray(Vec<i32>),
-    StringArray(Vec<String>)
+    Array(Vec<ArrayTypesEnum>),
 }
 
 pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
@@ -18,8 +22,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         "EQUAL_SIGN".to_string(),
         "STRING".to_string(),
         "INTEGER".to_string(),
-        "STRING_ARRAY".to_string(),
-        "INTEGER_ARRAY".to_string(),
+        "ARRAY".to_string(),
         "COMMENT".to_string(),
         "VARIABLE/FUNCTION_NAME".to_string()
     ];
@@ -133,7 +136,8 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         '.',
         ':',
         '!',
-        '?'
+        '?',
+        ' '
     ];
    
     /*
@@ -438,168 +442,144 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
         // array check
         else if part.chars().nth(0).unwrap() == '[' && part.chars().rev().nth(0).unwrap() == ']' {
             let mut array = part.clone();
-
+        
             // remove [ and ]
             array.remove(0);
             array.remove(array.len() - 1);
-
+        
             // check if array is empty
             if array.trim().is_empty() {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ARRAY IS EMPTY!".to_string()))); 
+                final_tokens.push((token_classification[6].to_string(), ValueEnum::Array(vec![])));
                 break;
             }
-
-            // string elements
-            if part.contains("\"") {
-                // check if there is a comma at the beginning or at the end - otherwise wrong error message would occur
-                if array.trim().chars().nth(0).unwrap() == ',' {
-                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
-                    break;
-                }
-                if array.trim().chars().rev().nth(0).unwrap() == ',' {
-                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
-                    break;
-                }
-
-                let mut split_of_array: Vec<String> = vec![];
-                let mut current_element = String::new();
-                let mut first_quote = true;
-                let mut comma_count = 1;
-
-                for character in array.chars() {
-                    if character == '"' {
-                        if comma_count == 1 {
-                            if first_quote {
-                                current_element.push(character);
-                                first_quote = false;
-                            } else {
-                                current_element.push(character);
-                                split_of_array.push(current_element);
-                                current_element = String::new();
-                                comma_count = 0;
-                                first_quote = true;
-                            }
-                        } else if comma_count == 0 {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("COMMA BETWEEN ELEMENTS OF ARRAY MISSING!".to_string())));
-                            break;
-                        } else if comma_count > 1 {
-                            final_tokens.push(("ERROR_MESSAG".to_string(), ValueEnum::String("TOO MANY COMMAS BETWEEN ELEMENTS OF ARRAY!".to_string())));
-                            break;
-                        }
-                    } else {
-                        if !(first_quote) {
-                            if !(allowed_string_inner_part_characters.contains(&character)) {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
-                                break;
-                        }
-                            current_element.push(character);
-                        } else if character == ',' {
-                            comma_count += 1;
-                        } else if character != ' ' {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY! MAYBE THERE A ARE QUOTES MISSING?".to_string())));
-                            break;
-                        }
-                    }
-                }
-
-                final_tokens.push((token_classification[6].to_string(), ValueEnum::StringArray(split_of_array)));
+            
+            // check if there is a comma at the beginning or at the end - otherwise wrong error message would occur
+            if array.trim().chars().nth(0).unwrap() == ',' {
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
+                break;
             }
-            // integer elements
-            else if part.chars().into_iter().any(|c| c.is_numeric()) {
-                if array.trim().chars().nth(0).unwrap() == ',' {
-                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
+            if array.trim().chars().rev().nth(0).unwrap() == ',' {
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
+                break;
+            } else {
+                array.push(',');
+            }
+        
+            let mut split_of_array: Vec<ArrayTypesEnum> = vec![];
+            let mut current_element = String::new();
+            let mut is_string_active = false;
+            let mut is_integer_active = false;
+            let mut valid_for_next_element = true;
+        
+            for (position, character) in array.chars().enumerate() {
+                println!("{}", character);
+                if is_string_active && character != '"' && position == array.len() - 1 {
+                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING ISN'T CLOSED!".to_string())));
                     break;
-
                 }
-                else if array.trim().chars().rev().nth(0).unwrap() == ',' {
-                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE IS A COMMA AT WRONG PLACE IN THE ARRAY!".to_string())));
-                    break;
-
-                } else {
-                    array.push(',');
+                if character == '"' {
+                    if !(is_string_active) && !(is_integer_active) {
+                        current_element.push(character);
+                        is_string_active = true;
+                    }
+                    else if is_integer_active {
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                        break;
+                    }
+                    else if is_string_active {
+                        current_element.push(character);
+                        split_of_array.push(ArrayTypesEnum::String(current_element));
+                        current_element = String::new();
+                        is_string_active = false;
+                        valid_for_next_element = false;
+                    }
                 }
-                
-                let mut split_of_array: Vec<i32> = vec![];
-                let mut current_number = String::new();
-                let mut number_started = false;
-                let mut valid_element = false;
-                let mut comma_count = 1;
-                let mut current_position = 0;
-                
-                for character in array.chars() {
-                    if character == '-' {
-                        if !(array.chars().nth(current_position+1).unwrap().is_numeric()) {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
-                        }
-                        else if current_position != 0 {
-                            if array.chars().nth(current_position-1).unwrap().is_numeric() {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
-                            }
+                else if character == '-' {
+                    if !(is_string_active) && !(is_integer_active) && valid_for_next_element {
+                        if array.chars().nth(position+1).unwrap().is_numeric() {
+                            current_element.push(character);
+                            is_integer_active = true;
                         } else {
-                            current_number.push(character);
-                            number_started = true;
-                            valid_element = true;
-                        }
-                    }
-                    else if character.is_numeric() {
-                        if comma_count == 1 {
-                            if !(number_started) {
-                                current_number.push(character);
-                                number_started = true;
-                                valid_element = true;
-                            }
-                            else if number_started && valid_element {
-                                current_number.push(character);
-                            }
-                            else if number_started && !(valid_element) {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID FORMATION OF ELEMENTS OF ARRAY!".to_string())));
-                                break;
-                            }   
-                        } else if comma_count == 0 {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("COMMA BETWEEN ELEMENTS OF ARRAY MISSING!".to_string())));
-                            break;
-                        } else if comma_count > 1 {
-                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TOO MANY COMMAS BETWEEN ELEMENTS OF ARRAY!".to_string())));
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
                             break;
                         }
                     }
-                    else if character == ' ' {
-                        if number_started {
-                            valid_element = false;
+                }
+                else if character == ',' {
+                    if !(is_string_active) && !(is_integer_active) {
+                        if !(valid_for_next_element) {
+                            valid_for_next_element = true;
+                        } else {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TO MANY COMMAS!".to_string())));
+                            break;
                         }
                     }
-                    else if character == ',' {
-                        match current_number.parse::<i32>() {
+                    else if is_integer_active {
+                        match current_element.parse::<i32>() {
                             Ok(number) => {
-                                split_of_array.push(number);
-                                current_number = String::new();
-                                number_started = false;
-                                valid_element = false;
-                                comma_count = 0;
+                                split_of_array.push(ArrayTypesEnum::Integer(number));
+                                current_element = String::new();
+                                is_integer_active = false;
                             },
                             Err(_) => {
                                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INTEGER ELEMENTS OF AN ARRAY HAVE TO BE I32!".to_string())));
                                 break;
                             }
                         }
-                        comma_count += 1;
-                    } else {
-                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
                     }
-
-                    current_position += 1;
+                } else {
+                    if !(valid_for_next_element) {
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("A COMMA IS MISSING!".to_string())));
+                        break;
+                    }
+                    else if !(is_string_active) && !(is_integer_active) {
+                        if character.is_numeric() {
+                            current_element.push(character);
+                            is_integer_active = true;
+                        } else {
+                            if character != ' ' {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                                break;   
+                            }
+                        }
+                    }
+                    else if is_string_active {
+                        if !(allowed_string_inner_part_characters.contains(&character)) {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING!".to_string())));
+                            break;
+                        }
+                        current_element.push(character);
+                    }
+                    else if is_integer_active {
+                        if character.is_numeric() {
+                            current_element.push(character);   
+                        } else if character == ' ' {
+                            match current_element.parse::<i32>() {
+                                Ok(number) => {
+                                    split_of_array.push(ArrayTypesEnum::Integer(number));
+                                    current_element = String::new();
+                                    is_integer_active = false;
+                                    valid_for_next_element = false;
+                                },
+                                Err(_) => {
+                                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INTEGER ELEMENTS OF AN ARRAY HAVE TO BE I32!".to_string())));
+                                    break;
+                                }
+                            }
+                        } else {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN ARRAY!".to_string())));
+                            break;
+                        }
+                    }
                 }
-
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::IntegerArray(split_of_array)));
-            } else {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ELEMENTS OF ARRAY DON'T SEEM TO BE STRINGS OR INTEGERS!".to_string())));
-                break;
             }
+        
+            final_tokens.push((token_classification[6].to_string(), ValueEnum::Array(split_of_array)));
         }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -615,7 +595,7 @@ pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(part.to_string())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
