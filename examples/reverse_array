@@ -1,6 +1,6 @@
 Repl:
 
-> LET ARR = ["MY", "NAME", IS", "RUSTY"]
+> LET ARR = ["MY", "NAME", "IS", "RUSTY"]
 > LET ARR_LEN = | GET FROM ARR LEN |
 > LET I = 0
 > WHILE I < ARR_LEN START
