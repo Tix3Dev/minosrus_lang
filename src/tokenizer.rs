@@ -6,7 +6,7 @@ pub enum ValueEnum {
     StringArray(Vec<String>)
 }
 
-pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(input: String) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
@@ -136,6 +136,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
         '?'
     ];
    
+    /*
     // check for one verine and if one exists replace input
     if input.contains('|') {
         let input_as_str = input.as_str();
@@ -302,6 +303,7 @@ pub fn make_tokens(mut input: String) -> Vec<(String, ValueEnum)> {
             input = input_as_str[0..verine_positions[0]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
         }
     }
+    */
 
     // split input into parts; strings don't get split; arrays don't get split
     let input = input.trim().to_string() + " ";
