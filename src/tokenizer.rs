@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::tokenizer;
-use crate::verine_expression::Tokenizer;
+use crate::verine_expression::{Tokenizer, Token, TokenizerError};
 
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
@@ -161,390 +161,68 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
 
     // check for one verine and if one exists replace input
     if input.contains('|') {
-        let input_as_str = input.as_str();
-
         // save | positions
         let mut verine_positions: Vec<usize> = vec![];
-        for (index, character) in input_as_str.chars().enumerate() {
+        for (index, character) in input.chars().enumerate() {
             if character == '|' {
                 verine_positions.push(index);
             }
         }
-        // needed error checks for further tokenizing
-        if input_as_str.contains("\"") && verine_positions.len() != 2 {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TWO | EXPECTED (FOR STRING VERINE)!".to_string())));
-            return final_tokens;
-        }
-        if verine_positions.len() % 2 != 0 {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
-            return final_tokens;
-        }
-        if input_as_str[verine_positions[0] + 1..verine_positions[1]].trim().is_empty() {
+
+        if input[verine_positions[0] + 1..verine_positions[1]].trim().is_empty() {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string())));
             return final_tokens;
         }
 
-        let (from, to) = (verine_positions[0] + 1, verine_positions[1]);
-        let mut tokens = Tokenizer::new(&input_as_str[from..to]).tokenize();
-        assert!(!tokens.is_empty());
 
-        use crate::verine_expression::Token;
-        use crate::verine_expression::Operator;
+        if verine_positions.len() % 2 != 0 {
+            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
+            return final_tokens;
+        }
+
+        // needed error checks for further tokenizing
+        if input.contains("\"") && verine_positions.len() != 2 {
+            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TWO | EXPECTED (FOR STRING VERINE)!".to_string())));
+            return final_tokens;
+        }
+
+        /////////
+
+        let (from, to) = (verine_positions[0], verine_positions[1]);
+        let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &global_variables);
+
+        let mut evaluate_to = |result: &str| {
+            input.replace_range(from..=to, result);
+        };
 
         let mut push_error = |message: &str| {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
         };
 
-        let mut evaluate_to = |result: &str| {
-            input.replace_range(from - 1..=to, result);
-        };
-
-        macro_rules! get_global_variable {
-            ($var: ident) => {
-                if let Some(var_token) = global_variables.get($var) {
-                    var_token
-                } else {
-                    push_error(&format!("Variable '{}' does not exist", $var));
-                    return final_tokens;
+        match verine {
+            Ok(token) => {
+                match token {
+                    Token::String(s) => evaluate_to(&format!("\"{}\"", s)),
+                    Token::Number(n) => evaluate_to(&n),
+                    _ => panic!("The tokenizer must evaluate to a value"),
                 }
-            };
-        }
-
-        // Do a first pass for READLN
-        for token in &mut tokens {
-            if matches!(token, Token::ReadLn) {
-                let mut input = String::new();
-                match std::io::stdin().read_line(&mut input) {
-                    Ok(_) => {
-                        input.pop();
-                        *token = Token::String(input)
-                    },
-                    Err(e) => {
-                        push_error(&e.to_string());
-                        return final_tokens;
-                    }
+            }
+            Err(error) => {
+                match error {
+                    TokenizerError::StdInError => push_error("Error reading from stdin"),
+                    TokenizerError::InvalidExpression => push_error("Invalid expression"),
+                    TokenizerError::VariableNotFound(var) => push_error(&format!("Variable '{}' not found", var)),
+                    TokenizerError::NumberParsingError(var) => push_error(&format!("Couldn't parse '{}' into a number", var)),
+                    TokenizerError::InvalidOperator => push_error("Invalid operator"),
+                    TokenizerError::InvalidOperands => push_error("Invalid operands"),
+                    TokenizerError::InvalidIndex(i) => push_error(&format!("'{}' is not a valid index", i)),
+                    TokenizerError::IndexOutOfBounds => push_error("Index out of bounds"),
+                    TokenizerError::TypeNotIndexable => push_error("Type is not indexable"),
+                    TokenizerError::TypeHasNoLength => push_error("Type has no length")
                 }
             }
         }
-
-        // Do a second pass for FROM_STRING and FROM_INTEGER
-        let mut tokens = {
-            let mut new_tokens = vec![];
-            let mut i = 0;
-            while i < tokens.len() - 1 {
-                match (&tokens[i], &tokens[i+1]) {
-                    (Token::StringFrom, Token::Number(n)) => {
-                        new_tokens.push(Token::String(n.to_owned()));
-                        i += 2;
-                    }
-                    (Token::IntegerFrom, Token::String(s)) => {
-                        new_tokens.push(Token::Number(s.to_owned()));
-                        i += 2;
-                    }
-                    (Token::StringFrom | Token::IntegerFrom, _) => {
-                        push_error(&format!("Invalid expression"));
-                        return final_tokens;
-                    }
-                    (token, _) => {
-                        new_tokens.push(token.clone());
-                        i += 1;
-                    }
-                }
-            }
-            new_tokens.push(tokens.last().unwrap().clone());
-            new_tokens
-        };
-
-        // Final pass, evaluation
-        match tokens.first().unwrap() {
-            // Number computation or string interpolation
-            Token::Number(_) | Token::String(_) => {
-                while tokens.len() > 1 {
-                    // We only support binary operations for now
-                    if let [left, Token::Operator(op), right, ..] = tokens.as_slice() {
-                        let result = match (left, right) {
-                            (Token::Number(l), Token::Number(r)) => {
-                                // Supposing they are integers for now
-                                let l = l.parse::<i32>();
-                                let r = r.parse::<i32>();
-
-                                if let (Ok(l), Ok(r)) = (l, r) {
-                                    match op {
-                                        // Ugly
-                                        // We should maybe store a number inside Token::Number but it's good enough for now
-                                        Operator::Plus => Ok(Token::Number((l + r).to_string())),
-                                        Operator::Minus => Ok(Token::Number((l - r).to_string())),
-                                        Operator::Asterisk => Ok(Token::Number((l * r).to_string())),
-                                        Operator::Slash => Ok(Token::Number((l / r).to_string())),
-                                    }
-                                } else {
-                                    Err("Parsing error")
-                                }
-                            }
-                            (Token::String(l), Token::String(r)) => {
-                                match op {
-                                    Operator::Plus => Ok(Token::String(format!("{}{}", l, r))),
-                                    _ => Err("Invalid operator"),
-                                }
-                            }
-                            _ => Err("Invalid operands"),
-                        };
-
-                        match result {
-                            Ok(token) => {
-                                // Replace the first 3 tokens with the result of them
-                                tokens.remove(0);
-                                tokens.remove(0);
-                                tokens[0] = token;
-                            },
-                            Err(message) => {
-                                push_error(message);
-                                return final_tokens;
-                            }
-                        }
-                    } else {
-                        push_error("Invalid expression");
-                        return final_tokens;
-                    }
-                }
-
-                // At the end, everything was calculated into one final token
-                assert_eq!(tokens.len(), 1);
-                match &tokens[0] {
-                    Token::String(string) => {
-                        evaluate_to(&format!("\"{}\"", string));
-                    }
-                    Token::Number(number) => {
-                        evaluate_to(number);
-                    }
-                    _ => {
-                        push_error("Invalid expression");
-                        return final_tokens;
-                    }
-                }
-            }
-            // GET FROM VAR [AT X | LEN]
-            Token::Get => {
-                use Token::*;
-                match tokens.as_slice() {
-                    [Get, From, Id(var), At, index] => {
-                        let var_token: &ValueEnum = get_global_variable!(var);
-
-                        let index = match index {
-                            Token::Id(id) => {
-                                let var_token: &ValueEnum = get_global_variable!(id);
-
-                                if let &ValueEnum::Integer(index) = var_token {
-                                    index as usize
-                                } else {
-                                    push_error(&format!("Variable '{}' is not a valid index", var));
-                                    return final_tokens;
-                                }
-                            }
-                            Token::Number(index) => {
-                                if let Ok(index) = index.parse::<usize>() {
-                                    index
-                                } else {
-                                    push_error(&format!("'{}' is not a valid index", var));
-                                    return final_tokens;
-                                }
-                            }
-                            _ => {
-                                push_error(&format!("'{}' is not a valid index", var));
-                                return final_tokens;
-                            }
-                        };
-
-                        match var_token {
-                            ValueEnum::Array(array) => {
-                                match array.get(index) {
-                                    Some(ArrayTypesEnum::String(string)) => evaluate_to(string),
-                                    Some(ArrayTypesEnum::Integer(int)) => evaluate_to(&int.to_string()),
-                                    None => {
-                                        push_error("Index out of bounds");
-                                        return final_tokens;
-                                    }
-                                };
-                            }
-                            ValueEnum::String(var) => {
-                                if let Some(char) = var.chars().nth(index) {
-                                    evaluate_to(&format!("\"{}\"", char));
-                                } else {
-                                    push_error("Index out of bounds");
-                                    return final_tokens;
-                                };
-                            }
-                            _ => {
-                                push_error(&format!("'{}' cannot be indexed", var));
-                                return final_tokens;
-                            }
-                        }
-                    }
-                    [Get, From, Id(var), Len] => {
-                        let var_token: &ValueEnum = get_global_variable!(var);
-
-                        evaluate_to(&match var_token {
-                            ValueEnum::Array(array) => array.len(),
-                            ValueEnum::String(var) => var.len(),
-                            _ => {
-                                push_error(&format!("'{}' does not have a length", var));
-                                return final_tokens;
-                            }
-                        }.to_string())
-                    }
-                    _ => {}
-                }
-            }
-            _ => {
-                push_error("Invalid expression");
-                return final_tokens;
-            }
-        }
-
-
-        // predefined name verine
-        // if input[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].split_whitespace().any(|c| predefined_names.contains(&c.to_string())) {
-        //     println!("not implemented yet: predefined_verine!");
-        // }
-        // string verine
-        // else if input_as_str.contains("\"") {
-        //     // make tokens
-        //     let verine = input_as_str[verine_positions[0]+1..verine_positions[1]-1].trim().to_string() + " ";
-        //     let mut split_of_string_verine: Vec<String> = vec![];
-        //     let mut current_token = String::new();
-        //     let mut last_character = 'a';
-        //     let mut string_started = false;
-        //
-        //     for character in verine.chars() {
-        //         if character == ' ' {
-        //             if current_token.starts_with('"') && !current_token.ends_with('"') {
-        //                 // space belongs to the string
-        //                 current_token.push(character);
-        //             }
-        //             else {
-        //                 // end of token
-        //                 if last_character != ' ' {
-        //                     split_of_string_verine.push(current_token);
-        //                     current_token = String::new();
-        //                 }
-        //             }
-        //         } else {
-        //             if character == '"' {
-        //                 if current_token.starts_with('"') {
-        //                     string_started = false;
-        //                 }
-        //             }
-        //
-        //             if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
-        //                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER INSIDE OF THE STRING (IN VERINE)!".to_string())));
-        //                 return final_tokens;
-        //             }
-        //
-        //             if character == '"' {
-        //                 if !(current_token.starts_with('"')) {
-        //                     string_started = true;
-        //                 }
-        //             }
-        //
-        //             current_token.push(character);
-        //         }
-        //         last_character = character;
-        //     }
-        //
-        //     // check if tokens are in right order
-        //     let mut i = 0;
-        //     while i < split_of_string_verine.len() {
-        //         let part = &split_of_string_verine[i];
-        //
-        //         if i % 2 == 0 {
-        //             if !(part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"') {
-        //                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN STRING VERINE IS WRONG!".to_string())));
-        //                 return final_tokens;
-        //             }
-        //         } else {
-        //             if part != "+" {
-        //                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN STRING VERINE IS WRONG!".to_string())));
-        //                 return final_tokens;
-        //             }
-        //         }
-        //
-        //         i += 1;
-        //     }
-        //
-        //     let mut final_result = String::new();
-        //     for element in split_of_string_verine.iter().step_by(2) {
-        //         final_result.push_str(&element[1..element.len()-1]);
-        //     }
-        //
-        //     // all went right -> change input
-        //     input = input_as_str[0..verine_positions[0]].to_string() + &final_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
-        // }
-        // number verine
-        // else if input_as_str.chars().into_iter().any(|c| c.is_numeric()) {
-        //     // check for invalid characters
-        //     if input_as_str[verine_positions[0]+1..verine_positions[verine_positions.len()-1]].chars().into_iter().any(|character| !(arithmetic_operators.contains(&character.to_string()) || character.is_numeric() || character == '|' || character == ' ')) {
-        //         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN NUMBER VERINE!".to_string())));
-        //         return final_tokens;
-        //     }
-        //
-        //     // go over each verine (start with the innermost) and caculate it's value; add each value to the final result (last_result)
-        //     let mut last_pos = verine_positions.len() - (verine_positions.len() / 2);
-        //     let mut last_result: i32 = 0;
-        //     for i in (0..verine_positions.len() / 2).rev() {
-        //         let current_slice = if i == verine_positions.len() / 2 - 1 {
-        //             input_as_str[verine_positions[i]+1..verine_positions[last_pos]].to_string()
-        //         } else {
-        //             input_as_str[verine_positions[i]+1..verine_positions[i+1]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[last_pos-1]+1..verine_positions[last_pos]-1].to_string()
-        //         };
-        //
-        //         let mut last_character = "";
-        //         last_result = 0;
-        //         for (index, character) in current_slice.split_whitespace().collect::<Vec<&str>>().iter().enumerate() {
-        //             if character.parse::<i32>().is_ok() {
-        //                 if index == 0 {
-        //                     last_character = character;
-        //                     last_result += character.to_string().parse::<i32>().unwrap();
-        //                 }
-        //                 else if arithmetic_operators.contains(&last_character.to_string()) {
-        //                     match last_character {
-        //                         "+" => last_result += character.parse::<i32>().unwrap(),
-        //                         "-" => last_result -= character.parse::<i32>().unwrap(),
-        //                         "*" => last_result *= character.parse::<i32>().unwrap(),
-        //                         "/" => last_result /= character.parse::<i32>().unwrap(),
-        //                         "**" => last_result = last_result.pow(character.parse::<u32>().unwrap()),
-        //                         _ => ()
-        //                     }
-        //                     last_character = character;
-        //                 } else {
-        //                     final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN NUMBER VERINE IS WRONG!".to_string())));
-        //                     return final_tokens;
-        //                 }
-        //             }
-        //             if arithmetic_operators.contains(&character.to_string()) {
-        //                 if index == 0 {
-        //                     final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER VERINE CAN'T START WITH AN OPERATOR!".to_string())));
-        //                     return final_tokens;
-        //                 } else if index == input_as_str.len() - 1 {
-        //                     final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER VERINE CAN'T END WITH AN OPERATOR!".to_string())));
-        //                     return final_tokens;
-        //                 } else if last_character.parse::<i32>().is_ok() {
-        //                     last_character = character;
-        //                 } else {
-        //                     final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("ORDER IN NUMBER VERINE IS WRONG!".to_string())));
-        //                     return final_tokens;
-        //                 }
-        //             }
-        //         }
-        //
-        //         last_pos += 1;
-        //     }
-        //
-        //     // all went right -> change input
-        //     input = input_as_str[0..verine_positions[0]].to_string() + &last_result.to_string() + &input_as_str[verine_positions[verine_positions.len()-1]+1..input_as_str.len()].to_string();
-        // }
     }
-
-    /////////////////
 
     // split input into parts; strings don't get split; arrays don't get split
     let input = input.trim().to_string() + " ";
