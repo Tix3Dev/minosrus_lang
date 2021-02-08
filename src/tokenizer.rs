@@ -185,7 +185,7 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
         }
 
         let (from, to) = (verine_positions[0] + 1, verine_positions[1]);
-        let tokens = Tokenizer::new(&input_as_str[from..to]).tokenize();
+        let mut tokens = Tokenizer::new(&input_as_str[from..to]).tokenize();
         assert!(!tokens.is_empty());
 
         use crate::verine_expression::Token;
@@ -210,7 +210,24 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
             };
         }
 
-        // Do a first pass for FROM_STRING and FROM_INTEGER
+        // Do a first pass for READLN
+        for token in &mut tokens {
+            if matches!(token, Token::ReadLn) {
+                let mut input = String::new();
+                match std::io::stdin().read_line(&mut input) {
+                    Ok(_) => {
+                        input.pop();
+                        *token = Token::String(input)
+                    },
+                    Err(e) => {
+                        push_error(&e.to_string());
+                        return final_tokens;
+                    }
+                }
+            }
+        }
+
+        // Do a second pass for FROM_STRING and FROM_INTEGER
         let mut tokens = {
             let mut new_tokens = vec![];
             let mut i = 0;
@@ -228,13 +245,13 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
                         push_error(&format!("Invalid expression"));
                         return final_tokens;
                     }
-                    (first, second) => {
-                        new_tokens.push(first.clone());
-                        new_tokens.push(second.clone());
-                        i += 2;
+                    (token, _) => {
+                        new_tokens.push(token.clone());
+                        i += 1;
                     }
                 }
             }
+            new_tokens.push(tokens.last().unwrap().clone());
             new_tokens
         };
 

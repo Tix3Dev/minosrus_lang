@@ -13,6 +13,7 @@ pub enum Token {
     At,
     StringFrom,
     IntegerFrom,
+    ReadLn,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -42,6 +43,7 @@ impl Token {
             "AT" => Token::At,
             "STRING_FROM" => Token::StringFrom,
             "INTEGER_FROM" => Token::IntegerFrom,
+            "READLN" => Token::ReadLn,
             _ => {
                 let mut it = symbol.chars();
                 let (first, second) = (it.next(), it.next());
