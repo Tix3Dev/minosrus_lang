@@ -4,3 +4,5 @@
 )
 
 ( - implement test cases (tokenizing) )
+
+- show detailed error report when executing from file; all execution errors are "runtime errors"
