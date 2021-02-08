@@ -3,6 +3,10 @@ mod tokenizer;
 
 use std::io::{self, Write};
 use std::collections::HashMap;
+use std::env;
+use std::path::Path;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 // here are all variables for exec saved
 pub struct ExecData {
@@ -34,7 +38,7 @@ impl ExecData {
     }
 }
 
-fn main() {
+fn repl() {
     // some starting text
     println!("EVERYTHING HAS TO BE UPPERCASE!");
 
@@ -67,5 +71,64 @@ fn main() {
 
             Err(e) => println!("Something with you input went wrong: {}", e)
         }
+    }
+}
+
+fn main() {
+    // get command line arguments
+    let args: Vec<String> = env::args().collect(); 
+
+    // check if valid
+    if args.len() == 3 {
+        if args[1] == "--execute".to_string() {
+            if Path::new(&args[2]).exists() {
+                let file = File::open(&args[2]).unwrap();
+                let reader = BufReader::new(file);
+
+                for (line_nr, line) in reader.lines().enumerate() {
+                    let line = line.unwrap();
+
+                    let mut valid_input = true;
+
+                    // make ExecData instance
+                    let mut exec_data_variable = ExecData::new();
+
+                    if !(line.trim().to_string().is_empty()) {
+                        for character in line.chars() {
+                            if character.is_lowercase() {
+                                println!("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
+                                valid_input = false;
+                                break;
+                            }
+                        }
+                        if valid_input {
+                            exec_data_variable.exec(tokenizer::make_tokens(line));
+                        }
+                    }
+                }
+            } else {
+                println!("INTERPRETER ERROR: THIRD COMMAND LINE ARGUMENT IS NOT A VALID PATH!");
+            }
+        } else {
+            println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
+            println!("HELP: ARGUMENTS");
+            println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
+            println!("  --repl                         | WILL START A REPL");
+        }
+    }
+    else if args.len() == 2 {
+        if args[1] == "--repl".to_string() {
+            repl();
+        } else {
+            println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
+            println!("HELP: ARGUMENTS");
+            println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
+            println!("  --repl                         | WILL START A REPL");
+        }
+    } else {
+        println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
+        println!("HELP: ARGUMENTS");
+        println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
+        println!("  --repl                         | WILL START A REPL");
     }
 }
