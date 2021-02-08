@@ -185,9 +185,7 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
         }
 
         let (from, to) = (verine_positions[0] + 1, verine_positions[1]);
-        let mut tokens = {
-            Tokenizer::new(&input_as_str[from..to]).tokenize()
-        };
+        let tokens = Tokenizer::new(&input_as_str[from..to]).tokenize();
         assert!(!tokens.is_empty());
 
         use crate::verine_expression::Token;
@@ -201,6 +199,46 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
             input.replace_range(from - 1..=to, result);
         };
 
+        macro_rules! get_global_variable {
+            ($var: ident) => {
+                if let Some(var_token) = global_variables.get($var) {
+                    var_token
+                } else {
+                    push_error(&format!("Variable '{}' does not exist", $var));
+                    return final_tokens;
+                }
+            };
+        }
+
+        // Do a first pass for FROM_STRING and FROM_INTEGER
+        let mut tokens = {
+            let mut new_tokens = vec![];
+            let mut i = 0;
+            while i < tokens.len() - 1 {
+                match (&tokens[i], &tokens[i+1]) {
+                    (Token::StringFrom, Token::Number(n)) => {
+                        new_tokens.push(Token::String(n.to_owned()));
+                        i += 2;
+                    }
+                    (Token::IntegerFrom, Token::String(s)) => {
+                        new_tokens.push(Token::Number(s.to_owned()));
+                        i += 2;
+                    }
+                    (Token::StringFrom | Token::IntegerFrom, _) => {
+                        push_error(&format!("Invalid expression"));
+                        return final_tokens;
+                    }
+                    (first, second) => {
+                        new_tokens.push(first.clone());
+                        new_tokens.push(second.clone());
+                        i += 2;
+                    }
+                }
+            }
+            new_tokens
+        };
+
+        // Final pass, evaluation
         match tokens.first().unwrap() {
             // Number computation or string interpolation
             Token::Number(_) | Token::String(_) => {
@@ -269,22 +307,35 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
                 }
             }
             // GET FROM VAR [AT X | LEN]
-            Token::GET => {
+            Token::Get => {
                 use Token::*;
                 match tokens.as_slice() {
-                    [GET, FROM, Id(var), AT, Number(index)] => {
-                        let var_token = if let Some(var_token) = global_variables.get(var) {
-                            var_token
-                        } else {
-                            push_error(&format!("Variable '{}' does not exist", var));
-                            return final_tokens;
-                        };
+                    [Get, From, Id(var), At, index] => {
+                        let var_token: &ValueEnum = get_global_variable!(var);
 
-                        let index = if let Ok(index) = index.parse::<usize>() {
-                            index
-                        } else {
-                            push_error(&format!("'{}' is not a valid index", var));
-                            return final_tokens;
+                        let index = match index {
+                            Token::Id(id) => {
+                                let var_token: &ValueEnum = get_global_variable!(id);
+
+                                if let &ValueEnum::Integer(index) = var_token {
+                                    index as usize
+                                } else {
+                                    push_error(&format!("Variable '{}' is not a valid index", var));
+                                    return final_tokens;
+                                }
+                            }
+                            Token::Number(index) => {
+                                if let Ok(index) = index.parse::<usize>() {
+                                    index
+                                } else {
+                                    push_error(&format!("'{}' is not a valid index", var));
+                                    return final_tokens;
+                                }
+                            }
+                            _ => {
+                                push_error(&format!("'{}' is not a valid index", var));
+                                return final_tokens;
+                            }
                         };
 
                         match var_token {
@@ -312,13 +363,8 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
                             }
                         }
                     }
-                    [GET, FROM, Id(var), LEN] => {
-                        let var_token = if let Some(var_token) = global_variables.get(var) {
-                            var_token
-                        } else {
-                            push_error(&format!("Variable '{}' does not exist", var));
-                            return final_tokens;
-                        };
+                    [Get, From, Id(var), Len] => {
+                        let var_token: &ValueEnum = get_global_variable!(var);
 
                         evaluate_to(&match var_token {
                             ValueEnum::Array(array) => array.len(),

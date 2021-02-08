@@ -7,10 +7,12 @@ pub enum Token {
     Number(String),
     String(String),
     Operator(Operator),
-    GET,
-    FROM,
-    LEN,
-    AT,
+    Get,
+    From,
+    Len,
+    At,
+    StringFrom,
+    IntegerFrom,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -34,10 +36,12 @@ impl Token {
 
     pub fn from_symbol(symbol: &str) -> Self {
         match symbol {
-            "GET" => Token::GET,
-            "FROM" => Token::FROM,
-            "LEN" => Token::LEN,
-            "AT" => Token::AT,
+            "GET" => Token::Get,
+            "FROM" => Token::From,
+            "LEN" => Token::Len,
+            "AT" => Token::At,
+            "STRING_FROM" => Token::StringFrom,
+            "INTEGER_FROM" => Token::IntegerFrom,
             _ => {
                 let mut it = symbol.chars();
                 let (first, second) = (it.next(), it.next());

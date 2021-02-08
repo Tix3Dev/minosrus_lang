@@ -1,3 +1,5 @@
+#![feature(or_patterns)]
+
 mod execution;
 mod verine_expression;
 mod tokenizer;
