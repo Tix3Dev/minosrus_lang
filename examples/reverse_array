@@ -1,0 +1,24 @@
+Repl:
+
+> LET ARR = ["MY", "NAME", "IS", "RUSTY"]
+> LET ARR_LEN = | GET FROM ARR LEN |
+> LET I = 0
+> WHILE I < ARR_LEN START
+	> LET LAST_ELEMENT = | GET FROM ARR AT ARR_LEN - 1 |
+	> INSERT LAST_ELEMENT INTO ARR AT 0
+	> POP FROM ARR
+	> LET I = | I + 1 |
+	> END
+>
+> LET I = 0
+> WHILE I < ARR_LEN START
+	> PRINT | GET FROM ARR AT I |
+	> LET I = | I + 1 |
+	> END
+
+Output:
+
+RUST
+IS
+NAME
+MY

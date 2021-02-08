@@ -1,6 +1,6 @@
 # minosrus_lang
 
-**DISCLAIMER: This project is still in development.**
+**DISCLAIMER: This project is still in development. Verines don't work yet. That means some examples don't work.**
 
 A simple interpreter in form of a repl for my own programming language called minosrus_lang. 
 
@@ -15,9 +15,11 @@ Short Paradigm:
 
 ## Installing
 
-- You can simply clone this repository via ```https://github.com/Tix3Dev/minosrus_lang```.
+- You can simply clone this repository with ```git clone https://github.com/Tix3Dev/minosrus_lang```.
 - You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
 - Finally you can execute the project with ```cargo run```.
+
+**IMPORTANT: If you decided to try this out, and you get this error: ```SOMEHOW THIS SHOULDN'T BE PRINTED!```, please create a new issue and post your input + the output. Thank you!**
 
 ----
 
@@ -36,7 +38,7 @@ Repl:
 ```
 > LET COUNTER = 1
 > WHILE COUNTER <= 5 START
-	> PRINT | "COUNTER: " + COUNTER |
+	> PRINT | "COUNTER: " + STRING_FROM COUNTER |
 	> LET COUNTER = | COUNTER + 1 |
 	> END
 ``` 
@@ -48,6 +50,8 @@ COUNTER: 3
 COUNTER: 4
 COUNTER: 5
 ```
+
+For more examples have a look at the [examples](https://github.com/Tix3Dev/minosrus_lang/tree/master/examples) folder.
 
 ----
 

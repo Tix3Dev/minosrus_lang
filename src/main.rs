@@ -38,7 +38,6 @@ impl ExecData {
 fn main() {
     // some starting text
     println!("EVERYTHING HAS TO BE UPPERCASE!");
-    println!("DON'T USE VERINES! THEY AREN'T WORKING PROPERLY");
 
     // make ExecData instance
     let mut exec_data_variable = ExecData::new();
