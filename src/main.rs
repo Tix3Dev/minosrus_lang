@@ -64,7 +64,11 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        exec_data_variable.exec(tokenizer::make_tokens(input));
+                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(input));
+                        if return_of_execution != "".to_string() {
+                            // print error message
+                            println!("{}", return_of_execution); 
+                        }
                     }
                 }
             },
@@ -86,6 +90,11 @@ fn main() {
                 let reader = BufReader::new(file);
 
                 for (line_nr, line) in reader.lines().enumerate() {
+                    let print_err = | error_message | {
+                        println!("- ERROR OCCURED ON LINE NR. {}", line_nr + 1);
+                        println!("  -> {}", error_message);
+                    };
+
                     let line = line.unwrap();
 
                     let mut valid_input = true;
@@ -96,13 +105,16 @@ fn main() {
                     if !(line.trim().to_string().is_empty()) {
                         for character in line.chars() {
                             if character.is_lowercase() {
-                                println!("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
+                                print_err("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
                                 valid_input = false;
                                 break;
                             }
                         }
                         if valid_input {
-                            exec_data_variable.exec(tokenizer::make_tokens(line));
+                            let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(line));
+                            if return_of_execution != "".to_string() {
+                                print_err(&return_of_execution);
+                            }
                         }
                     }
                 }

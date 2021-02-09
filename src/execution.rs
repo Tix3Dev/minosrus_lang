@@ -22,7 +22,7 @@ fn subtract_indentation(indentation: &mut String) {
     }
 }
 
-fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, predefined_name_order: HashMap<&str, OrderEnum>) -> bool {
+fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, predefined_name_order: HashMap<&str, OrderEnum>) -> String {
     match &line[0].1 {
         tokenizer::ValueEnum::String(clean) => {
             match predefined_name_order.get(&clean.as_str()) {
@@ -32,12 +32,10 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                         OrderEnum::SingleOption(v) => {
                             // length check - otherwise the indexing would panic
                             if line.len() < v.len() {
-                                println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
                             }
                             if line.len() > v.len() {
-                                println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                             }
 
                             // analyse if order of key and value is right
@@ -62,12 +60,10 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                                 }
                             }
                             if !(is_key_order_right) {
-                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean); 
-                                return false;
+                                return format!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean); 
                             }
                             if !(is_value_order_right) {
-                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean); 
-                                return false;
+                                return format!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean); 
                             }
                         },
                         OrderEnum::MultipleOptions(v) => {
@@ -83,12 +79,10 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                                 }
                             }
                             if too_few_tokens {
-                                println!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: THERE ARE LESS TOKENS THAN '{}' NEEDS!", clean);
                             }
                             if too_many_tokens {
-                                println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN '{}' NEEDS!", clean);
                             }
 
                             // analyse if order of key and value is right
@@ -123,26 +117,23 @@ fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, prede
                             }
                             // print help - show all possible orders
                             if !(is_one_token_order_right) {
-                                println!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: KEY ORDER FOR '{}' ISN'T RIGHT!", clean);
                             }
                             if !(is_one_value_order_right) {
-                                println!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
-                                return false;
+                                return format!("EXECUTION ERROR: VALUE ORDER FOR '{}' ISN'T RIGHT!", clean);
                             }
                         }
                     }
                 },
                 None => {
-                    println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
-                    return false;
+                    return format!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
                 }
             }
         },
         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
     }
 
-    return true;
+    return format!("");
 }
 
 fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) -> bool {
@@ -264,7 +255,7 @@ impl ExecData {
         }
     }
 
-    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) {
+    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
         let mut token_collection = token_collection.clone();
         println!("token_collection: {:?}", token_collection);
 
@@ -272,8 +263,7 @@ impl ExecData {
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
             match value {
                 tokenizer::ValueEnum::String(v) => {
-                    println!("SYNTAX ERROR: {}", v);
-                    return;
+                    return format!("SYNTAX ERROR: {}", v);
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
@@ -283,7 +273,7 @@ impl ExecData {
             match value {
                 tokenizer::ValueEnum::String(_v) => {
                     println!("");
-                    return;
+                    return format!("");
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
@@ -293,7 +283,7 @@ impl ExecData {
             tokenizer::ValueEnum::String(v) => {
                 if v == "RESET" && token_collection.len() == 1 {
                     self.global_variables.clear();
-                    return;
+                    return format!("");
                 }
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -618,8 +608,7 @@ impl ExecData {
                         if self.current_block_type.0 == "" {
                             add_indentation(&mut self.indentation);
                         } else {
-                            println!("FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
-                            return;
+                            return format!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
                         }
                     }
                     else if v == "END" && token_collection.len() == 1 {
@@ -649,8 +638,9 @@ impl ExecData {
                                                                     where_is_elif_block = line_position;
 
                                                                     // check key and value order
-                                                                    if !(is_key_and_value_order_right(line.to_vec(), predefined_name_order.clone())) {
-                                                                        return;
+                                                                    let return_of_check = is_key_and_value_order_right(line.to_vec(), predefined_name_order.clone());
+                                                                    if return_of_check != "".to_string() {
+                                                                        return format!("{}", return_of_check);
                                                                     }
 
                                                                     // evaluate left and right side of elif
@@ -671,14 +661,12 @@ impl ExecData {
                                                                                                 line_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                                             },
                                                                                             _ => {
-                                                                                                println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                                                return;
+                                                                                                return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                                             }
                                                                                         }
                                                                                     },
                                                                                     None => {
-                                                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                                        return;
+                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                                     }
                                                                                 }
                                                                             },
@@ -700,14 +688,12 @@ impl ExecData {
                                                                                                 line_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                                             },
                                                                                             _ => {
-                                                                                                println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                                                return;
+                                                                                                return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                                             }
                                                                                         }
                                                                                     },
                                                                                     None => {
-                                                                                        println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                                        return;
+                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                                     }
                                                                                 }
                                                                             },
@@ -730,8 +716,7 @@ impl ExecData {
                                                                         is_there_else_block = true;
                                                                         where_is_else_block = line_position;
                                                                     } else {
-                                                                        println!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN ELSE NEEDS!");
-                                                                        return;
+                                                                        return format!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN ELSE NEEDS!");
                                                                     }
                                                                 }
                                                             },
@@ -776,8 +761,7 @@ impl ExecData {
                                                     loop {
                                                         let new_block_code = update_while_condition_values(&self.block_code, &self.global_variables, &mut error);
                                                         if error != "".to_string() {
-                                                            println!("{}", error);
-                                                            return;
+                                                            return format!("{}", error);
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
@@ -805,8 +789,7 @@ impl ExecData {
                     // saving code block stuff
                     if self.current_block_type.0 == "normal" {
                         if v == "FN" {
-                            println!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
-                            return;
+                            return format!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
                         }
                         self.block_code.push(token_collection.clone());
                     }
@@ -819,7 +802,7 @@ impl ExecData {
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
 
-            return;
+            return format!("");
         }
 
 
@@ -828,13 +811,13 @@ impl ExecData {
         let first_key_element = &token_collection[0].0;
 
         if first_key_element != "PREDEFINED_NAME" {
-            println!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
-            return;
+            return format!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
         }
 
         // check if key and value order is right
-        if !(is_key_and_value_order_right(token_collection.to_vec(), predefined_name_order.clone())) {
-            return;
+        let return_of_check = is_key_and_value_order_right(token_collection.to_vec(), predefined_name_order.clone());
+        if return_of_check != "".to_string() {
+            return format!("{}", return_of_check);
         }
 
         // evaluate value for LET, PRINT, IF, PUSH, INSERT
@@ -870,8 +853,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -895,14 +877,12 @@ impl ExecData {
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
                                                                         _ => {
-                                                                            println!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
-                                                                            return;
+                                                                            return format!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         }
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -926,14 +906,12 @@ impl ExecData {
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
                                                                         _ => {
-                                                                            println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                            return;
+                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         }
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -955,14 +933,12 @@ impl ExecData {
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
                                                                         _ => {
-                                                                            println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                            return;
+                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         }
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -987,14 +963,12 @@ impl ExecData {
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
                                                                         _ => {
-                                                                            println!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                            return;
+                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         }
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1018,14 +992,12 @@ impl ExecData {
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
                                                                         _ => {
-                                                                            println!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                            return;
+                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
                                                                         }
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
-                                                                    return;
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1041,8 +1013,7 @@ impl ExecData {
                             }
                         },
                         None => {
-                            println!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
-                            return;
+                            return format!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
                         }
                     }
                 },
@@ -1094,8 +1065,7 @@ impl ExecData {
                                             }
                                         }
                                         None => {
-                                            println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                            return;
+                                            return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
                                         }
                                     }
                                 }
@@ -1123,15 +1093,11 @@ impl ExecData {
                         tokenizer::ValueEnum::String(function_name) => {
                             match self.functions.get(function_name) {
                                 Some(function_code_block) => {
-                                    println!("function {} would get now executed", function_name);
-                                    println!("execution starts now");
                                     let block_code = function_code_block[1..].to_vec();
                                     self.execute_block_code(block_code);
-                                    println!("execution ends now");
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
-                                    return;
+                                    return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
                                 }
                             }
                         },
@@ -1168,21 +1134,18 @@ impl ExecData {
                                                     *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER OR A STRING ONTO AN ARRAY!");
-                                                    return;
+                                                    return format!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER OR A STRING ONTO AN ARRAY!");
                                                 }
                                             }
                                         },
                                         _ => {
-                                            println!("EXECUTION  ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!");
-                                            return;
+                                            return format!("EXECUTION  ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!");
                                         }
 
                                     }
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                    return;
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
                                 }
                             }
                         },
@@ -1201,14 +1164,12 @@ impl ExecData {
                                             *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                         },
                                         _ => {
-                                            println!("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!");
-                                            return;
+                                            return format!("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!");
                                         }
                                     }
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                    return;
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
                                 }
                             }
                         },
@@ -1245,20 +1206,17 @@ impl ExecData {
                                                 },
 
                                                 _ => {
-                                                    println!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
-                                                    return;
+                                                    return format!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
                                                 }
                                             }
                                         },
                                         _ => {
-                                            println!("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!");
-                                            return;
+                                            return format!("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!");
                                         }
                                     }
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                    return;
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
                                 }
                             }
                         },
@@ -1286,8 +1244,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                    return;
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
                                 }
                             }
                         },
@@ -1328,8 +1285,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    println!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword);
-                                    return;
+                                    return format!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword);
                                 }
                             }
                         },
@@ -1341,5 +1297,7 @@ impl ExecData {
         }
 
         println!("self.global_variables: {:?}", self.global_variables);
+
+        return format!("");
     }
 }
