@@ -169,26 +169,14 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
             }
         }
 
-        if input[verine_positions[0] + 1..verine_positions[1]].trim().is_empty() {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VERINE IS EMPTY!".to_string())));
-            return final_tokens;
-        }
-
-
         if verine_positions.len() % 2 != 0 {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
             return final_tokens;
         }
 
-        // needed error checks for further tokenizing
-        if input.contains("\"") && verine_positions.len() != 2 {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("TWO | EXPECTED (FOR STRING VERINE)!".to_string())));
-            return final_tokens;
-        }
-
         /////////
 
-        let (from, to) = (verine_positions[0], verine_positions[1]);
+        let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
         let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &global_variables);
 
         let mut evaluate_to = |result: &str| {

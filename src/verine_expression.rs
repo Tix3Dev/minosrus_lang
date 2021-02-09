@@ -18,6 +18,8 @@ pub enum Token {
     StringFrom,
     IntegerFrom,
     ReadLn,
+    OpenVerine,
+    CloseVerine,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -29,8 +31,10 @@ pub enum Operator {
 }
 
 impl Token {
-    pub fn from_single_char(c: char) -> Self {
+    pub fn from_single_char(c: char, last_token: Option<&Token>) -> Self {
         match c {
+            '|' if last_token.map_or(true, |t| matches!(t, Self::Operator(_))) => Self::OpenVerine,
+            '|' => Self::CloseVerine,
             '+' => Self::Operator(Operator::Plus),
             '-' => Self::Operator(Operator::Minus),
             '*' => Self::Operator(Operator::Asterisk),
@@ -97,6 +101,8 @@ pub struct Tokenizer<'a> {
     current_character: Option<(usize, char)>,
 }
 
+type Globals = HashMap<String, tokenizer::ValueEnum>;
+
 impl<'a> Tokenizer<'a> {
     pub fn new(source: &'a str) -> Self {
         let mut this = Self {
@@ -128,6 +134,7 @@ impl<'a> Tokenizer<'a> {
                 }
                 // Middle
                 TokenType::StringLiteral => {
+                    // Escape quotes with backward slash (example: \")
                     if c == '\\' {
                         self.it.next(); // Skip the next character
                     }
@@ -151,9 +158,9 @@ impl<'a> Tokenizer<'a> {
                     }
                 }
                 // Special characters and operators that terminate a token
-                '+' | '-' | '*' | '/' => {
+                '|' | '+' | '-' | '*' | '/' => {
                     self.end_current_token();
-                    self.tokens.push(Token::from_single_char(c));
+                    self.tokens.push(Token::from_single_char(c, self.tokens.last()));
                 }
                 whitespace if whitespace.is_whitespace() => {
                     self.end_current_token();
@@ -195,10 +202,50 @@ impl<'a> Tokenizer<'a> {
         self.current_token_start_index = end_index + 1;
     }
 
-    pub fn tokenize_and_evaluate(
-        input: &str,
-        global_variables: &HashMap<String, tokenizer::ValueEnum>,
-    ) -> Result<Token, TokenizerError> {
+    fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<Token, TokenizerError> {
+        // Remember the ranges of top level verine expressions
+        let mut verine_expression_ranges = vec![];
+        let mut verine_level = 0;
+        let mut opening_verine = 0;
+
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::OpenVerine => {
+                    if verine_level == 0 {
+                        opening_verine = i;
+                    }
+                    verine_level += 1;
+                }
+                Token::CloseVerine => {
+                    verine_level -= 1;
+                    if verine_level == 0 {
+                        verine_expression_ranges.push(opening_verine..=i);
+                    }
+                }
+                _ => ()
+            }
+        }
+
+        // Evaluate each verine expression
+        let mut resulting_tokens = vec![];
+
+        for range in &verine_expression_ranges {
+            let without_verines = range.start() + 1..*range.end();
+            resulting_tokens.push((
+                Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?
+            ));
+        }
+
+        // Replace the tokens of top level verine expression with their resulting token
+        // We need to shift the ranges to the left because we remove from the vector
+        let mut shift = 0;
+        for (range, token) in verine_expression_ranges.iter().zip(resulting_tokens) {
+            let range = (range.start() - shift ..= range.end() - shift);
+            tokens.splice(range.clone(), [token].iter().cloned());
+            shift += range.end() - range.start();
+        }
+
+        // Start evaluating this verine expression
         use TokenizerError::*;
 
         let get_global_variable = |var: &str| {
@@ -206,7 +253,6 @@ impl<'a> Tokenizer<'a> {
         };
 
         // Do a first pass for READLN
-        let mut tokens = Tokenizer::new(&input).tokenize();
         for token in &mut tokens {
             if matches!(token, Token::ReadLn) {
                 let mut input = String::new();
@@ -250,7 +296,7 @@ impl<'a> Tokenizer<'a> {
                 while tokens.len() > 1 {
                     // We only support binary operations for now
                     if let [left, Token::Operator(op), right, ..] = tokens.as_slice() {
-                        let token = match (left, right) {
+                        let result = match (left, right) {
                             (Token::Number(l), Token::Number(r)) => {
                                 // Supposing they are integers for now
                                 let l = l.parse::<i32>().map_err(|_| NumberParsingError(l.to_owned()))?;
@@ -276,7 +322,7 @@ impl<'a> Tokenizer<'a> {
                         // Replace the first 3 tokens with the result of them
                         tokens.remove(0);
                         tokens.remove(0);
-                        tokens[0] = token;
+                        tokens[0] = result;
                     } else {
                         return Err(InvalidExpression)
                     }
@@ -341,5 +387,10 @@ impl<'a> Tokenizer<'a> {
             }
             _ => Err(InvalidExpression)
         }
+    }
+
+    pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<Token, TokenizerError> {
+        let mut tokens = Tokenizer::new(&input).tokenize();
+        Tokenizer::evaluate(tokens, &global_variables)
     }
 }
