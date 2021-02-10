@@ -6,5 +6,3 @@
 ( - implement test cases (tokenizing) )
 
 - stop execution when an error is found
-
-- somehow implement indentation; at least it doesn't look like it works
