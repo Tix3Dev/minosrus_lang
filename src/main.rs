@@ -50,19 +50,24 @@ fn file_execution(args_2: String) {
         let file = File::open(&args_2).unwrap();
         let reader = BufReader::new(file);
 
-        for (line_nr, line) in reader.lines().enumerate() {
-            let print_err = | error_message | {
-                println!("- ERROR OCCURED ON LINE NR. {}", line_nr + 1);
-                println!("  -> {}", error_message);
-            };
+        let mut exec_data_variable = ExecData::new();
 
+        let mut token_collection_of_all_lines: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
+
+        let mut compilation_error_count = 0;
+
+        // tokenizing - syntax errors - compilation errors - all lines are checked
+        for (line_nr, line) in reader.lines().enumerate() {
             let line = line.unwrap();
 
+            let mut print_err = | error_message | {
+                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", line_nr, line);
+                println!("  -> {}", error_message);
+                compilation_error_count += 1;
+            };
+
             let mut valid_input = true;
-
-            // make ExecData instance
-            let mut exec_data_variable = ExecData::new();
-
+ 
             if !(line.trim().to_string().is_empty()) {
                 for character in line.chars() {
                     if character.is_lowercase() {
@@ -72,13 +77,45 @@ fn file_execution(args_2: String) {
                     }
                 }
                 if valid_input {
-                    let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(line));
-                    if return_of_execution != "".to_string() {
-                        print_err(&return_of_execution);
+                    let token_collection_of_current_line = tokenizer::make_tokens(&line);
+
+                    // check for syntax errors
+                    if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
+                        match value {
+                            tokenizer::ValueEnum::String(v) => {
+                                print_err(format!("SYNTAX ERROR: {}", v).as_str());
+                            },
+                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                        }
                     }
+
+                    // save stuff if there were no errors
+                    token_collection_of_all_lines.push(token_collection_of_current_line);
                 }
             }
         }
+
+        if compilation_error_count != 0 {
+            println!("\nABORTING DUE THE PREVIOUS {} ERRORS!", compilation_error_count + 1); 
+            println!("\nINTERPRETER STOPPED!");
+            return;
+        }
+
+        // executing - execution errors - runtime errors - execution stops when an error occurs
+        for (line_nr, line) in token_collection_of_all_lines.iter().enumerate() {
+            let print_err = | error_message | {
+                println!("- ERROR OCCURED ON LINE NR. {}", line_nr);
+                println!("  -> {}", error_message);
+                println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
+            };
+
+            let return_of_execution = exec_data_variable.exec(line.to_vec());
+            if return_of_execution != "".to_string() {
+                print_err(&return_of_execution);
+                return;
+            }
+        }
+
     } else {
         print_interpreter_error("INTERPRETER ERROR: THIRD COMMAND LINE ARGUMENT IS NOT A VALID PATH!");
     }
@@ -110,7 +147,7 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(input));
+                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input));
                         if return_of_execution != "".to_string() {
                             // print error message
                             println!("{}", return_of_execution); 

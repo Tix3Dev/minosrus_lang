@@ -1054,7 +1054,11 @@ impl ExecData {
                             tokenizer::ValueEnum::String(stuff) => {
                                 if &token_collection[1].0 == &"STRING".to_string() {
                                     stuff.to_string()
+                                } else {
+                                    println!("wtf");
+                                    unreachable!("oooooooof");
                                 }
+                                /*
                                 else {
                                     match self.global_variables.get(stuff) {
                                         Some(value) => {
@@ -1069,6 +1073,7 @@ impl ExecData {
                                         }
                                     }
                                 }
+                                */
                             },
                             tokenizer::ValueEnum::Integer(stuff) => stuff.to_string(),
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
