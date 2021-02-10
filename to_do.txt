@@ -4,5 +4,3 @@
 )
 
 ( - implement test cases (tokenizing) )
-
-- stop execution when an error is found
