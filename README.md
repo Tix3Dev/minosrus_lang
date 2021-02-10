@@ -2,7 +2,7 @@
 
 **DISCLAIMER: This project is still in development. Verines don't work yet. That means some examples don't work.**
 
-A simple interpreter in form of a repl for my own programming language called minosrus_lang. 
+A simple interpreter for my own programming language called minosrus_lang. 
 
 It's inspired by BASIC but also by new languages like Rust. In the future the interpreter will (eventually) be used for an OS. And it's my first project in Rust.
 
