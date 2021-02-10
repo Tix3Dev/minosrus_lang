@@ -38,6 +38,52 @@ impl ExecData {
     }
 }
 
+fn print_interpreter_error(error_message: &str) {
+    println!("{}", error_message);
+    println!("HELP: ARGUMENTS");
+    println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
+    println!("  --repl                         | WILL START A REPL");
+}
+
+fn file_execution(args_2: String) {
+    if Path::new(&args_2).exists() {
+        let file = File::open(&args_2).unwrap();
+        let reader = BufReader::new(file);
+
+        for (line_nr, line) in reader.lines().enumerate() {
+            let print_err = | error_message | {
+                println!("- ERROR OCCURED ON LINE NR. {}", line_nr + 1);
+                println!("  -> {}", error_message);
+            };
+
+            let line = line.unwrap();
+
+            let mut valid_input = true;
+
+            // make ExecData instance
+            let mut exec_data_variable = ExecData::new();
+
+            if !(line.trim().to_string().is_empty()) {
+                for character in line.chars() {
+                    if character.is_lowercase() {
+                        print_err("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
+                        valid_input = false;
+                        break;
+                    }
+                }
+                if valid_input {
+                    let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(line));
+                    if return_of_execution != "".to_string() {
+                        print_err(&return_of_execution);
+                    }
+                }
+            }
+        }
+    } else {
+        print_interpreter_error("INTERPRETER ERROR: THIRD COMMAND LINE ARGUMENT IS NOT A VALID PATH!");
+    }
+}
+
 fn repl() {
     // some starting text
     println!("EVERYTHING HAS TO BE UPPERCASE!");
@@ -85,62 +131,18 @@ fn main() {
     // check if valid
     if args.len() == 3 {
         if args[1] == "--execute".to_string() {
-            if Path::new(&args[2]).exists() {
-                let file = File::open(&args[2]).unwrap();
-                let reader = BufReader::new(file);
-
-                for (line_nr, line) in reader.lines().enumerate() {
-                    let print_err = | error_message | {
-                        println!("- ERROR OCCURED ON LINE NR. {}", line_nr + 1);
-                        println!("  -> {}", error_message);
-                    };
-
-                    let line = line.unwrap();
-
-                    let mut valid_input = true;
-
-                    // make ExecData instance
-                    let mut exec_data_variable = ExecData::new();
-
-                    if !(line.trim().to_string().is_empty()) {
-                        for character in line.chars() {
-                            if character.is_lowercase() {
-                                print_err("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
-                                valid_input = false;
-                                break;
-                            }
-                        }
-                        if valid_input {
-                            let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(line));
-                            if return_of_execution != "".to_string() {
-                                print_err(&return_of_execution);
-                            }
-                        }
-                    }
-                }
-            } else {
-                println!("INTERPRETER ERROR: THIRD COMMAND LINE ARGUMENT IS NOT A VALID PATH!");
-            }
+            file_execution(args[2].to_string());
         } else {
-            println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
-            println!("HELP: ARGUMENTS");
-            println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
-            println!("  --repl                         | WILL START A REPL");
+            print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
         }
     }
     else if args.len() == 2 {
         if args[1] == "--repl".to_string() {
             repl();
         } else {
-            println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
-            println!("HELP: ARGUMENTS");
-            println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
-            println!("  --repl                         | WILL START A REPL");
+            print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
         }
     } else {
-        println!("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
-        println!("HELP: ARGUMENTS");
-        println!("  --execute <path/filename.morl> | WILL EXECUTE A MORL FILE");
-        println!("  --repl                         | WILL START A REPL");
+        print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
     }
 }
