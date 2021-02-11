@@ -319,8 +319,8 @@ impl<'a> Tokenizer<'a> {
                     let left = Tokenizer::evaluate(vec![left.clone()], global_variables)?;
                     let right = Tokenizer::evaluate(vec![right.clone()], global_variables)?;
 
-                    let result = match (left, right) {
-                        (Token::Number(l), Token::Number(r)) => {
+                    let result = match (left, op, right) {
+                        (Token::Number(l), _, Token::Number(r)) => {
                             let l = parse_i32(&l)?;
                             let r = parse_i32(&r)?;
 
@@ -333,11 +333,20 @@ impl<'a> Tokenizer<'a> {
                                 Op::Slash => Ok(Token::Number((l / r).to_string())),
                             }
                         }
-                        (Token::String(l), Token::String(r)) => {
+                        (Token::String(l), _, Token::String(r)) => {
                             match op {
                                 Op::Plus => Ok(Token::String(format!("{}{}", l, r))),
                                 _ => Err(InvalidOperator),
                             }
+                        }
+                        // Implicit String to Number conversion like in Javascript
+                        // String + Number = String
+                        // Number + String = String
+                        (Token::String(l), Op::Plus, Token::Number(r)) => {
+                            Ok(Token::String(format!("{}{}", l, r)))
+                        }
+                        (Token::Number(l), Op::Plus, Token::String(r)) => {
+                            Ok(Token::String(format!("{}{}", l, r)))
                         }
                         _ => Err(InvalidOperands),
                     }?;
