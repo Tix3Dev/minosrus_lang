@@ -42,17 +42,6 @@ List (of those that are at the beginning):
 			> PRINT "HELLO"
 			> END
 
-- ELSE
-	- Used for control flow
-	- Works only with IF
-
-	- Example:
-		> IF 12 > 122 START
-			> PRINT "HELLO"
-			> ELSE
-			> PRINT "OH NOOO"
-			> END
-
 - WHILE
 	- Used for control flow
 	- Executes code block as long as the condition is true
