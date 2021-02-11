@@ -265,30 +265,41 @@ impl<'a> Tokenizer<'a> {
             }
         }
 
-        // Do a second pass for FROM_STRING and FROM_INTEGER
+        // Do a second pass for STRING_FROM and INTEGER_FROM
         let mut tokens = {
             let mut new_tokens = vec![];
-            let mut i = 0;
-            while i < tokens.len() - 1 {
-                match (&tokens[i], &tokens[i + 1]) {
-                    (Token::StringFrom, Token::Number(n)) => {
-                        new_tokens.push(Token::String(n.to_owned()));
-                        i += 2;
+
+            let mut tokens = tokens.as_slice();
+            loop {
+                match tokens {
+                    [Token::StringFrom, argument, ..] => {
+                        let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
+                        match argument {
+                            Token::Number(n) => {
+                                new_tokens.push(Token::String(n));
+                                tokens = &tokens[2..];
+                            }
+                            _ => return Err(InvalidExpression)
+                        }
                     }
-                    (Token::IntegerFrom, Token::String(s)) => {
-                        new_tokens.push(Token::Number(s.to_owned()));
-                        i += 2;
+                    [Token::IntegerFrom, argument, ..] => {
+                        let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
+                        match argument {
+                            Token::String(s) => {
+                                new_tokens.push(Token::Number(s));
+                                tokens = &tokens[2..];
+                            }
+                            _ => return Err(InvalidExpression)
+                        }
                     }
-                    (Token::StringFrom | Token::IntegerFrom, _) => {
-                        return Err(InvalidExpression);
-                    },
-                    (token, _) => {
+                    [token, ..] => {
                         new_tokens.push(token.clone());
-                        i += 1;
+                        tokens = &tokens[1..];
                     }
+                    [] => break,
                 }
             }
-            new_tokens.push(tokens.last().unwrap().clone());
+
             new_tokens
         };
 
