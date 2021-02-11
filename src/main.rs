@@ -53,6 +53,7 @@ fn file_execution(args_2: String) {
         let mut exec_data_variable = ExecData::new();
 
         let mut token_collection_of_all_lines: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
+        let mut collection_of_all_lines: Vec<String> = Vec::new();
 
         let mut compilation_error_count = 0;
 
@@ -91,6 +92,7 @@ fn file_execution(args_2: String) {
 
                     // save stuff if there were no errors
                     token_collection_of_all_lines.push(token_collection_of_current_line);
+                    collection_of_all_lines.push(line);
                 }
             }
         }
@@ -104,7 +106,7 @@ fn file_execution(args_2: String) {
         // executing - execution errors - runtime errors - execution stops when an error occurs
         for (line_nr, line) in token_collection_of_all_lines.iter().enumerate() {
             let print_err = | error_message | {
-                println!("- ERROR OCCURED ON LINE NR. {}", line_nr);
+                println!("- ERROR OCCURED ON LINE NR. {}: {}", line_nr, collection_of_all_lines[line_nr]);
                 println!("  -> {}", error_message);
                 println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
             };
