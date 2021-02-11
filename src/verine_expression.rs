@@ -10,7 +10,7 @@ pub enum Token {
     Id(String),
     Number(String),
     String(String),
-    Operator(Operator),
+    Operator(Op),
     Get,
     From,
     Len,
@@ -23,7 +23,7 @@ pub enum Token {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum Operator {
+pub enum Op {
     Plus,
     Minus,
     Asterisk,
@@ -35,23 +35,23 @@ impl Token {
         match c {
             '|' if last_token.map_or(true, |t| matches!(t, Self::Operator(_))) => Self::OpenVerine,
             '|' => Self::CloseVerine,
-            '+' => Self::Operator(Operator::Plus),
-            '-' => Self::Operator(Operator::Minus),
-            '*' => Self::Operator(Operator::Asterisk),
-            '/' => Self::Operator(Operator::Slash),
+            '+' => Self::Operator(Op::Plus),
+            '-' => Self::Operator(Op::Minus),
+            '*' => Self::Operator(Op::Asterisk),
+            '/' => Self::Operator(Op::Slash),
             _ => unimplemented!()
         }
     }
 
     pub fn from_symbol(symbol: &str) -> Self {
         match symbol {
-            "GET" => Token::Get,
-            "FROM" => Token::From,
-            "LEN" => Token::Len,
-            "AT" => Token::At,
-            "STRING_FROM" => Token::StringFrom,
-            "INTEGER_FROM" => Token::IntegerFrom,
-            "READLN" => Token::ReadLn,
+            "GET" => Self::Get,
+            "FROM" => Self::From,
+            "LEN" => Self::Len,
+            "AT" => Self::At,
+            "STRING_FROM" => Self::StringFrom,
+            "INTEGER_FROM" => Self::IntegerFrom,
+            "READLN" => Self::ReadLn,
             _ => {
                 let mut it = symbol.chars();
                 let (first, second) = (it.next(), it.next());
@@ -62,9 +62,9 @@ impl Token {
                     _ => false,
                 };
                 if is_number {
-                    Token::Number(symbol.to_string())
+                    Self::Number(symbol.to_string())
                 } else {
-                    Token::Id(symbol.to_string())
+                    Self::Id(symbol.to_string())
                 }
             }
         }
@@ -204,45 +204,48 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<Token, TokenizerError> {
-        // Remember the ranges of top level verine expressions
-        let mut verine_expression_ranges = vec![];
-        let mut verine_level = 0;
-        let mut opening_verine = 0;
+        // Nested verine expression evaluation
+        {
+            // Remember the ranges of top level verine expressions
+            let mut verine_expression_ranges = vec![];
+            let mut verine_level = 0;
+            let mut opening_verine = 0;
 
-        for (i, token) in tokens.iter().enumerate() {
-            match token {
-                Token::OpenVerine => {
-                    if verine_level == 0 {
-                        opening_verine = i;
+            for (i, token) in tokens.iter().enumerate() {
+                match token {
+                    Token::OpenVerine => {
+                        if verine_level == 0 {
+                            opening_verine = i;
+                        }
+                        verine_level += 1;
                     }
-                    verine_level += 1;
-                }
-                Token::CloseVerine => {
-                    verine_level -= 1;
-                    if verine_level == 0 {
-                        verine_expression_ranges.push(opening_verine..=i);
+                    Token::CloseVerine => {
+                        verine_level -= 1;
+                        if verine_level == 0 {
+                            verine_expression_ranges.push(opening_verine..=i);
+                        }
                     }
+                    _ => ()
                 }
-                _ => ()
             }
-        }
 
-        // Evaluate each verine expression
-        let mut resulting_tokens = vec![];
+            // Evaluate each verine expression
+            let mut resulting_tokens = vec![];
 
-        for range in &verine_expression_ranges {
-            let without_verines = range.start() + 1..*range.end();
-            let result = Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?;
-            resulting_tokens.push(result);
-        }
+            for range in &verine_expression_ranges {
+                let without_verines = range.start() + 1..*range.end();
+                let result = Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?;
+                resulting_tokens.push(result);
+            }
 
-        // Replace the tokens of top level verine expression with their resulting token
-        // We need to shift the ranges to the left because we remove from the vector
-        let mut shift = 0;
-        for (range, token) in verine_expression_ranges.iter().zip(resulting_tokens) {
-            let range = range.start() - shift ..= range.end() - shift;
-            tokens.splice(range.clone(), [token].iter().cloned());
-            shift += range.end() - range.start();
+            // Replace the tokens of top level verine expression with their resulting token
+            // We need to shift the ranges to the left because we remove from the beginning of the vector
+            let mut shift = 0;
+            for (range, token) in verine_expression_ranges.iter().zip(resulting_tokens) {
+                let range = range.start() - shift..=range.end() - shift;
+                tokens.splice(range.clone(), std::iter::once(token));
+                shift += range.end() - range.start();
+            }
         }
 
         // Start evaluating this verine expression
@@ -296,101 +299,96 @@ impl<'a> Tokenizer<'a> {
             n.parse::<i32>().map_err(|_| NumberNotAnI32(n.to_owned()))
         }
 
+        use Token::{Get, From, Id, At, Len};
+
         // Final pass, evaluation
-        match tokens.first().unwrap() {
-            // Number computation or string interpolation
-            Token::Number(_) | Token::String(_) => {
-                while tokens.len() > 1 {
-                    // We only support binary operations for now
-                    if let [left, Token::Operator(op), right, ..] = tokens.as_slice() {
-                        let result = match (left, right) {
-                            (Token::Number(l), Token::Number(r)) => {
-                                let l = parse_i32(l)?;
-                                let r = parse_i32(r)?;
+        while tokens.len() > 1 {
+            match tokens.as_slice() {
+                [left, Token::Operator(op), right, ..] => {
+                    let left = Tokenizer::evaluate(vec![left.clone()], global_variables)?;
+                    let right = Tokenizer::evaluate(vec![right.clone()], global_variables)?;
 
-                                // Ugly
-                                // We should maybe store a number inside Token::Number but it's good enough for now
-                                match op {
-                                    Operator::Plus => Ok(Token::Number((l + r).to_string())),
-                                    Operator::Minus => Ok(Token::Number((l - r).to_string())),
-                                    Operator::Asterisk => Ok(Token::Number((l * r).to_string())),
-                                    Operator::Slash => Ok(Token::Number((l / r).to_string())),
-                                }
+                    let result = match (left, right) {
+                        (Token::Number(l), Token::Number(r)) => {
+                            let l = parse_i32(&l)?;
+                            let r = parse_i32(&r)?;
+
+                            // Ugly
+                            // We should maybe store a number inside Token::Number but it's good enough for now
+                            match op {
+                                Op::Plus => Ok(Token::Number((l + r).to_string())),
+                                Op::Minus => Ok(Token::Number((l - r).to_string())),
+                                Op::Asterisk => Ok(Token::Number((l * r).to_string())),
+                                Op::Slash => Ok(Token::Number((l / r).to_string())),
                             }
-                            (Token::String(l), Token::String(r)) => {
-                                match op {
-                                    Operator::Plus => Ok(Token::String(format!("{}{}", l, r))),
-                                    _ => Err(InvalidOperator),
-                                }
+                        }
+                        (Token::String(l), Token::String(r)) => {
+                            match op {
+                                Op::Plus => Ok(Token::String(format!("{}{}", l, r))),
+                                _ => Err(InvalidOperator),
                             }
-                            _ => Err(InvalidOperands),
-                        }?;
-                        // Replace the first 3 tokens with the result of them
-                        tokens.remove(0);
-                        tokens.remove(0);
-                        tokens[0] = result;
-                    } else {
-                        return Err(InvalidExpression)
-                    }
+                        }
+                        _ => Err(InvalidOperands),
+                    }?;
+                    // Replace the first 3 tokens with the result of them
+                    tokens.splice(0..3, std::iter::once(result));
                 }
+                [Get, From, Id(var), At, index, ..] => {
+                    let index = match index {
+                        Id(id) => {
+                            match get_global_variable(id)? {
+                                &ValueEnum::Integer(index) => Ok(index as usize),
+                                _ => Err(InvalidIndex(var.to_owned()))
+                            }
+                        }
+                        Token::Number(index) => {
+                            index.parse::<usize>().map_err(|_| NumberParsingError(index.to_owned()))
+                        }
+                        _ => Err(InvalidIndex(var.to_owned()))
+                    }?;
 
-                // At the end, everything was calculated into one final token
-                assert_eq!(tokens.len(), 1);
-                match &tokens[0] {
-                    token @ Token::String(_) => Ok(token.clone()),
-                    token @ Token::Number(number) => {
-                        // Ugly
-                        // Force-parse the number to check if it's valid
-                        parse_i32(number)?;
-                        Ok(token.clone())
-                    },
-                    _ => Err(InvalidExpression)
+                    let result = match get_global_variable(var)? {
+                        ValueEnum::Array(array) => {
+                            match array.get(index).ok_or(IndexOutOfBounds)? {
+                                ArrayTypesEnum::String(s) => Ok(Token::String(s.to_owned())),
+                                ArrayTypesEnum::Integer(i) => Ok(Token::Number(i.to_string()))
+                            }
+                        }
+                        ValueEnum::String(var) => {
+                            let char = var.chars().nth(index).ok_or(IndexOutOfBounds)?;
+                            Ok(Token::String(char.to_string()))
+                        }
+                        _ => Err(TypeNotIndexable)
+                    }?;
+
+                    tokens.splice(0..5, std::iter::once(result));
+                }
+                [Get, From, Id(var), Len, ..] => {
+                    let result = match get_global_variable(var)? {
+                        ValueEnum::Array(array) => Ok(Token::Number(array.len().to_string())),
+                        ValueEnum::String(var) => Ok(Token::Number(var.len().to_string())),
+                        _ => Err(TypeHasNoLength)
+                    }?;
+
+                    tokens.splice(0..4, std::iter::once(result));
+                }
+                _ => return Err(InvalidExpression),
+            }
+        }
+        assert_eq!(tokens.len(), 1);
+
+        // Make sure the remaining token is valid for the interpreter
+        match tokens.remove(0) {
+            Token::Id(var) => {
+                match get_global_variable(&var)? {
+                    ValueEnum::String(str) => Ok(Token::String(str.to_owned())),
+                    ValueEnum::Integer(int) => Ok(Token::Number(int.to_string())),
+                    _ => return Err(InvalidExpression)
                 }
             }
-            // GET FROM VAR [AT X | LEN]
-            Token::Get => {
-                use Token::*;
-                match tokens.as_slice() {
-                    [Get, From, Id(var), At, index] => {
-                        let var_token = get_global_variable(var)?;
-
-                        let index = match index {
-                            Token::Id(id) => {
-                                match get_global_variable(id)? {
-                                    &ValueEnum::Integer(index) => Ok(index as usize),
-                                    _ => Err(InvalidIndex(var.to_owned()))
-                                }
-                            }
-                            Token::Number(index) => {
-                                index.parse::<usize>().map_err(|_| NumberParsingError(index.to_owned()))
-                            }
-                            _ => Err(InvalidIndex(var.to_owned()))
-                        }?;
-
-                        match var_token {
-                            ValueEnum::Array(array) => {
-                                match array.get(index).ok_or(IndexOutOfBounds)? {
-                                    ArrayTypesEnum::String(s) => Ok(Token::String(s.to_owned())),
-                                    ArrayTypesEnum::Integer(i) => Ok(Token::Number(i.to_string()))
-                                }
-                            }
-                            ValueEnum::String(var) => {
-                                let char = var.chars().nth(index).ok_or(IndexOutOfBounds)?;
-                                Ok(Token::String(char.to_string()))
-                            }
-                            _ => Err(TypeNotIndexable)
-                        }
-                    }
-                    [Get, From, Id(var), Len] => {
-                        match get_global_variable(var)? {
-                            ValueEnum::Array(array) => Ok(Token::Number(array.len().to_string())),
-                            ValueEnum::String(var) => Ok(Token::Number(var.len().to_string())),
-                            _ => Err(TypeHasNoLength)
-                        }
-                    }
-                    _ => Err(InvalidExpression)
-                }
-            }
+            // Force parse the number to make sure it's an integer
+            Token::Number(n) => Ok(Token::Number(parse_i32(&n)?.to_string())),
+            token @ Token::String(_) => Ok(token),
             _ => Err(InvalidExpression)
         }
     }
