@@ -201,12 +201,13 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
                     TokenizerError::InvalidExpression => push_error("Invalid expression"),
                     TokenizerError::VariableNotFound(var) => push_error(&format!("Variable '{}' not found", var)),
                     TokenizerError::NumberParsingError(var) => push_error(&format!("Couldn't parse '{}' into a number", var)),
+                    TokenizerError::NumberNotAnI32(var) => push_error(&format!("'{}' is not an i32", var)),
                     TokenizerError::InvalidOperator => push_error("Invalid operator"),
                     TokenizerError::InvalidOperands => push_error("Invalid operands"),
                     TokenizerError::InvalidIndex(i) => push_error(&format!("'{}' is not a valid index", i)),
                     TokenizerError::IndexOutOfBounds => push_error("Index out of bounds"),
                     TokenizerError::TypeNotIndexable => push_error("Type is not indexable"),
-                    TokenizerError::TypeHasNoLength => push_error("Type has no length")
+                    TokenizerError::TypeHasNoLength => push_error("Type has no length"),
                 }
             }
         }

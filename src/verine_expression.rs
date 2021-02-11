@@ -81,6 +81,7 @@ pub enum TokenizerError {
     InvalidExpression,
     VariableNotFound(String),
     NumberParsingError(String),
+    NumberNotAnI32(String),
     InvalidOperator,
     InvalidOperands,
     InvalidIndex(String),
@@ -231,16 +232,15 @@ impl<'a> Tokenizer<'a> {
 
         for range in &verine_expression_ranges {
             let without_verines = range.start() + 1..*range.end();
-            resulting_tokens.push((
-                Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?
-            ));
+            let result = Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?;
+            resulting_tokens.push(result);
         }
 
         // Replace the tokens of top level verine expression with their resulting token
         // We need to shift the ranges to the left because we remove from the vector
         let mut shift = 0;
         for (range, token) in verine_expression_ranges.iter().zip(resulting_tokens) {
-            let range = (range.start() - shift ..= range.end() - shift);
+            let range = range.start() - shift ..= range.end() - shift;
             tokens.splice(range.clone(), [token].iter().cloned());
             shift += range.end() - range.start();
         }
@@ -289,6 +289,13 @@ impl<'a> Tokenizer<'a> {
             new_tokens
         };
 
+        fn parse_i32(n: &str) -> Result<i32, TokenizerError> {
+            // f64 is a superset of all integers
+            // Any valid number can be parsed into an f64
+            n.parse::<f64>().map_err(|_| NumberParsingError(n.to_owned()))?;
+            n.parse::<i32>().map_err(|_| NumberNotAnI32(n.to_owned()))
+        }
+
         // Final pass, evaluation
         match tokens.first().unwrap() {
             // Number computation or string interpolation
@@ -298,9 +305,8 @@ impl<'a> Tokenizer<'a> {
                     if let [left, Token::Operator(op), right, ..] = tokens.as_slice() {
                         let result = match (left, right) {
                             (Token::Number(l), Token::Number(r)) => {
-                                // Supposing they are integers for now
-                                let l = l.parse::<i32>().map_err(|_| NumberParsingError(l.to_owned()))?;
-                                let r = r.parse::<i32>().map_err(|_| NumberParsingError(r.to_owned()))?;
+                                let l = parse_i32(l)?;
+                                let r = parse_i32(r)?;
 
                                 // Ugly
                                 // We should maybe store a number inside Token::Number but it's good enough for now
@@ -335,7 +341,7 @@ impl<'a> Tokenizer<'a> {
                     token @ Token::Number(number) => {
                         // Ugly
                         // Force-parse the number to check if it's valid
-                        number.parse::<i32>().map_err(|_| NumberParsingError(number.to_owned()))?;
+                        parse_i32(number)?;
                         Ok(token.clone())
                     },
                     _ => Err(InvalidExpression)
@@ -390,7 +396,7 @@ impl<'a> Tokenizer<'a> {
     }
 
     pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<Token, TokenizerError> {
-        let mut tokens = Tokenizer::new(&input).tokenize();
+        let tokens = Tokenizer::new(&input).tokenize();
         Tokenizer::evaluate(tokens, &global_variables)
     }
 }
