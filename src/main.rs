@@ -78,7 +78,7 @@ fn file_execution(args_2: String) {
                     }
                 }
                 if valid_input {
-                    let token_collection_of_current_line = tokenizer::make_tokens(&line);
+                    let token_collection_of_current_line = tokenizer::make_tokens(&line); 
 
                     // check for syntax errors
                     if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
