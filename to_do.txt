@@ -41,8 +41,6 @@
 
 - warning when code block isn't closed
 
-- maybe smth like this also for execution part, problem is that line in is a token_collection : println!("- ERROR OCCURED ON LINE NR. {}: '{}'", line_nr, line);
-
 - floats!!!
 
 - maybe in installing part on README say that: install with cargo build --release and then execute it ./minosrus_lang
