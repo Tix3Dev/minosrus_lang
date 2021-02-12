@@ -249,13 +249,13 @@ fn update_while_condition_values(
 }
 
 impl ExecData {
-    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
+    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, original_line: &str) {
         for line in block_code {
-            self.exec(line);
+            self.exec(line, original_line);
         }
     }
 
-    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
+    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>, original_line: &str) -> String {
         let mut token_collection = token_collection.clone();
         println!("token_collection: {:?}", token_collection);
 
@@ -595,7 +595,22 @@ impl ExecData {
             hashmap
         };
 
-
+        // check if indentation is right
+        let mut indentation_count = 0;
+        for character in original_line.chars() {
+            if character == ' ' {
+                indentation_count += 1;
+            }
+            else if character == '\t' {
+                indentation_count += 4;
+            } else {
+                break;
+            }
+        }
+        
+        if self.indentation.len() != indentation_count {
+            return format!("SYNTAX ERROR: INDENTATION IS WRONG!");
+        }
 
         // check for code block stuff
         if self.indentation.to_string() != "".to_string() {
@@ -741,13 +756,13 @@ impl ExecData {
 
 
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
-                                                        self.execute_block_code(if_part.to_vec());
+                                                        self.execute_block_code(if_part.to_vec(), original_line);
                                                     }
                                                     else if is_there_elif_block && is_elif_block_true {
-                                                        self.execute_block_code(elif_part.to_vec());
+                                                        self.execute_block_code(elif_part.to_vec(), original_line);
                                                     }
                                                     else if is_there_else_block {
-                                                        self.execute_block_code(else_part);
+                                                        self.execute_block_code(else_part, original_line);
                                                     }
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -765,7 +780,7 @@ impl ExecData {
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
-                                                            self.execute_block_code(self.block_code[1..].to_vec());
+                                                            self.execute_block_code(self.block_code[1..].to_vec(), original_line);
                                                         }
                                                     }
                                                 },
@@ -1099,7 +1114,7 @@ impl ExecData {
                             match self.functions.get(function_name) {
                                 Some(function_code_block) => {
                                     let block_code = function_code_block[1..].to_vec();
-                                    self.execute_block_code(block_code);
+                                    self.execute_block_code(block_code, original_line);
                                 },
                                 None => {
                                     return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);

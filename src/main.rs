@@ -111,7 +111,7 @@ fn file_execution(args_2: String) {
                 println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
             };
 
-            let return_of_execution = exec_data_variable.exec(line.to_vec());
+            let return_of_execution = exec_data_variable.exec(line.to_vec(), &collection_of_all_lines[line_nr]);
             if return_of_execution != "".to_string() {
                 print_err(&return_of_execution);
                 return;
@@ -149,7 +149,7 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input));
+                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input), &input);
                         if return_of_execution != "".to_string() {
                             // print error message
                             println!("{}", return_of_execution); 
