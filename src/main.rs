@@ -125,17 +125,23 @@ fn file_execution(args_2: String) {
                 }
             }
             if exec_data_variable.indentation.len() != indentation_count {
-                print_err(format!("INDENTATION ERROR!"));
+                print_err("INDENTATION ERROR!");
                 return;
             }
 
             let return_of_execution = exec_data_variable.exec(tokenized_line.to_vec());
             if return_of_execution != "".to_string() {
-                print_err(return_of_execution);
+                print_err(&return_of_execution);
                 return;
             }
         }
 
+        if exec_data_variable.indentation != "".to_string() {
+            let len_of_file = collection_of_all_lines.len();
+            println!("- ERROR OCCURED ON LINE NR. {}: '{}'", len_of_file, collection_of_all_lines[len_of_file - 1]);
+            println!("  -> EXECUTION ERROR: BLOCK CODE ISN'T CLOSED!");
+            println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
+        }
     } else {
         print_interpreter_error("INTERPRETER ERROR: THIRD COMMAND LINE ARGUMENT IS NOT A VALID PATH!");
     }
