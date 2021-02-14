@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::iter::{Enumerate, Peekable};
-use std::str::Chars;
 
 use crate::tokenizer;
 use crate::tokenizer::{ArrayTypesEnum, ValueEnum};
@@ -8,7 +6,8 @@ use crate::tokenizer::{ArrayTypesEnum, ValueEnum};
 #[derive(Debug, Clone)]
 pub enum Token {
     Id(String),
-    Number(String),
+    Float(f32),
+    Integer(i32),
     String(String),
     Operator(Op),
     Get,
@@ -28,179 +27,201 @@ pub enum Op {
     Minus,
     Asterisk,
     Slash,
-}
-
-impl Token {
-    pub fn from_single_char(c: char, last_token: Option<&Token>) -> Self {
-        match c {
-            '|' if last_token.map_or(true, |t| matches!(t, Self::Operator(_))) => Self::OpenVerine,
-            '|' => Self::CloseVerine,
-            '+' => Self::Operator(Op::Plus),
-            '-' => Self::Operator(Op::Minus),
-            '*' => Self::Operator(Op::Asterisk),
-            '/' => Self::Operator(Op::Slash),
-            _ => unimplemented!()
-        }
-    }
-
-    pub fn from_symbol(symbol: &str) -> Self {
-        match symbol {
-            "GET" => Self::Get,
-            "FROM" => Self::From,
-            "LEN" => Self::Len,
-            "AT" => Self::At,
-            "STRING_FROM" => Self::StringFrom,
-            "INTEGER_FROM" => Self::IntegerFrom,
-            "READLN" => Self::ReadLn,
-            _ => {
-                let mut it = symbol.chars();
-                let (first, second) = (it.next(), it.next());
-
-                let is_number = match (first, second) {
-                    (Some(sign), Some(digit)) if (sign == '+' || sign == '-') && digit.is_ascii_digit() => true,
-                    (Some(digit), _) if digit.is_ascii_digit() => true,
-                    _ => false,
-                };
-                if is_number {
-                    Self::Number(symbol.to_string())
-                } else {
-                    Self::Id(symbol.to_string())
-                }
-            }
-        }
-    }
-}
-
-pub enum TokenType {
-    Symbol,
-    StringLiteral,
+    Pow,
 }
 
 pub enum TokenizerError {
+    UnexpectedCharacter(char),
     StdInError,
     InvalidExpression,
     VariableNotFound(String),
-    NumberParsingError(String),
-    NumberNotAnI32(String),
-    InvalidOperator,
+    NumberNotAnInteger(String),
     InvalidOperands,
     InvalidIndex(String),
     IndexOutOfBounds,
     TypeNotIndexable,
     TypeHasNoLength,
+    DivisionByZero,
 }
 
 pub struct Tokenizer<'a> {
-    source: &'a str,
-    current_token_start_index: usize,
-    starting_new_token: bool,
-    current_token_type: TokenType,
-
+    view: &'a [char],
     tokens: Vec<Token>,
-
-    it: Peekable<Enumerate<Chars<'a>>>,
-    current_character: Option<(usize, char)>,
 }
 
 type Globals = HashMap<String, tokenizer::ValueEnum>;
 
 impl<'a> Tokenizer<'a> {
-    pub fn new(source: &'a str) -> Self {
-        let mut this = Self {
-            source,
-            current_token_start_index: 0,
-            starting_new_token: true,
-            current_token_type: TokenType::Symbol,
-
+    pub fn new(view: &'a [char]) -> Self {
+        Self {
+            view,
             tokens: vec![],
-
-            it: source.chars().enumerate().peekable(),
-            current_character: None,
-        };
-        this.current_character = this.it.next();
-        this
+        }
     }
 
-    fn tokenize(mut self) -> Vec<Token> {
-        while let Some((i, c)) = self.current_character {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, TokenizerError> {
+        loop {
+            let is_the_last_token_an_operator = {
+                match self.tokens.last() {
+                    None => true,
+                    Some(Token::Operator(_)) => true,
+                    Some(_) => false,
+                }
+            };
 
-            // String literals
-            match self.current_token_type {
-                // End
-                TokenType::StringLiteral if c == '"' => {
-                    self.end_current_token();
-                    self.current_token_type = TokenType::Symbol;
-                    self.current_character = self.it.next();
-                    continue;
-                }
-                // Middle
-                TokenType::StringLiteral => {
-                    // Escape quotes with backward slash (example: \")
-                    if c == '\\' {
-                        self.it.next(); // Skip the next character
-                    }
-                    self.current_character = self.it.next();
-                    continue;
-                }
-                // Start
-                TokenType::Symbol => if matches!(c, '"') {
-                    self.end_current_token();
-                    self.current_token_type = TokenType::StringLiteral;
-                    self.current_character = self.it.next();
-                    continue;
+            match self.view {
+                [w, ..] if w.is_whitespace() => self.view = &self.view[1..],
+                ['"', ..] => self.process_string_literals()?,
+                [digit, ..] if digit.is_ascii_digit() => self.process_numeric_literals()?,
+                ['+' | '-', digit, ..] if digit.is_ascii_digit() && is_the_last_token_an_operator => self.process_numeric_literals()?,
+                [p, ..] if is_punctuation(*p) => self.process_operators_and_punctuation()?,
+                [c, ..] if is_valid_identifier_character(*c) => self.process_keywords_and_identifiers()?,
+                [e, ..] => return Err(TokenizerError::UnexpectedCharacter(*e)),
+                [] => break,
+            }
+        }
+        Ok(self.tokens.clone())
+    }
+
+    fn process_keywords_and_identifiers(&mut self) -> Result<(), TokenizerError> {
+        let start = self.view;
+        let mut i = 0;
+
+        fn end_token(start: &[char], i: usize) -> Option<Token> {
+            match start.is_empty() {
+                true => None,
+                false => {
+                    let token = start[..i].iter().collect::<String>();
+                    let token = match token.as_str() {
+                        "GET" => Token::Get,
+                        "FROM" => Token::From,
+                        "LEN" => Token::Len,
+                        "AT" => Token::At,
+                        "STRING_FROM" => Token::StringFrom,
+                        "INTEGER_FROM" => Token::IntegerFrom,
+                        "READLN" => Token::ReadLn,
+                        _ => Token::Id(start[..i].iter().collect::<String>())
+                    };
+                    Some(token)
                 }
             }
+        }
 
-            match c {
-                '+' | '-' if self.it.peek().filter(|(_, char)| char.is_ascii_digit()).is_some() => {
-                    if self.starting_new_token {
-                        self.current_token_start_index = i;
-                        self.starting_new_token = false;
+        loop {
+            match self.view {
+                [c, ..] if !is_valid_identifier_character(*c) => {
+                    if let Some(token) = end_token(start, i) {
+                        self.tokens.push(token);
                     }
+                    break Ok(());
                 }
-                // Special characters and operators that terminate a token
-                '|' | '+' | '-' | '*' | '/' => {
-                    self.end_current_token();
-                    self.tokens.push(Token::from_single_char(c, self.tokens.last()));
+                [] => {
+                    if let Some(token) = end_token(start, i) {
+                        self.tokens.push(token);
+                    }
+                    break Ok(());
                 }
-                whitespace if whitespace.is_whitespace() => {
-                    self.end_current_token();
+                [_, ..] => {
+                    self.view = &self.view[1..];
+                    i += 1;
                 }
-                // Mark the beginning of the new token
+            }
+        }
+    }
+
+    fn process_operators_and_punctuation(&mut self) -> Result<(), TokenizerError> {
+        let token = match self.view {
+            ['|', ..] => {
+                let token = match self.tokens.last() {
+                    None => Token::OpenVerine,
+                    Some(Token::Operator(_)) => Token::OpenVerine,
+                    Some(_) => Token::CloseVerine,
+                };
+                Some((1, token))
+            },
+            ['+', ..] => Some((1, Token::Operator(Op::Plus))),
+            ['-', ..] => Some((1, Token::Operator(Op::Minus))),
+            ['*', '*', ..] => Some((2, Token::Operator(Op::Pow))),
+            ['*', ..] => Some((1, Token::Operator(Op::Asterisk))),
+            ['/', ..] => Some((1, Token::Operator(Op::Slash))),
+            _ => None,
+        };
+        if let Some((n, token)) = token {
+            self.tokens.push(token);
+            self.view = &self.view[n..];
+        }
+        Ok(())
+    }
+
+    fn process_string_literals(&mut self) -> Result<(), TokenizerError> {
+        self.view = &self.view[1..]; // Eat first quote
+        let start = self.view;
+        let mut i = 0;
+        loop {
+            match self.view {
+                ['\\', '"', ..] => {
+                    self.view = &self.view[2..];
+                    i += 2;
+                }
+                ['"', ..] => {
+                    let string = start[..i].iter().collect::<String>();
+                    self.tokens.push(Token::String(string));
+
+                    self.view = &self.view[1..]; // Eat last quote
+                    break Ok(());
+                }
+                [_, ..] => {
+                    self.view = &self.view[1..];
+                    i += 1;
+                }
+                [] => break Ok(()),
+            }
+        }
+    }
+
+    fn process_numeric_literals(&mut self) -> Result<(), TokenizerError> {
+        let start = self.view;
+        let mut i = 0;
+        let mut is_float = false;
+
+        let mut is_sign_allowed = true;
+        let mut is_point_allowed = true;
+
+        loop {
+            match self.view {
+                ['+' | '-', ..] if is_sign_allowed => {
+                    is_sign_allowed = false;
+
+                    self.view = &self.view[1..];
+                    i += 1;
+                }
+                ['.', ..] if is_point_allowed => {
+                    is_point_allowed = false;
+                    is_sign_allowed = false;
+                    is_float = true;
+
+                    self.view = &self.view[1..];
+                    i += 1;
+                }
+                [d, ..] if d.is_ascii_digit() => {
+                    is_sign_allowed = false;
+
+                    self.view = &self.view[1..];
+                    i += 1;
+                }
                 _ => {
-                    if self.starting_new_token {
-                        self.current_token_start_index = i;
-                        self.starting_new_token = false;
-                    }
+                    let number = &start[..i].iter().collect::<String>();
+                    self.tokens.push(if is_float {
+                        let float = number.parse::<f32>().unwrap();
+                        Token::Float(float)
+                    } else {
+                        let integer = number.parse::<i32>().unwrap();
+                        Token::Integer(integer)
+                    });
+                    break Ok(())
                 }
             }
-            self.current_character = self.it.next();
         }
-        self.end_current_token();
-        self.tokens.clone()
-    }
-
-    fn end_current_token(&mut self) {
-        let end_index = if let Some((i, _)) = self.current_character {
-            i
-        } else {
-            self.source.len()
-        };
-
-        let token_str = &self.source[self.current_token_start_index..end_index];
-
-        match self.current_token_type {
-            TokenType::Symbol => {
-                if !token_str.is_empty() {
-                    self.tokens.push(Token::from_symbol(token_str));
-                }
-            }
-            TokenType::StringLiteral => {
-                self.tokens.push(Token::String(token_str.to_string()));
-            }
-        }
-        self.starting_new_token = true;
-        self.current_token_start_index = end_index + 1;
     }
 
     fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<Token, TokenizerError> {
@@ -274,23 +295,24 @@ impl<'a> Tokenizer<'a> {
                 match tokens {
                     [Token::StringFrom, argument, ..] => {
                         let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
-                        match argument {
-                            Token::Number(n) => {
-                                new_tokens.push(Token::String(n));
-                                tokens = &tokens[2..];
-                            }
+                        let argument_string = match argument {
+                            Token::Integer(int) => int.to_string(),
+                            Token::Float(float) => float.to_string(),
                             _ => return Err(InvalidExpression)
-                        }
+                        };
+                        new_tokens.push(Token::String(argument_string));
+                        tokens = &tokens[2..];
                     }
                     [Token::IntegerFrom, argument, ..] => {
                         let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
                         match argument {
                             Token::String(s) => {
-                                new_tokens.push(Token::Number(s));
-                                tokens = &tokens[2..];
+                                let int = s.parse::<i32>().map_err(|_| NumberNotAnInteger(s))?;
+                                new_tokens.push(Token::Integer(int));
                             }
                             _ => return Err(InvalidExpression)
                         }
+                        tokens = &tokens[2..];
                     }
                     [token, ..] => {
                         new_tokens.push(token.clone());
@@ -303,53 +325,48 @@ impl<'a> Tokenizer<'a> {
             new_tokens
         };
 
-        fn parse_i32(n: &str) -> Result<i32, TokenizerError> {
-            // f64 is a superset of all integers
-            // Any valid number can be parsed into an f64
-            n.parse::<f64>().map_err(|_| NumberParsingError(n.to_owned()))?;
-            n.parse::<i32>().map_err(|_| NumberNotAnI32(n.to_owned()))
-        }
-
         use Token::{Get, From, Id, At, Len};
 
         // Final pass, evaluation
-        while tokens.len() > 1 {
+        loop {
             match tokens.as_slice() {
                 [left, Token::Operator(op), right, ..] => {
                     let left = Tokenizer::evaluate(vec![left.clone()], global_variables)?;
                     let right = Tokenizer::evaluate(vec![right.clone()], global_variables)?;
 
-                    let result = match (left, op, right) {
-                        (Token::Number(l), _, Token::Number(r)) => {
-                            let l = parse_i32(&l)?;
-                            let r = parse_i32(&r)?;
+                    fn compute_float_operation(l: f32, op: &Op, r: f32) -> Token {
+                        match op {
+                            Op::Plus => Token::Float(l + r),
+                            Op::Minus => Token::Float(l - r),
+                            Op::Asterisk => Token::Float(l * r),
+                            Op::Slash => Token::Float(l / r),
+                            Op::Pow => Token::Float(l.powf(r))
+                        }
+                    }
 
-                            // Ugly
-                            // We should maybe store a number inside Token::Number but it's good enough for now
+                    let result = match (left, op, right) {
+                        // String concatenation
+                        (Token::String(l), Op::Plus, Token::String(r)) => Token::String(format!("{}{}", l, r)),
+                        (Token::String(l), Op::Plus, Token::Integer(r)) => Token::String(format!("{}{}", l, r)),
+                        (Token::String(l), Op::Plus, Token::Float(r)) => Token::String(format!("{}{}", l, r)),
+                        (Token::Integer(l), Op::Plus, Token::String(r)) => Token::String(format!("{}{}", l, r)),
+                        (Token::Float(l), Op::Plus, Token::String(r)) => Token::String(format!("{}{}", l, r)),
+                        // int [op] int = int
+                        (Token::Integer(l), _, Token::Integer(r)) => {
                             match op {
-                                Op::Plus => Ok(Token::Number((l + r).to_string())),
-                                Op::Minus => Ok(Token::Number((l - r).to_string())),
-                                Op::Asterisk => Ok(Token::Number((l * r).to_string())),
-                                Op::Slash => Ok(Token::Number((l / r).to_string())),
+                                Op::Plus => Token::Integer(l + r),
+                                Op::Minus => Token::Integer(l - r),
+                                Op::Asterisk => Token::Integer(l * r),
+                                Op::Slash => Token::Integer(l.checked_div(r).ok_or(DivisionByZero)?),
+                                Op::Pow => Token::Float((l as f32).powi(r))
                             }
                         }
-                        (Token::String(l), _, Token::String(r)) => {
-                            match op {
-                                Op::Plus => Ok(Token::String(format!("{}{}", l, r))),
-                                _ => Err(InvalidOperator),
-                            }
-                        }
-                        // Implicit String to Number conversion like in Javascript
-                        // String + Number = String
-                        // Number + String = String
-                        (Token::String(l), Op::Plus, Token::Number(r)) => {
-                            Ok(Token::String(format!("{}{}", l, r)))
-                        }
-                        (Token::Number(l), Op::Plus, Token::String(r)) => {
-                            Ok(Token::String(format!("{}{}", l, r)))
-                        }
-                        _ => Err(InvalidOperands),
-                    }?;
+                        // Implicit int to float conversion
+                        (Token::Integer(l), _, Token::Float(r)) => compute_float_operation(l as f32, op, r),
+                        (Token::Float(l), _, Token::Integer(r)) => compute_float_operation(l, op, r as f32),
+                        (Token::Float(l), _, Token::Float(r)) => compute_float_operation(l, op, r),
+                        _ => return Err(InvalidOperands)
+                    };
                     // Replace the first 3 tokens with the result of them
                     tokens.splice(0..3, std::iter::once(result));
                 }
@@ -357,64 +374,78 @@ impl<'a> Tokenizer<'a> {
                     let index = match index {
                         Id(id) => {
                             match get_global_variable(id)? {
-                                &ValueEnum::Integer(index) => Ok(index as usize),
-                                _ => Err(InvalidIndex(var.to_owned()))
+                                &ValueEnum::Integer(index) => index as usize,
+                                _ => return Err(InvalidIndex(var.to_owned()))
                             }
                         }
-                        Token::Number(index) => {
-                            index.parse::<usize>().map_err(|_| NumberParsingError(index.to_owned()))
-                        }
-                        _ => Err(InvalidIndex(var.to_owned()))
-                    }?;
+                        Token::Integer(index) => *index as usize,
+                        _ => return Err(InvalidIndex(var.to_owned()))
+                    };
 
                     let result = match get_global_variable(var)? {
                         ValueEnum::Array(array) => {
                             match array.get(index).ok_or(IndexOutOfBounds)? {
-                                ArrayTypesEnum::String(s) => Ok(Token::String(s.to_owned())),
-                                ArrayTypesEnum::Integer(i) => Ok(Token::Number(i.to_string()))
+                                ArrayTypesEnum::String(s) => Token::String(s.to_owned()),
+                                ArrayTypesEnum::Integer(i) => Token::Integer(*i)
                             }
                         }
                         ValueEnum::String(var) => {
                             let char = var.chars().nth(index).ok_or(IndexOutOfBounds)?;
-                            Ok(Token::String(char.to_string()))
+                            Token::String(char.to_string())
                         }
-                        _ => Err(TypeNotIndexable)
-                    }?;
+                        _ => return Err(TypeNotIndexable)
+                    };
 
                     tokens.splice(0..5, std::iter::once(result));
                 }
                 [Get, From, Id(var), Len, ..] => {
                     let result = match get_global_variable(var)? {
-                        ValueEnum::Array(array) => Ok(Token::Number(array.len().to_string())),
-                        ValueEnum::String(var) => Ok(Token::Number(var.len().to_string())),
-                        _ => Err(TypeHasNoLength)
-                    }?;
+                        ValueEnum::Array(array) => Token::Integer(array.len() as i32),
+                        ValueEnum::String(var) => Token::Integer(var.len() as i32),
+                        _ => return Err(TypeHasNoLength)
+                    };
 
                     tokens.splice(0..4, std::iter::once(result));
                 }
-                _ => return Err(InvalidExpression),
-            }
-        }
-        assert_eq!(tokens.len(), 1);
-
-        // Make sure the remaining token is valid for the interpreter
-        match tokens.remove(0) {
-            Token::Id(var) => {
-                match get_global_variable(&var)? {
-                    ValueEnum::String(str) => Ok(Token::String(str.to_owned())),
-                    ValueEnum::Integer(int) => Ok(Token::Number(int.to_string())),
-                    _ => return Err(InvalidExpression)
+                [single, ..] => {
+                    // Make sure the remaining token is valid for the interpreter
+                    let single = match single.clone() {
+                        Token::Id(var) => {
+                            match get_global_variable(&var)? {
+                                ValueEnum::String(str) => Token::String(str.to_owned()),
+                                ValueEnum::Integer(int) => Token::Integer(*int),
+                                _ => return Err(InvalidExpression)
+                            }
+                        }
+                        // Force parse the number to make sure it's an integer
+                        token @ Token::Integer(_) => token,
+                        token @ Token::Float(_) => token,
+                        token @ Token::String(_) => token,
+                        _ => return Err(InvalidExpression)
+                    };
+                    break Ok(single)
                 }
+                [] => break Err(InvalidExpression)
             }
-            // Force parse the number to make sure it's an integer
-            Token::Number(n) => Ok(Token::Number(parse_i32(&n)?.to_string())),
-            token @ Token::String(_) => Ok(token),
-            _ => Err(InvalidExpression)
         }
     }
 
     pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<Token, TokenizerError> {
-        let tokens = Tokenizer::new(&input).tokenize();
+        let chars = input.chars().collect::<Vec<_>>();
+        let mut tokenizer = Tokenizer::new(chars.as_slice());
+        let tokens = tokenizer.tokenize()?;
+        dbg!(&tokens);
         Tokenizer::evaluate(tokens, &global_variables)
+    }
+}
+
+fn is_valid_identifier_character(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+fn is_punctuation(c: char) -> bool {
+    match c {
+        '+' | '-' | '*' | '/' | '.' | '|' => true,
+        _ => false,
     }
 }

@@ -191,23 +191,29 @@ pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tok
             Ok(token) => {
                 match token {
                     Token::String(s) => evaluate_to(&format!("\"{}\"", s)),
-                    Token::Number(n) => evaluate_to(&n),
+                    Token::Integer(int) => evaluate_to(&int.to_string()),
+                    Token::Float(float) => {
+                        dbg!(&float);
+                        panic!("Floats are not supported yet")
+                    },
+                    // Token::Float(float) => evaluate_to(&float.to_string()),
                     _ => panic!("The tokenizer must evaluate to a value"),
                 }
             }
             Err(error) => {
+                use TokenizerError::*;
                 match error {
-                    TokenizerError::StdInError => push_error("Error reading from stdin"),
-                    TokenizerError::InvalidExpression => push_error("Invalid expression"),
-                    TokenizerError::VariableNotFound(var) => push_error(&format!("Variable '{}' not found", var)),
-                    TokenizerError::NumberParsingError(var) => push_error(&format!("Couldn't parse '{}' into a number", var)),
-                    TokenizerError::NumberNotAnI32(var) => push_error(&format!("'{}' is not an i32", var)),
-                    TokenizerError::InvalidOperator => push_error("Invalid operator"),
-                    TokenizerError::InvalidOperands => push_error("Invalid operands"),
-                    TokenizerError::InvalidIndex(i) => push_error(&format!("'{}' is not a valid index", i)),
-                    TokenizerError::IndexOutOfBounds => push_error("Index out of bounds"),
-                    TokenizerError::TypeNotIndexable => push_error("Type is not indexable"),
-                    TokenizerError::TypeHasNoLength => push_error("Type has no length"),
+                    UnexpectedCharacter(char) => push_error(&format!("Unexpected character '{}'", char)),
+                    StdInError => push_error("Error reading from stdin"),
+                    InvalidExpression => push_error("Invalid expression"),
+                    VariableNotFound(var) => push_error(&format!("Variable '{}' not found", var)),
+                    NumberNotAnInteger(var) => push_error(&format!("'{}' is not an integer", var)),
+                    InvalidOperands => push_error("Invalid operands"),
+                    InvalidIndex(i) => push_error(&format!("'{}' is not a valid index", i)),
+                    IndexOutOfBounds => push_error("Index out of bounds"),
+                    TypeNotIndexable => push_error("Type is not indexable"),
+                    TypeHasNoLength => push_error("Type has no length"),
+                    DivisionByZero => push_error("Division by zero")
                 }
             }
         }
