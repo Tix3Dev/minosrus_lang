@@ -55,7 +55,7 @@ fn file_execution(args_2: String) {
         let mut token_collection_of_all_lines: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
         let mut collection_of_all_lines: Vec<String> = Vec::new();
 
-        let mut compilation_error_count = 0;
+        let mut tokenizing_error_count = 0;
 
         // tokenizing - syntax errors - compilation errors - all lines are checked
         for (line_nr, line) in reader.lines().enumerate() {
@@ -64,56 +64,74 @@ fn file_execution(args_2: String) {
             let mut print_err = | error_message | {
                 println!("- ERROR OCCURED ON LINE NR. {}: '{}'", line_nr, line);
                 println!("  -> {}", error_message);
-                compilation_error_count += 1;
+                tokenizing_error_count += 1;
             };
 
-            let mut valid_input = true;
- 
             if !(line.trim().to_string().is_empty()) {
                 for character in line.chars() {
                     if character.is_lowercase() {
-                        print_err("SYNTAX ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
-                        valid_input = false;
-                        break;
+                        print_err("INPUT ERROR: INPUT INCLUDES LOWERCASE CHARACTER!");
+                        println!("INTERPRETER STOPPPED!");
+                        return;
                     }
                 }
-                if valid_input {
-                    let token_collection_of_current_line = tokenizer::make_tokens(&line); 
 
-                    // check for syntax errors
-                    if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
-                        match value {
-                            tokenizer::ValueEnum::String(v) => {
-                                print_err(format!("SYNTAX ERROR: {}", v).as_str());
-                            },
-                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                        }
+                let token_collection_of_current_line = tokenizer::make_tokens(&line); 
+
+                // check for syntax errors
+                if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
+                    match value {
+                        tokenizer::ValueEnum::String(v) => {
+                            print_err(format!("SYNTAX ERROR: {}", v).as_str());
+                        },
+                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                     }
-
-                    // save stuff if there were no errors
-                    token_collection_of_all_lines.push(token_collection_of_current_line);
-                    collection_of_all_lines.push(line);
                 }
+
+                // save stuff if there were no errors
+                token_collection_of_all_lines.push(token_collection_of_current_line);
+                collection_of_all_lines.push(line);
             }
         }
 
-        if compilation_error_count != 0 {
-            println!("\nABORTING DUE THE PREVIOUS {} ERRORS!", compilation_error_count + 1); 
-            println!("\nINTERPRETER STOPPED!");
+        if tokenizing_error_count != 0 {
+            if tokenizing_error_count == 1 {
+                println!("\nABORTING DUE THE PREVIOUS {} ERROR!", tokenizing_error_count); 
+            } else {
+                println!("\nABORTING DUE THE PREVIOUS {} ERRORS!", tokenizing_error_count); 
+            }
+            println!("INTERPRETER STOPPED!");
             return;
         }
 
         // executing - execution errors - runtime errors - execution stops when an error occurs
-        for (line_nr, line) in token_collection_of_all_lines.iter().enumerate() {
+        for (tokenized_line_nr, tokenized_line) in token_collection_of_all_lines.iter().enumerate() {
             let print_err = | error_message | {
-                println!("- ERROR OCCURED ON LINE NR. {}: {}", line_nr, collection_of_all_lines[line_nr]);
+                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", tokenized_line_nr, collection_of_all_lines[tokenized_line_nr]);
                 println!("  -> {}", error_message);
                 println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
             };
 
-            let return_of_execution = exec_data_variable.exec(line.to_vec());
+            // check if indentation is right
+            let mut indentation_count = 0;
+            for character in collection_of_all_lines[tokenized_line_nr].chars() {
+                if character == ' ' {
+                    indentation_count += 1;
+                }
+                else if character == '\t' {
+                    indentation_count += 4;
+                } else {
+                    break;
+                }
+            }
+            if exec_data_variable.indentation.len() != indentation_count {
+                print_err(format!("INDENTATION ERROR!"));
+                return;
+            }
+
+            let return_of_execution = exec_data_variable.exec(tokenized_line.to_vec());
             if return_of_execution != "".to_string() {
-                print_err(&return_of_execution);
+                print_err(return_of_execution);
                 return;
             }
         }
@@ -158,7 +176,7 @@ fn repl() {
                 }
             },
 
-            Err(e) => println!("Something with you input went wrong: {}", e)
+            Err(_) => println!("INPUT ERROR: SOMETHING WITH YOUR INPUT IS WRONG!")
         }
     }
 }
