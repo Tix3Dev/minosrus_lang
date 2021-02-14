@@ -2,7 +2,7 @@
 
 **DISCLAIMER: This project is still in development. Verines don't work yet. That means some examples don't work.**
 
-A simple interpreter in form of a repl for my own programming language called minosrus_lang. 
+A simple interpreter for my own programming language called minosrus_lang. 
 
 It's inspired by BASIC but also by new languages like Rust. In the future the interpreter will (eventually) be used for an OS. And it's my first project in Rust.
 
@@ -17,7 +17,7 @@ Short Paradigm:
 
 - You can simply clone this repository with ```git clone https://github.com/Tix3Dev/minosrus_lang```.
 - You need to be able to execute rust code. To install rust have a look at the [instructions](https://www.rust-lang.org/tools/install) of the official rust-lang page.
-- Finally you can execute the project with ```cargo run```.
+- To build the project execute ```cargo build --release```. The path to the executable is now ```<the path where you saved the project>/minosrus_lang/target/release/minosrus_lang```. 
 
 **IMPORTANT: If you decided to try this out, and you get this error: ```SOMEHOW THIS SHOULDN'T BE PRINTED!```, please create a new issue and post your input + the output. Thank you!**
 

@@ -16,7 +16,7 @@ pub enum ValueEnum {
     Array(Vec<ArrayTypesEnum>)
 }
 
-pub fn make_tokens(mut input: String, global_variables: &mut HashMap<String, tokenizer::ValueEnum>) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokenizer::ValueEnum>) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 

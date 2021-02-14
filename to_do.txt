@@ -4,3 +4,42 @@
 )
 
 ( - implement test cases (tokenizing) )
+
+- fix weird behaviour (no error message and weird PRINT code (evaluation but still a global_variables.get thing)):
+	```
+	LET A = 12
+	IF A != 12 START
+		PRINT "NOT THE SAME"
+		ELSE
+		PRINT ASSD
+		END
+	```
+	-> 
+	```
+
+	split_of_input: ["PRINT", "\"HELLO\""]
+	split_of_input: ["LET", "A", "=", "12"]
+	split_of_input: ["IF", "A", "!=", "12", "START"]
+	split_of_input: ["PRINT", "\"NOT THE SAME\""]
+	split_of_input: ["ELSE"]
+	split_of_input: ["PRINT", "ASDF"]
+	split_of_input: ["END"]
+	token_collection: [("PREDEFINED_NAME", String("PRINT")), ("STRING", String("HELLO"))]
+	oneoneoneoneoenoenoenoeneoneoneoneoenoenoenoenoeneone
+	HELLO
+	self.global_variables: {}
+	token_collection: [("PREDEFINED_NAME", String("LET")), ("VARIABLE/FUNCTION_NAME", String("A")), ("EQUAL_SIGN", String("=")), ("INTEGER", Integer(12))]
+	self.global_variables: {"A": Integer(12)}
+	token_collection: [("PREDEFINED_NAME", String("IF")), ("VARIABLE/FUNCTION_NAME", String("A")), ("COMPARING_OPERATOR", String("!=")), ("INTEGER", Integer(12)), ("PREDEFINED_NAME", String("START"))]
+	self.global_variables: {"A": Integer(12)}
+	token_collection: [("PREDEFINED_NAME", String("PRINT")), ("STRING", String("NOT THE SAME"))]
+	token_collection: [("PREDEFINED_NAME", String("ELSE"))]
+	token_collection: [("PREDEFINED_NAME", String("PRINT")), ("VARIABLE/FUNCTION_NAME", String("ASDF"))]
+	token_collection: [("PREDEFINED_NAME", String("END"))]
+	token_collection: [("PREDEFINED_NAME", String("PRINT")), ("VARIABLE/FUNCTION_NAME", String("ASDF"))]
+	```
+
+- floats!!!
+
+- maybe in installing part on README say that: install with cargo build --release and then execute it ./minosrus_lang
+and say that it's only tested on linux and instructions are for linux
