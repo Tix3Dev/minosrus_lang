@@ -467,7 +467,7 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
                 }
             }
             if dot_count > 1 {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS!".to_string())));
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS IN THE NUMBER!".to_string())));
                 break;
             }
 
@@ -622,7 +622,7 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
                         }
                         else if character == '.' {
                             if dot_count > 0 {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS!".to_string())));
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS IN THE NUMBER!".to_string())));
                                 break;
                             } else {
                                 current_element.push(character);
