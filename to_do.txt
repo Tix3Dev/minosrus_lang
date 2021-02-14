@@ -39,10 +39,6 @@
 	token_collection: [("PREDEFINED_NAME", String("PRINT")), ("VARIABLE/FUNCTION_NAME", String("ASDF"))]
 	```
 
-- warning when code block isn't closed
-
-- indentation check
-
 - floats!!!
 
 - maybe in installing part on README say that: install with cargo build --release and then execute it ./minosrus_lang
