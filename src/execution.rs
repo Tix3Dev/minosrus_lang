@@ -1161,7 +1161,7 @@ impl ExecData {
                         match &token_collection[1].1 {
                             tokenizer::ValueEnum::String(stuff) => stuff.to_string(), 
                             tokenizer::ValueEnum::Integer(stuff) => stuff.to_string(),
-                            tokenizer::ValueEnum::Float(stuff) => stuff.to_string(),
+                            tokenizer::ValueEnum::Float(stuff) => format!("{:?}", stuff), 
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                         }
                     };
