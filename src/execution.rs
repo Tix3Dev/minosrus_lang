@@ -766,6 +766,8 @@ impl ExecData {
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
                                                             self.execute_block_code(self.block_code[1..].to_vec());
+                                                        } else {
+                                                            break;
                                                         }
                                                     }
                                                 },
@@ -1051,30 +1053,7 @@ impl ExecData {
                 else if v == &"PRINT".to_string() {
                     let stuff_to_print: String = {
                         match &token_collection[1].1 {
-                            tokenizer::ValueEnum::String(stuff) => {
-                                if &token_collection[1].0 == &"STRING".to_string() {
-                                    stuff.to_string()
-                                } else {
-                                    println!("wtf");
-                                    unreachable!("oooooooof");
-                                }
-                                /*
-                                else {
-                                    match self.global_variables.get(stuff) {
-                                        Some(value) => {
-                                            match &value {
-                                                tokenizer::ValueEnum::String(final_value) => final_value.to_string(),
-                                                tokenizer::ValueEnum::Integer(final_value) => final_value.to_string(),
-                                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                            }
-                                        }
-                                        None => {
-                                            return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
-                                        }
-                                    }
-                                }
-                                */
-                            },
+                            tokenizer::ValueEnum::String(stuff) => stuff.to_string(), 
                             tokenizer::ValueEnum::Integer(stuff) => stuff.to_string(),
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                         }
