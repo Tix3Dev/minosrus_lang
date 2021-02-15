@@ -62,7 +62,7 @@ fn file_execution(args_2: String) {
             let line = line.unwrap();
 
             let mut print_err = | error_message | {
-                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", line_nr, line);
+                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", line_nr + 1, line);
                 println!("  -> {}", error_message);
                 tokenizing_error_count += 1;
             };
@@ -107,7 +107,7 @@ fn file_execution(args_2: String) {
         // executing - execution errors - runtime errors - execution stops when an error occurs
         for (tokenized_line_nr, tokenized_line) in token_collection_of_all_lines.iter().enumerate() {
             let print_err = | error_message | {
-                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", tokenized_line_nr, collection_of_all_lines[tokenized_line_nr]);
+                println!("- ERROR OCCURED ON LINE NR. {}: '{}'", tokenized_line_nr + 1, collection_of_all_lines[tokenized_line_nr]);
                 println!("  -> {}", error_message);
                 println!("INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!");
             };

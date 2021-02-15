@@ -255,10 +255,14 @@ fn update_while_condition_values(
 }
 
 impl ExecData {
-    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
+    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) -> String {
         for line in block_code {
-            self.exec(line);
+            let return_of_execution = self.exec(line);
+            if return_of_execution != "".to_string() {
+                return return_of_execution;
+            }
         }
+        return format!("");
     }
 
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
@@ -834,13 +838,22 @@ impl ExecData {
 
 
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
-                                                        self.execute_block_code(if_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(if_part.to_vec());
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                     else if is_there_elif_block && is_elif_block_true {
-                                                        self.execute_block_code(elif_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec());
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                     else if is_there_else_block {
-                                                        self.execute_block_code(else_part);
+                                                        let return_of_block_code_execution = self.execute_block_code(else_part);
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -858,7 +871,10 @@ impl ExecData {
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
-                                                            self.execute_block_code(self.block_code[1..].to_vec());
+                                                            let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec());
+                                                            if return_of_block_code_execution != "".to_string() {
+                                                                return format!("{}", return_of_block_code_execution);
+                                                            }
                                                         } else {
                                                             break;
                                                         }
@@ -1185,7 +1201,10 @@ impl ExecData {
                             match self.functions.get(function_name) {
                                 Some(function_code_block) => {
                                     let block_code = function_code_block[1..].to_vec();
-                                    self.execute_block_code(block_code);
+                                    let return_of_block_code_execution = self.execute_block_code(block_code);
+                                    if return_of_block_code_execution != "".to_string() {
+                                        return format!("{}", return_of_block_code_execution);
+                                    }
                                 },
                                 None => {
                                     return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
