@@ -1250,7 +1250,7 @@ impl ExecData {
                                                     *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
-                                                    return format!("EXECUTION ERROR: YOU HAVE TO PUSH AN INTEGER OR A STRING ONTO AN ARRAY!");
+                                                    return format!("EXECUTION ERROR: YOU HAVE TO PUSH A STRING, INTEGER OR FLOAT ONTO AN ARRAY!");
                                                 }
                                             }
                                         },
@@ -1299,39 +1299,35 @@ impl ExecData {
                                 Some(value) => {
                                     match &value {
                                         tokenizer::ValueEnum::Array(vec) => {
+                                            let index = {
+                                                match &token_collection[5].1 {
+                                                    tokenizer::ValueEnum::Integer(index_where_to_insert) => *index_where_to_insert as usize,
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                }
+                                            };
+
+                                            if index >= vec.len() {
+                                                return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
+                                            }
+
                                             match &token_collection[1].1 {
                                                 tokenizer::ValueEnum::String(stuff_to_push) => {
-                                                    match &token_collection[5].1 {
-                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
-                                                            let mut vec_clone = vec.clone();
-                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
-                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                        },
-                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
-                                                    }
+                                                    let mut vec_clone = vec.clone(); 
+                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 tokenizer::ValueEnum::Integer(stuff_to_push) => {
-                                                    match &token_collection[5].1 {
-                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
-                                                            let mut vec_clone = vec.clone();
-                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
-                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                        },
-                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
-                                                    }
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 tokenizer::ValueEnum::Float(stuff_to_push) => {
-                                                    match &token_collection[5].1 {
-                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
-                                                            let mut vec_clone = vec.clone();
-                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
-                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                        },
-                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
-                                                    }
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
-                                                    return format!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
+                                                    return format!("EXECUTION ERROR: YOU HAVE TO INSERT A STRING, INTEGER OR FLOAT INTO AN ARRAY!");
                                                 }
                                             }
                                         },
@@ -1422,7 +1418,7 @@ impl ExecData {
         }
 
         // debugging purpose
-        println!("self.global_variables: {:?}", self.global_variables);
+        // println!("self.global_variables: {:?}", self.global_variables);
 
         return format!("");
     }
