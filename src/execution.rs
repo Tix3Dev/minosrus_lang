@@ -282,7 +282,6 @@ impl ExecData {
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"COMMENT") {
             match value {
                 tokenizer::ValueEnum::String(_v) => {
-                    println!("");
                     return format!("");
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
