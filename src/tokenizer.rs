@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
     String(String),
@@ -12,7 +14,7 @@ pub enum ValueEnum {
     Array(Vec<ArrayTypesEnum>),
 }
 
-pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(input: &str, global_variables: &HashMap<String, ValueEnum>) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
@@ -511,6 +513,7 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
             // acutal spliting
             let mut split_of_array: Vec<ArrayTypesEnum> = vec![];
             let mut current_element = String::new();
+            let mut is_variable_active = false;
             let mut is_string_active = false;
             let mut is_integer_active = false;
             let mut dot_count = 0;
@@ -550,12 +553,44 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
                     }
                 }
                 else if character == ',' {
-                    if !(is_string_active) && !(is_integer_active) {
+                    if !(is_string_active) && !(is_integer_active) && !(is_variable_active) {
                         if !(valid_for_next_element) {
                             valid_for_next_element = true;
                         } else {
                             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY COMMAS IN THE ARRAY!".to_string())));
                             break;
+                        }
+                    }
+                    else if is_variable_active {
+                        match global_variables.get(&current_element) {
+                            Some(value_of_variable) => {
+                                match value_of_variable {
+                                    ValueEnum::String(v) => {
+                                        split_of_array.push(ArrayTypesEnum::String(v.to_string()));
+                                        current_element = String::new();
+                                        is_string_active = false;
+                                        valid_for_next_element = true;
+                                    },
+                                    ValueEnum::Integer(v) => {
+                                        split_of_array.push(ArrayTypesEnum::Integer(*v));
+                                        current_element = String::new();
+                                        is_variable_active = false;
+                                    },
+                                    ValueEnum::Float(v) => {
+                                        split_of_array.push(ArrayTypesEnum::Float(*v));
+                                        current_element = String::new();
+                                        is_variable_active = false;
+                                    },
+                                    _ => {
+                                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLES IN ARRAYS CAN'T BE ARRAYS!".to_string())));
+                                        break;
+                                    }
+                                }
+                            },
+                            None => {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(format!("THERE IS NO VARIABLE CALLED {}!", current_element))));
+                                break;
+                            }
                         }
                     }
                     else if is_integer_active {
@@ -580,15 +615,57 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
                         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("A COMMA IS MISSING!".to_string())));
                         break;
                     }
-                    else if !(is_string_active) && !(is_integer_active) {
+                    else if !(is_string_active) && !(is_integer_active) && !(is_variable_active) {
                         if character.is_numeric() {
                             current_element.push(character);
                             is_integer_active = true;
                         } else {
                             if character != ' ' {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
-                                break;   
+                                current_element.push(character);
+                                is_variable_active = true;
                             }
+                        }
+                    }
+                    else if is_variable_active {
+                        if character == ' ' {
+                            match global_variables.get(&current_element) {
+                                Some(value_of_variable) => {
+                                    match value_of_variable {
+                                        ValueEnum::String(v) => {
+                                            split_of_array.push(ArrayTypesEnum::String(v.to_string()));
+                                            current_element = String::new();
+                                            is_string_active = false;
+                                            valid_for_next_element = false;
+                                        },
+                                        ValueEnum::Integer(v) => {
+                                            split_of_array.push(ArrayTypesEnum::Integer(*v));
+                                            current_element = String::new();
+                                            is_variable_active = false;
+                                            valid_for_next_element = false;
+                                        },
+                                        ValueEnum::Float(v) => {
+                                            split_of_array.push(ArrayTypesEnum::Float(*v));
+                                            current_element = String::new();
+                                            is_variable_active = false;
+                                            valid_for_next_element = false;
+                                        },
+                                        _ => {
+                                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLES IN ARRAYS CAN'T BE ARRAYS!".to_string())));
+                                            break;
+                                        }
+                                    }
+                                },
+                                None => {
+                                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(format!("THERE IS NO VARIABLE CALLED {}!", current_element))));
+                                    break;
+                                }
+                            }
+                        }
+                        else if !(allowed_variable_function_characters.contains(&character)) {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
+                            break;
+                        } else {
+                            current_element.push(character);
                         }
                     }
                     else if is_string_active {

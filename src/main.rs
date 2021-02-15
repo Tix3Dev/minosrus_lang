@@ -76,7 +76,7 @@ fn file_execution(args_2: String) {
                     }
                 }
 
-                let token_collection_of_current_line = tokenizer::make_tokens(&line); 
+                let token_collection_of_current_line = tokenizer::make_tokens(&line, &exec_data_variable.global_variables); 
 
                 // check for syntax errors
                 if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -174,7 +174,7 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input));
+                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input, &exec_data_variable.global_variables));
                         if return_of_execution != "".to_string() {
                             // print error message
                             println!("{}", return_of_execution); 

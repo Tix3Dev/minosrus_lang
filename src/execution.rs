@@ -216,7 +216,7 @@ fn update_while_condition_values(
                         }
                     },
                     None => {
-                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name;
+                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name + "!";
                     }
                 }
             },
@@ -243,7 +243,8 @@ fn update_while_condition_values(
                         }
                     },
                     None => {
-                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name;
+                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name + "!";
+
                     }
                 }
             },
@@ -763,7 +764,7 @@ impl ExecData {
                                                                                         }
                                                                                     },
                                                                                     None => {
-                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                                     }
                                                                                 }
                                                                             },
@@ -790,7 +791,7 @@ impl ExecData {
                                                                                         }
                                                                                     },
                                                                                     None => {
-                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                                     }
                                                                                 }
                                                                             },
@@ -968,7 +969,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1001,7 +1002,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1034,7 +1035,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1065,7 +1066,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1099,7 +1100,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1132,7 +1133,7 @@ impl ExecData {
                                                                     }
                                                                 },
                                                                 None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", variable_name);
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
                                                                 }
                                                             }
                                                         },
@@ -1207,7 +1208,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
+                                    return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}!", function_name);
                                 }
                             }
                         },
@@ -1260,7 +1261,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
                                 }
                             }
                         },
@@ -1284,7 +1285,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
                                 }
                             }
                         },
@@ -1340,7 +1341,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
                                 }
                             }
                         },
@@ -1368,7 +1369,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}", stuff);
+                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
                                 }
                             }
                         },
@@ -1421,7 +1422,7 @@ impl ExecData {
         }
 
         // debugging purpose
-        // println!("self.global_variables: {:?}", self.global_variables);
+        println!("self.global_variables: {:?}", self.global_variables);
 
         return format!("");
     }
