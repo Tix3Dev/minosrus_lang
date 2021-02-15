@@ -136,6 +136,7 @@ fn file_execution(args_2: String) {
             }
         }
 
+        // check if block code is closed at the end of the file
         if exec_data_variable.indentation != "".to_string() {
             let len_of_file = collection_of_all_lines.len();
             println!("- ERROR OCCURED ON LINE NR. {}: '{}'", len_of_file, collection_of_all_lines[len_of_file - 1]);
