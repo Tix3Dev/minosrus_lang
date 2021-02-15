@@ -92,7 +92,7 @@ List (of those that are at the beginning):
 
 List (of those that are in verines):
 - GET
-	- Used to get something; either case 1(length of a string/array) or case 2(character/element)
+	- Used to get something; either case 1(length of a string/array) or case 2(character of string/element of array)
 	- case 1: GET FROM A LEN
 	- case 2: GET FROM A AT 0
 
