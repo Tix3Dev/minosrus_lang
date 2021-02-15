@@ -6,14 +6,16 @@ use crate::verine_expression::{Tokenizer, Token, TokenizerError};
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
     String(String),
-    Integer(i32)
+    Integer(i32),
+    Float(f32)
 }
 
 #[derive(Debug, Clone)]
 pub enum ValueEnum {
     String(String),
     Integer(i32),
-    Array(Vec<ArrayTypesEnum>)
+    Float(f32),
+    Array(Vec<ArrayTypesEnum>),
 }
 
 pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokenizer::ValueEnum>) -> Vec<(String, ValueEnum)> {
@@ -28,6 +30,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
         "EQUAL_SIGN".to_string(),
         "STRING".to_string(),
         "INTEGER".to_string(),
+        "FLOAT".to_string(),
         "ARRAY".to_string(),
         "COMMENT".to_string(),
         "VARIABLE/FUNCTION_NAME".to_string()
@@ -341,11 +344,40 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
             final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.as_str()[1..part.len()-1].to_string())));
         }
         // integer check
-        else if !(part.chars().any(|c| !(c.is_numeric()))) {
+        else if !(part.chars().any(|c| !(c.is_numeric() || c == '-' || c == '.'))) {
+            let mut dot_count = 0;
+            for (index, character) in part.chars().enumerate() {
+                if index != 0 && character == '-' {
+                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NEGATIVE SIGN HAS TO BE AT THE BEGINNING OF A NUMBER!".to_string())));
+                    break;
+
+                }
+                else if character == '.' {
+                    if index == 0 {
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("DOT CAN'T BE AT THE BEGINNING OF THE NUMBER!".to_string())));
+                        break;
+
+                    }
+                    else if index == part.len() - 1 {
+                         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("DOT CAN'T BE AT THE END OF THE NUMBER!".to_string())));
+                         break;
+                    } else {
+                        dot_count += 1;
+                    }
+                }
+            }
+            if dot_count > 1 {
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS IN THE NUMBER!".to_string())));
+                break;
+            }
+
             if part.parse::<i32>().is_ok() {
                 final_tokens.push((token_classification[5].to_string(), ValueEnum::Integer(part.parse::<i32>().unwrap())));
+            }
+            else if part.parse::<f32>().is_ok() {
+                final_tokens.push((token_classification[6].to_string(), ValueEnum::Float(part.parse::<f32>().unwrap())));
             } else {
-                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THE INTEGER IS NOT I32!".to_string())));
+                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THE NUMBER IS NOT I32 OR F32!".to_string())));
                 break;
             }
         }
@@ -359,7 +391,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
 
             // check if array is empty
             if array.trim().is_empty() {
-                final_tokens.push((token_classification[6].to_string(), ValueEnum::Array(vec![])));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::Array(vec![])));
                 break;
             }
 
@@ -380,6 +412,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
             let mut current_element = String::new();
             let mut is_string_active = false;
             let mut is_integer_active = false;
+            let mut dot_count = 0;
             let mut valid_for_next_element = true;
 
             for (position, character) in array.chars().enumerate() {
@@ -425,16 +458,20 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                         }
                     }
                     else if is_integer_active {
-                        match current_element.parse::<i32>() {
-                            Ok(number) => {
-                                split_of_array.push(ArrayTypesEnum::Integer(number));
-                                current_element = String::new();
-                                is_integer_active = false;
-                            },
-                            Err(_) => {
-                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INTEGER ELEMENTS OF AN ARRAY HAVE TO BE I32!".to_string())));
-                                break;
-                            }
+                        if current_element.parse::<i32>().is_ok() {
+                            split_of_array.push(ArrayTypesEnum::Integer(current_element.parse::<i32>().unwrap()));
+                            current_element = String::new();
+                            dot_count = 0;
+                            is_integer_active = false;
+                        }
+                        else if current_element.parse::<f32>().is_ok() {
+                            split_of_array.push(ArrayTypesEnum::Float(current_element.parse::<f32>().unwrap()));
+                            current_element = String::new();
+                            dot_count = 0;
+                            is_integer_active = false;
+                        } else {
+                            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER ELEMENTS OF AN ARRAY HAVE TO BE I32 OR F32!".to_string())));
+                            break;
                         }
                     }
                 } else {
@@ -462,19 +499,34 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                     }
                     else if is_integer_active {
                         if character.is_numeric() {
-                            current_element.push(character);
-                        } else if character == ' ' {
-                            match current_element.parse::<i32>() {
-                                Ok(number) => {
-                                    split_of_array.push(ArrayTypesEnum::Integer(number));
-                                    current_element = String::new();
-                                    is_integer_active = false;
-                                    valid_for_next_element = false;
-                                },
-                                Err(_) => {
-                                    final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INTEGER ELEMENTS OF AN ARRAY HAVE TO BE I32!".to_string())));
-                                    break;
-                                }
+                            current_element.push(character);   
+                        }
+                        else if character == ' ' {
+                            if part.parse::<i32>().is_ok() {
+                                split_of_array.push(ArrayTypesEnum::Integer(part.parse::<i32>().unwrap()));
+                                current_element = String::new();
+                                dot_count = 0;
+                                is_integer_active = false;
+                                valid_for_next_element = false;
+                            }
+                            else if part.parse::<f32>().is_ok() {
+                                split_of_array.push(ArrayTypesEnum::Float(part.parse::<f32>().unwrap()));
+                                current_element = String::new();
+                                dot_count = 0;
+                                is_integer_active = false;
+                                valid_for_next_element = false;
+                            } else {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("NUMBER ELEMENTS OF AN ARRAY HAVE TO BE I32 OR F32!".to_string())));
+                                break;
+                            }
+                        }
+                        else if character == '.' {
+                            if dot_count > 0 {
+                                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THERE ARE TOO MANY DOTS IN THE NUMBER!".to_string())));
+                                break;
+                            } else {
+                                current_element.push(character);
+                                dot_count += 1;
                             }
                         } else {
                             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("INVALID CHARACTER IN THE ARRAY!".to_string())));
@@ -483,13 +535,13 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                     }
                 }
             }
-
-            final_tokens.push((token_classification[6].to_string(), ValueEnum::Array(split_of_array)));
+        
+            final_tokens.push((token_classification[7].to_string(), ValueEnum::Array(split_of_array)));
         }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -505,7 +557,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(part.to_string())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;

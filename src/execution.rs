@@ -141,6 +141,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a == b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a == b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a == b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
@@ -148,6 +149,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a != b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a != b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a != b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
@@ -155,6 +157,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a < b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a < b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a < b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
@@ -162,6 +165,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a > b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a > b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a > b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
@@ -169,6 +173,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a <= b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a <= b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a <= b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     }
@@ -176,6 +181,7 @@ fn check_block_code_condition(operator: String, block_code: Vec<Vec<(String, tok
         match (&block_code[0][1].1, &block_code[0][3].1) {
             (tokenizer::ValueEnum::String(a), tokenizer::ValueEnum::String(b)) => a >= b,
             (tokenizer::ValueEnum::Integer(a), tokenizer::ValueEnum::Integer(b)) => a >= b,
+            (tokenizer::ValueEnum::Float(a), tokenizer::ValueEnum::Float(b)) => a >= b,
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
     } else {
@@ -249,10 +255,14 @@ fn update_while_condition_values(
 }
 
 impl ExecData {
-    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) {
+    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) -> String {
         for line in block_code {
-            self.exec(line);
+            let return_of_execution = self.exec(line);
+            if return_of_execution != "".to_string() {
+                return return_of_execution;
+            }
         }
+        return format!("");
     }
 
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
@@ -272,7 +282,6 @@ impl ExecData {
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"COMMENT") {
             match value {
                 tokenizer::ValueEnum::String(_v) => {
-                    println!("");
                     return format!("");
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -320,6 +329,12 @@ impl ExecData {
                         "PREDEFINED_NAME:LET",
                         "VARIABLE/FUNCTION_NAME:?",
                         "EQUAL_SIGN:=",
+                        "FLOAT:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:LET",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "EQUAL_SIGN:=",
                         "ARRAY:?"
                     ],
                     vec![
@@ -339,6 +354,10 @@ impl ExecData {
                     vec![
                         "PREDEFINED_NAME:PRINT",
                         "INTEGER:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:PRINT",
+                        "FLOAT:?"
                     ],
                     vec![
                         "PREDEFINED_NAME:PRINT",
@@ -377,6 +396,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:IF",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:IF",
                         "STRING:?",
                         "COMPARING_OPERATOR:?",
                         "VARIABLE/FUNCTION_NAME:?",
@@ -391,6 +417,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:IF",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:IF",
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "STRING:?",
@@ -401,6 +434,13 @@ impl ExecData {
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "INTEGER:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:IF",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
                         "PREDEFINED_NAME:START"
                     ],
                     vec![
@@ -430,6 +470,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:ELIF",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:ELIF",
                         "STRING:?",
                         "COMPARING_OPERATOR:?",
                         "VARIABLE/FUNCTION_NAME:?",
@@ -444,6 +491,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:ELIF",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:ELIF",
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "STRING:?",
@@ -454,6 +508,13 @@ impl ExecData {
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "INTEGER:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:ELIF",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
                         "PREDEFINED_NAME:START"
                     ],
                     vec![
@@ -484,6 +545,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:WHILE",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:WHILE",
                         "STRING:?",
                         "COMPARING_OPERATOR:?",
                         "VARIABLE/FUNCTION_NAME:?",
@@ -498,6 +566,13 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:WHILE",
+                        "FLOAT:?",
+                        "COMPARING_OPERATOR:?",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:WHILE",
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "STRING:?",
@@ -508,6 +583,13 @@ impl ExecData {
                         "VARIABLE/FUNCTION_NAME:?",
                         "COMPARING_OPERATOR:?",
                         "INTEGER:?",
+                        "PREDEFINED_NAME:START"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:WHILE",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "COMPARING_OPERATOR:?",
+                        "FLOAT:?",
                         "PREDEFINED_NAME:START"
                     ],
                     vec![
@@ -530,6 +612,12 @@ impl ExecData {
                     vec![
                         "PREDEFINED_NAME:PUSH",
                         "INTEGER:?",
+                        "PREDEFINED_NAME:ONTO",
+                        "VARIABLE/FUNCTION_NAME:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:PUSH",
+                        "FLOAT:?",
                         "PREDEFINED_NAME:ONTO",
                         "VARIABLE/FUNCTION_NAME:?"
                     ],
@@ -561,6 +649,14 @@ impl ExecData {
                     vec![
                         "PREDEFINED_NAME:INSERT",
                         "INTEGER:?",
+                        "PREDEFINED_NAME:INTO",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:AT",
+                        "INTEGER:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:INSERT",
+                        "FLOAT:?",
                         "PREDEFINED_NAME:INTO",
                         "VARIABLE/FUNCTION_NAME:?",
                         "PREDEFINED_NAME:AT",
@@ -741,13 +837,22 @@ impl ExecData {
 
 
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
-                                                        self.execute_block_code(if_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(if_part.to_vec());
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                     else if is_there_elif_block && is_elif_block_true {
-                                                        self.execute_block_code(elif_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec());
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                     else if is_there_else_block {
-                                                        self.execute_block_code(else_part);
+                                                        let return_of_block_code_execution = self.execute_block_code(else_part);
+                                                        if return_of_block_code_execution != "".to_string() {
+                                                            return format!("{}", return_of_block_code_execution);
+                                                        }
                                                     }
                                                 },
                                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -765,7 +870,10 @@ impl ExecData {
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
-                                                            self.execute_block_code(self.block_code[1..].to_vec());
+                                                            let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec());
+                                                            if return_of_block_code_execution != "".to_string() {
+                                                                return format!("{}", return_of_block_code_execution);
+                                                            }
                                                         } else {
                                                             break;
                                                         }
@@ -848,6 +956,10 @@ impl ExecData {
                                                                             token_collection_clone[3].0 = "INTEGER".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[3].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         tokenizer::ValueEnum::Array(v) => {
                                                                             token_collection_clone[3].0 = "ARRAY".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Array(v.to_vec());
@@ -878,6 +990,10 @@ impl ExecData {
                                                                             token_collection_clone[1].0 = "INTEGER".to_string();
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         _ => {
                                                                             return format!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
                                                                         }
@@ -907,8 +1023,12 @@ impl ExecData {
                                                                             token_collection_clone[1].0 = "INTEGER".to_string();
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -934,8 +1054,12 @@ impl ExecData {
                                                                             token_collection_clone[3].0 = "INTEGER".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[3].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -964,8 +1088,12 @@ impl ExecData {
                                                                             token_collection_clone[1].0 = "INTEGER".to_string();
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -993,8 +1121,12 @@ impl ExecData {
                                                                             token_collection_clone[1].0 = "INTEGER".to_string();
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
+                                                                        tokenizer::ValueEnum::Float(v) => {
+                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                        },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
+                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -1037,29 +1169,19 @@ impl ExecData {
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                         }
                     };
-                    if &token_collection[3].0 == &"STRING".to_string() {
-                        self.global_variables.insert(variable_name, token_collection[3].1.clone());
-                    }
-                    else if &token_collection[3].0 == &"INTEGER".to_string() {
-                        self.global_variables.insert(variable_name, token_collection[3].1.clone());
-                    }
-                    else if &token_collection[3].0 == &"VARIABLE/FUNCTION_NAME".to_string() {
-                        self.global_variables.insert(variable_name, token_collection[3].1.clone());
-                    }
-                    else if &token_collection[3].0 == &"ARRAY".to_string() {
-                        self.global_variables.insert(variable_name, token_collection[3].1.clone());
-                    }
+                    self.global_variables.insert(variable_name, token_collection[3].1.clone());
                 }
                 else if v == &"PRINT".to_string() {
                     let stuff_to_print: String = {
                         match &token_collection[1].1 {
                             tokenizer::ValueEnum::String(stuff) => stuff.to_string(), 
                             tokenizer::ValueEnum::Integer(stuff) => stuff.to_string(),
+                            tokenizer::ValueEnum::Float(stuff) => format!("{:?}", stuff), 
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                         }
                     };
 
-                    println!("{}", stuff_to_print);
+                    println!("{}", stuff_to_print); // if float print decimal places
                 }
                 else if v == &"FN".to_string() {
                     match &token_collection[1].1 {
@@ -1078,7 +1200,10 @@ impl ExecData {
                             match self.functions.get(function_name) {
                                 Some(function_code_block) => {
                                     let block_code = function_code_block[1..].to_vec();
-                                    self.execute_block_code(block_code);
+                                    let return_of_block_code_execution = self.execute_block_code(block_code);
+                                    if return_of_block_code_execution != "".to_string() {
+                                        return format!("{}", return_of_block_code_execution);
+                                    }
                                 },
                                 None => {
                                     return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}", function_name);
@@ -1115,6 +1240,11 @@ impl ExecData {
                                                 tokenizer::ValueEnum::Integer(stuff_to_push) => {
                                                     let mut vec_clone = vec.clone();
                                                     vec_clone.push(tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
+                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                                },
+                                                tokenizer::ValueEnum::Float(stuff_to_push) => {
+                                                    let mut vec_clone = vec.clone();
+                                                    vec_clone.push(tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
                                                     *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
@@ -1188,7 +1318,16 @@ impl ExecData {
                                                         _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
                                                     }
                                                 },
-
+                                                tokenizer::ValueEnum::Float(stuff_to_push) => {
+                                                    match &token_collection[5].1 {
+                                                        tokenizer::ValueEnum::Integer(index_where_to_insert) => {
+                                                            let mut vec_clone = vec.clone();
+                                                            vec_clone.insert(*index_where_to_insert as usize, tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
+                                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                                        },
+                                                        _ => unreachable!("SOMEHOW THIS SHOUDLN'T BE PRINTED!")
+                                                    }
+                                                },
                                                 _ => {
                                                     return format!("EXECUTION ERROR: YOU HAVE TO INSERT AN INTEGER INTO A INTEGER ARRAY!");
                                                 }

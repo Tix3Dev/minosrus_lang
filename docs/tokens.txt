@@ -30,9 +30,17 @@ Integers:
 
 
 
+Floats:
+- e.g. 352.001 or -72727.1337
+- Semantics: Data type
+			 Numbers which are always signed and 32 bit -> f32
+- Note: Dots are used; no commas
+
+
+
 Arrays:
 - e.g. [21, -211, 3828]
-- Semantics: Multiple strings or integers of the same type; dynamic
+- Semantics: Multiple strings, integers or floats; dynamic
 - Manipulating: PUSH 121 ONTO A
 - Manipulating: POP FROM A
 - Manipulating: INSERT 121 INTO A AT 0

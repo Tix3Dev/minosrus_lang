@@ -57,7 +57,7 @@ For more examples have a look at the [examples](https://github.com/Tix3Dev/minos
 
 ## Documentation
 
-To get a better understanding of the language, you might consider looking at the documentation. You will also find some examples there. Here is the link to the [docs](https://github.com/Tix3Dev/minosrus_lang/tree/master/docs).
+To get a better understanding of the language, you might consider looking at the documentation. Here is the link to the [docs](https://github.com/Tix3Dev/minosrus_lang/tree/master/docs).
 
 ----
 
