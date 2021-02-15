@@ -8,6 +8,7 @@
 		END
 	```
 
-- indexing errors for e.g. REMOVE (like OUT OF BOUNDS or INVALID INDEX (-23))
+- update error messages (there are many missing)
+	-> maybe automate the process
 
 - fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
