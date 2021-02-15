@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::tokenizer;
-use crate::verine_expression::{Tokenizer, Token, TokenizerError};
+use crate::verine_expression::{Tokenizer, TokenizerError, Value};
 
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
@@ -99,8 +99,6 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
         vec
     };
 
-    /////////////////
-
     // check for one verine and if one exists replace input
     if input.contains('|') {
         // save | positions
@@ -116,8 +114,6 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
             return final_tokens;
         }
 
-        /////////
-
         let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
         let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &global_variables);
 
@@ -132,16 +128,15 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
         match verine {
             Ok(token) => {
                 match token {
-                    Token::String(s) => evaluate_to(&format!("\"{}\"", s)),
-                    Token::Integer(int) => evaluate_to(&int.to_string()),
-                    Token::Float(float) => evaluate_to(&float.to_string()),
-                    _ => panic!("The tokenizer must evaluate to a value"),
+                    Value::String(s) => evaluate_to(&format!("\"{}\"", s)),
+                    Value::Integer(int) => evaluate_to(&int.to_string()),
+                    Value::Float(float) => evaluate_to(&float.to_string()),
                 }
             }
             Err(error) => {
                 use TokenizerError::*;
                 match error {
-                    UnexpectedCharacter(char) => push_error("INVALID CHARACTER IN VERINE!"),
+                    UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
                     StdInError => push_error("PROBLEMS READING USER INPUT!"),
                     InvalidExpression => push_error("Invalid expression"),
                     VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
