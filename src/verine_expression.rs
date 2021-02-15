@@ -135,6 +135,10 @@ impl<'a> Tokenizer<'a> {
                 let token = match self.tokens.last() {
                     None => Token::OpenVerine,
                     Some(Token::Operator(_)) => Token::OpenVerine,
+                    Some(Token::From) => Token::OpenVerine,
+                    Some(Token::At) => Token::OpenVerine,
+                    Some(Token::StringFrom) => Token::OpenVerine,
+                    Some(Token::IntegerFrom) => Token::OpenVerine,
                     Some(_) => Token::CloseVerine,
                 };
                 Some((1, token))
