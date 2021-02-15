@@ -386,7 +386,8 @@ impl<'a> Tokenizer<'a> {
                         ValueEnum::Array(array) => {
                             match array.get(index).ok_or(IndexOutOfBounds)? {
                                 ArrayTypesEnum::String(s) => Token::String(s.to_owned()),
-                                ArrayTypesEnum::Integer(i) => Token::Integer(*i)
+                                ArrayTypesEnum::Integer(i) => Token::Integer(*i),
+                                ArrayTypesEnum::Float(f) => Token::Float(*f),
                             }
                         }
                         ValueEnum::String(var) => {
@@ -414,10 +415,10 @@ impl<'a> Tokenizer<'a> {
                             match get_global_variable(&var)? {
                                 ValueEnum::String(str) => Token::String(str.to_owned()),
                                 ValueEnum::Integer(int) => Token::Integer(*int),
+                                ValueEnum::Float(float) => Token::Float(*float),
                                 _ => return Err(InvalidExpression)
                             }
                         }
-                        // Force parse the number to make sure it's an integer
                         token @ Token::Integer(_) => token,
                         token @ Token::Float(_) => token,
                         token @ Token::String(_) => token,

@@ -83,82 +83,21 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
     let equal_sign = "=".to_string();
 
     // used for checking whether a name is valid or not
-    let allowed_variable_function_characters = vec![
-        'A',
-        'B',
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'M',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z',
-        '_',
-    ];
+    let allowed_variable_function_characters = {
+        let mut vec = vec![];
+        vec.extend('A'..='Z');
+        vec.push('_');
+        vec
+    };
 
     // used for checking whether the inner part of a string is valid or not
-    let allowed_string_inner_part_characters = vec![
-        'A',
-        'B',
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'M',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '0',
-        ',',
-        '.',
-        ':',
-        '!',
-        '?',
-        ' '
-    ];
-
+    let allowed_string_inner_part_characters = {
+        let mut vec = vec![];
+        vec.extend('A'..='Z');
+        vec.extend('0'..='9');
+        vec.extend_from_slice(&[',', '.', ':', '!', '?', ' ']);
+        vec
+    };
 
     /////////////////
 
@@ -195,11 +134,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                 match token {
                     Token::String(s) => evaluate_to(&format!("\"{}\"", s)),
                     Token::Integer(int) => evaluate_to(&int.to_string()),
-                    Token::Float(float) => {
-                        dbg!(&float);
-                        panic!("Floats are not supported yet")
-                    },
-                    // Token::Float(float) => evaluate_to(&float.to_string()),
+                    Token::Float(float) => evaluate_to(&float.to_string()),
                     _ => panic!("The tokenizer must evaluate to a value"),
                 }
             }
