@@ -8,4 +8,8 @@
 		END
 	```
 
-- variables in arrays
+- fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
+
+(
+- PUSH, POP, INSERT and REMOVE for strings
+)
