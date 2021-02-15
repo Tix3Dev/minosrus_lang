@@ -46,7 +46,7 @@ Arrays:
 - Manipulating: INSERT 121 INTO A AT 0
 - Manipulating: REMOVE FROM A AT 1
 - Note: Can't print an array; just elements
-
+- Note: Variables are supported; e.g. [A, 32, "HELLO"] where A is a variable
 
 
 Comments:
