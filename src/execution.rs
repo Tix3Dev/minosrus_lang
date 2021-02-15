@@ -1352,14 +1352,20 @@ impl ExecData {
                                 Some(value) => {
                                     match &value {
                                         tokenizer::ValueEnum::Array(vec) => {
-                                            match &token_collection[4].1 {
-                                                tokenizer::ValueEnum::Integer(index_where_to_remove) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone.remove(*index_where_to_remove as usize);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                            let index = {
+                                                match &token_collection[4].1 {
+                                                    tokenizer::ValueEnum::Integer(index_where_to_remove) => *index_where_to_remove as usize,
+                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                }
+                                            };
+                                            
+                                            if index >= vec.len() {
+                                                return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
                                             }
+
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone.remove(index);
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                         },
                                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                     }
