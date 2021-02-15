@@ -91,7 +91,8 @@ impl<'a> Tokenizer<'a> {
                 [w, ..] if w.is_whitespace() => self.view = &self.view[1..],
                 ['"', ..] => self.process_string_literals()?,
                 [digit, ..] if digit.is_ascii_digit() => self.process_numeric_literals()?,
-                ['+' | '-', digit, ..] if digit.is_ascii_digit() && is_the_last_token_an_operator => self.process_numeric_literals()?,
+                ['+', digit, ..] if digit.is_ascii_digit() && is_the_last_token_an_operator => self.process_numeric_literals()?,
+                ['-', digit, ..] if digit.is_ascii_digit() && is_the_last_token_an_operator => self.process_numeric_literals()?,
                 [p, ..] if is_punctuation(*p) => self.process_operators_and_punctuation()?,
                 [c, ..] if is_valid_identifier_character(*c) => self.process_keywords_and_identifiers()?,
                 [e, ..] => return Err(TokenizerError::UnexpectedCharacter(*e)),
@@ -211,7 +212,7 @@ impl<'a> Tokenizer<'a> {
 
         loop {
             match self.view {
-                ['+' | '-', ..] if is_sign_allowed => {
+                ['+', ..] | ['-', ..] if is_sign_allowed => {
                     is_sign_allowed = false;
 
                     self.view = &self.view[1..];

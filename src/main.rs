@@ -1,6 +1,3 @@
-#![feature(or_patterns)]
-#![feature(bindings_after_at)]
-
 mod execution;
 mod verine_expression;
 mod tokenizer;
