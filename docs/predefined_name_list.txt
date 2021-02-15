@@ -104,10 +104,11 @@ List (of those that are in verines):
 
 - READLN
 	- Used to get user input
-	- Always used with STRING_FROM OR INTEGER_FROM
+	- Returns by default a string
+	- In case you need an integer you can use INTEGER_FROM
 
 	- Example:
-		> LET USER_INPUT = | STRING_FROM READLN |
+		> LET USER_INPUT = | READLN |
 
 - STRING_FROM
 	- Used to convert a integer to a string
