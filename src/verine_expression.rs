@@ -435,7 +435,6 @@ impl<'a> Tokenizer<'a> {
         let chars = input.chars().collect::<Vec<_>>();
         let mut tokenizer = Tokenizer::new(chars.as_slice());
         let tokens = tokenizer.tokenize()?;
-        dbg!(&tokens);
         Tokenizer::evaluate(tokens, &global_variables)
     }
 }
