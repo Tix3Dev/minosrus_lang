@@ -418,7 +418,8 @@ pub fn make_tokens(input: &str) -> Vec<(String, ValueEnum)> {
     if split_of_input[split_of_input.len() - 1] == "" {
         split_of_input.remove(split_of_input.len() - 1);
     }
-    println!("split_of_input: {:?}", split_of_input);
+    // debugging purpose
+    // println!("split_of_input: {:?}", split_of_input);
 
     let mut i = 0;
     while i < split_of_input.len() {

@@ -267,7 +267,8 @@ impl ExecData {
 
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
         let mut token_collection = token_collection.clone();
-        println!("token_collection: {:?}", token_collection);
+        // debugging purpose
+        // println!("token_collection: {:?}", token_collection);
 
         // check for syntax errors
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -1181,7 +1182,7 @@ impl ExecData {
                         }
                     };
 
-                    println!("{}", stuff_to_print); // if float print decimal places
+                    println!("{}", stuff_to_print);
                 }
                 else if v == &"FN".to_string() {
                     match &token_collection[1].1 {
@@ -1419,7 +1420,8 @@ impl ExecData {
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
         }
 
-        println!("self.global_variables: {:?}", self.global_variables);
+        // debugging purpose
+        // println!("self.global_variables: {:?}", self.global_variables);
 
         return format!("");
     }
