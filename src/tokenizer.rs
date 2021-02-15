@@ -141,17 +141,17 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
             Err(error) => {
                 use TokenizerError::*;
                 match error {
-                    UnexpectedCharacter(char) => push_error(&format!("Unexpected character '{}'", char)),
-                    StdInError => push_error("Error reading from stdin"),
+                    UnexpectedCharacter(char) => push_error("INVALID CHARACTER IN VERINE!"),
+                    StdInError => push_error("PROBLEMS READING USER INPUT!"),
                     InvalidExpression => push_error("Invalid expression"),
-                    VariableNotFound(var) => push_error(&format!("Variable '{}' not found", var)),
-                    NumberNotAnInteger(var) => push_error(&format!("'{}' is not an integer", var)),
-                    InvalidOperands => push_error("Invalid operands"),
-                    InvalidIndex(i) => push_error(&format!("'{}' is not a valid index", i)),
-                    IndexOutOfBounds => push_error("Index out of bounds"),
-                    TypeNotIndexable => push_error("Type is not indexable"),
-                    TypeHasNoLength => push_error("Type has no length"),
-                    DivisionByZero => push_error("Division by zero")
+                    VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
+                    NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
+                    InvalidOperands => push_error("INVALID OPERANDS!"),
+                    InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
+                    IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
+                    TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
+                    TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
+                    DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!")
                 }
             }
         }
