@@ -8,8 +8,6 @@
 		END
 	```
 
-- fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
+- indexing errors for e.g. REMOVE (like OUT OF BOUNDS or INVALID INDEX (-23))
 
-(
-- PUSH, POP, INSERT and REMOVE for strings
-)
+- fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
