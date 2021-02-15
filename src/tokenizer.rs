@@ -138,7 +138,6 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                 match error {
                     UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
                     StdInError => push_error("PROBLEMS READING USER INPUT!"),
-                    InvalidExpression => push_error("Invalid expression"),
                     VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
                     NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
                     InvalidOperands => push_error("INVALID OPERANDS!"),
@@ -146,7 +145,10 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                     IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
                     TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
                     TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
-                    DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!")
+                    DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
+                    StringLiteralNotClosed => push_error("String literal not closed"),
+                    UnsupportedReturnType => push_error("Unsupported return type"),
+                    InvalidExpression => push_error("Invalid expression"),
                 }
             }
         }

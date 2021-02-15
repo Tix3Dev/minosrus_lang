@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::tokenizer;
 use crate::tokenizer::{ArrayTypesEnum, ValueEnum};
-use crate::verine_expression::TokenizerError::InvalidExpression;
+use crate::verine_expression::TokenizerError::*;
 
 #[derive(Debug, Clone)]
 enum Token {
@@ -60,6 +60,8 @@ pub enum TokenizerError {
     TypeNotIndexable,
     TypeHasNoLength,
     DivisionByZero,
+    StringLiteralNotClosed,
+    UnsupportedReturnType, // Returning arrays is not supported
 }
 
 pub struct Tokenizer<'a> {
@@ -197,7 +199,7 @@ impl<'a> Tokenizer<'a> {
                     self.view = &self.view[1..];
                     i += 1;
                 }
-                [] => break Err(InvalidExpression),
+                [] => break Err(StringLiteralNotClosed),
             }
         }
     }
@@ -293,7 +295,6 @@ impl<'a> Tokenizer<'a> {
         }
 
         // Start evaluating this verine expression
-        use TokenizerError::*;
 
         let get_global_variable = |var: &str| {
             global_variables.get(var).ok_or(VariableNotFound(var.to_owned()))
@@ -431,7 +432,7 @@ impl<'a> Tokenizer<'a> {
 
                     tokens.splice(0..4, std::iter::once(result.into()));
                 }
-                [single] => {
+                [single, ..] => {
                     // Make sure the remaining token is valid for the interpreter
                     let single = match single.clone() {
                         Token::Id(var) => {
@@ -439,7 +440,7 @@ impl<'a> Tokenizer<'a> {
                                 ValueEnum::String(str) => Value::String(str.to_owned()),
                                 ValueEnum::Integer(int) => Value::Integer(*int),
                                 ValueEnum::Float(float) => Value::Float(*float),
-                                _ => return Err(InvalidExpression)
+                                _ => return Err(UnsupportedReturnType)
                             }
                         }
                         Token::Value(value) => value,
