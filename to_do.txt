@@ -1,13 +1,5 @@
 - fix weird behavior:
-	```
-	LET A = 12
-	IF A == 12 START
-		PRINT "HELLOOOOOOO"
-		ELSE
-		PRINT "HELLO"
-		END
-	```
-	and this one which only exists when executing it from_file
+	this one which only exists when executing it from_file
 	```
 	LET B = [12, 32]
 	LET A = | B |
