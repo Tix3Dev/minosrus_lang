@@ -15,11 +15,7 @@ fn add_indentation(indentation: &mut String) {
 }
 
 fn subtract_indentation(indentation: &mut String) {
-    if indentation.to_string() == "    ".to_string() {
-        *indentation = "".to_string();
-    } else {
-        *indentation = indentation[..4].to_string();
-    }
+    *indentation = indentation[4..].to_string();
 }
 
 fn is_key_and_value_order_right(line: Vec<(String, tokenizer::ValueEnum)>, predefined_name_order: HashMap<&str, OrderEnum>) -> String {
@@ -824,19 +820,18 @@ impl ExecData {
                                                     let if_part = if is_there_elif_block && is_there_else_block {
                                                         elif_part = self.block_code[where_is_elif_block+1..where_is_else_block].to_vec();
                                                         else_part = self.block_code[where_is_else_block+1..].to_vec();
-                                                        self.block_code[..where_is_elif_block].to_vec()
+                                                        self.block_code[1..where_is_elif_block].to_vec()
                                                     }
                                                     else if is_there_elif_block {
                                                         elif_part = self.block_code[where_is_elif_block+1..].to_vec();
-                                                        self.block_code[..where_is_elif_block].to_vec()
+                                                        self.block_code[1..where_is_elif_block].to_vec()
                                                     }
                                                     else if is_there_else_block {
                                                         else_part = self.block_code[where_is_else_block+1..].to_vec();
-                                                        self.block_code[..where_is_else_block].to_vec()
+                                                        self.block_code[1..where_is_else_block].to_vec()
                                                     } else {
                                                         self.block_code[1..].to_vec()
                                                     };
-
 
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
                                                         let return_of_block_code_execution = self.execute_block_code(if_part.to_vec());
