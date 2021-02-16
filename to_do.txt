@@ -7,8 +7,10 @@
 		PRINT "HELLO"
 		END
 	```
-
-- update error messages (there are many missing)
-	-> maybe automate the process
+	and this one which only exists when executing it from_file
+	```
+	LET B = [12, 32]
+	LET A = | B |
+	```
 
 - fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
