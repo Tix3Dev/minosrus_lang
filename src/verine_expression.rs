@@ -432,7 +432,7 @@ impl<'a> Tokenizer<'a> {
 
                     tokens.splice(0..4, std::iter::once(result.into()));
                 }
-                [single, ..] => {
+                [single] => {
                     // Make sure the remaining token is valid for the interpreter
                     let single = match single.clone() {
                         Token::Id(var) => {
