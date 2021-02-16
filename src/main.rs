@@ -1,4 +1,5 @@
 mod execution;
+mod verine_expression;
 mod tokenizer;
 
 use std::io::{self, Write};
@@ -12,14 +13,14 @@ use std::io::{BufRead, BufReader};
 pub struct ExecData {
     // here are all the global variables stored; not changed after one loop iteration
     pub global_variables: HashMap<String, tokenizer::ValueEnum>,
-    
+
     // save state of indentation
     pub indentation: String,
 
     // here is all block code saved (except for function code)
     pub block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>,
 
-    // here are all functions saved 
+    // here are all functions saved
     pub functions: HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>,
 
     // keep track of the current block code type (normal or functions)
@@ -76,7 +77,7 @@ fn file_execution(args_2: String) {
                     }
                 }
 
-                let token_collection_of_current_line = tokenizer::make_tokens(&line, &exec_data_variable.global_variables); 
+                let token_collection_of_current_line = tokenizer::make_tokens(line.clone(), &exec_data_variable.global_variables); 
 
                 // check for syntax errors
                 if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -96,9 +97,9 @@ fn file_execution(args_2: String) {
 
         if tokenizing_error_count != 0 {
             if tokenizing_error_count == 1 {
-                println!("\nABORTING DUE THE PREVIOUS {} ERROR!", tokenizing_error_count); 
+                println!("\nABORTING DUE THE PREVIOUS {} ERROR!", tokenizing_error_count);
             } else {
-                println!("\nABORTING DUE THE PREVIOUS {} ERRORS!", tokenizing_error_count); 
+                println!("\nABORTING DUE THE PREVIOUS {} ERRORS!", tokenizing_error_count);
             }
             println!("INTERPRETER STOPPED!");
             return;
@@ -174,10 +175,11 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        let return_of_execution = exec_data_variable.exec(tokenizer::make_tokens(&input, &exec_data_variable.global_variables));
-                        if return_of_execution != "".to_string() {
+                        let tokens = tokenizer::make_tokens(input, &mut exec_data_variable.global_variables);
+                        let return_of_execution = exec_data_variable.exec(tokens);
+                        if !return_of_execution.is_empty() {
                             // print error message
-                            println!("{}", return_of_execution); 
+                            println!("{}", return_of_execution);
                         }
                     }
                 }
@@ -190,7 +192,7 @@ fn repl() {
 
 fn main() {
     // get command line arguments
-    let args: Vec<String> = env::args().collect(); 
+    let args: Vec<String> = env::args().collect();
 
     // check if valid
     if args.len() == 3 {
@@ -204,9 +206,9 @@ fn main() {
         if args[1] == "--repl".to_string() {
             repl();
         } else {
-            print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
+            print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
         }
     } else {
-        print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!"); 
+        print_interpreter_error("INTERPRETER ERROR: COMMAND LINE ARGUMENTS AREN'T RIGHT!");
     }
 }
