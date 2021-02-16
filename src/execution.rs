@@ -269,7 +269,7 @@ impl ExecData {
     pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
         let mut token_collection = token_collection.clone();
         // debugging purpose
-        // println!("token_collection: {:?}", token_collection);
+        println!("token_collection: {:?}", token_collection);
 
         // check for syntax errors
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -1424,7 +1424,7 @@ impl ExecData {
         }
 
         // debugging purpose
-        // println!("self.global_variables: {:?}", self.global_variables);
+        println!("self.global_variables: {:?}", self.global_variables);
 
         return format!("");
     }

@@ -149,6 +149,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
                     UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
                     InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
                 }
+                return final_tokens;
             }
         }
     }
@@ -250,7 +251,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
         split_of_input.remove(split_of_input.len() - 1);
     }
     // debugging purpose
-    // println!("split_of_input: {:?}", split_of_input);
+    println!("split_of_input: {:?}", split_of_input);
 
     let mut i = 0;
     while i < split_of_input.len() {
