@@ -146,9 +146,9 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, tokeniz
                     TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
                     TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
                     DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
-                    StringLiteralNotClosed => push_error("String literal not closed"),
-                    UnsupportedReturnType => push_error("Unsupported return type"),
-                    InvalidExpression => push_error("Invalid expression"),
+                    StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
+                    UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+                    InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
                 }
             }
         }
