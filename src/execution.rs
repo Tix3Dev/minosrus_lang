@@ -254,9 +254,9 @@ fn update_while_condition_values(
 }
 
 impl ExecData {
-    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>) -> String {
+    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, called_from_while: bool) -> String {
         for line in block_code {
-            let return_of_execution = self.exec(line);
+            let return_of_execution = self.exec(line, called_from_while);
             if return_of_execution != "".to_string() {
                 return return_of_execution;
             }
@@ -264,7 +264,7 @@ impl ExecData {
         return format!("");
     }
 
-    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>) -> String {
+    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>, called_from_while: bool) -> String {
         let mut token_collection = token_collection.clone();
         // debugging purpose
         println!("token_collection: {:?}", token_collection);
@@ -691,57 +691,53 @@ impl ExecData {
             hashmap
         };
 
-
-        dbg!("AZER");
-
-        // check for code block stuff
-        if self.indentation.to_string() != "".to_string() {
-            dbg!("BBBB");
-            dbg!(&self.verines);
-
-
-            let verine_results = self.verines.iter().map(|(key, value)| {
-                let value = Tokenizer::tokenize_and_evaluate(value, &self.global_variables);
-                (key.to_string(), value)
-            });
-
-            let mut verines = HashMap::new();
-
-            for (key, result) in verine_results {
-                match result {
-                    Ok(token) => {
-                        let token = match token {
-                            Value::Float(f) => ValueEnum::Float(f),
-                            Value::Integer(i) => ValueEnum::Integer(i),
-                            Value::String(s) => ValueEnum::String(s),
-                        };
-                        verines.insert(key, token);
-                    },
-                    Err(error) => {
-                        use crate::verine_expression::TokenizerError::*;
-                        match error {
-                            UnexpectedCharacter(_char) => panic!("INVALID CHARACTER IN VERINE!"),
-                            StdInError => panic!("PROBLEMS READING USER INPUT!"),
-                            VariableNotFound(var) => panic!(format!("THERE IS NO VARIABLE CALLED {}!", var)),
-                            NumberNotAnInteger(var) => panic!(format!("'{}' IS NOT A INTEGER!", var)),
-                            InvalidOperands => panic!("INVALID OPERANDS!"),
-                            InvalidIndex(i) => panic!(format!("'{}' IS NOT A VALID INDEX!", i)),
-                            IndexOutOfBounds => panic!("INDEX IS OUT OF BOUNDS!"),
-                            TypeNotIndexable => panic!("TYPE IS NOT INDEXABLE!"),
-                            TypeHasNoLength => panic!("TYPE HAS NO LENGTH!"),
-                            DivisionByZero => panic!("CAN'T DIVIDE BY ZERO!"),
-                            StringLiteralNotClosed => panic!("STRING ISN'T CLOSED!"),
-                            UnsupportedReturnType => panic!("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-                            InvalidExpression => panic!("INVALID VERINE EXPRESSION!"),
+        if called_from_while {
+            match &token_collection[0].1 {
+                ValueEnum::String(s) => {
+                    if s == "LET" {
+                        match &mut token_collection[1].1 {
+                            ValueEnum::String(name) => {
+                                if let Some(value) = self.verines.get(name) {
+                                    match Tokenizer::tokenize_and_evaluate(value, &self.global_variables) {
+                                        Ok(token) => {
+                                            let token = match token {
+                                                Value::Float(f) => ValueEnum::Float(f),
+                                                Value::Integer(i) => ValueEnum::Integer(i),
+                                                Value::String(s) => ValueEnum::String(s),
+                                            };
+                                            token_collection[3].1 = token;
+                                        },
+                                        Err(error) => {
+                                            use crate::verine_expression::TokenizerError::*;
+                                            match error {
+                                                UnexpectedCharacter(_char) => panic!("INVALID CHARACTER IN VERINE!"),
+                                                StdInError => panic!("PROBLEMS READING USER INPUT!"),
+                                                VariableNotFound(var) => panic!(format!("THERE IS NO VARIABLE CALLED {}!", var)),
+                                                NumberNotAnInteger(var) => panic!(format!("'{}' IS NOT A INTEGER!", var)),
+                                                InvalidOperands => panic!("INVALID OPERANDS!"),
+                                                InvalidIndex(i) => panic!(format!("'{}' IS NOT A VALID INDEX!", i)),
+                                                IndexOutOfBounds => panic!("INDEX IS OUT OF BOUNDS!"),
+                                                TypeNotIndexable => panic!("TYPE IS NOT INDEXABLE!"),
+                                                TypeHasNoLength => panic!("TYPE HAS NO LENGTH!"),
+                                                DivisionByZero => panic!("CAN'T DIVIDE BY ZERO!"),
+                                                StringLiteralNotClosed => panic!("STRING ISN'T CLOSED!"),
+                                                UnsupportedReturnType => panic!("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+                                                InvalidExpression => panic!("INVALID VERINE EXPRESSION!"),
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                         }
                     }
                 }
+                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
+        }
 
-            for (var_name, verine) in verines {
-                self.global_variables.insert(var_name, verine);
-            }
-
+        // check for code block stuff
+        if self.indentation.to_string() != "".to_string() {
             match &token_collection[0].1 {
                 tokenizer::ValueEnum::String(v) => {
                     if v == "IF" || v == "WHILE" {
@@ -755,6 +751,7 @@ impl ExecData {
                         }
                     }
                     else if v == "END" && token_collection.len() == 1 {
+                        subtract_indentation(&mut self.indentation);
                         if self.indentation.to_string() == "".to_string() {
                             if self.current_block_type.0 == "normal" {
                                 match &self.block_code[0][0].1 {
@@ -882,19 +879,19 @@ impl ExecData {
                                                     };
 
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
-                                                        let return_of_block_code_execution = self.execute_block_code(if_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(if_part.to_vec(), false);
                                                         if return_of_block_code_execution != "".to_string() {
                                                             return format!("{}", return_of_block_code_execution);
                                                         }
                                                     }
                                                     else if is_there_elif_block && is_elif_block_true {
-                                                        let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec());
+                                                        let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec(), false);
                                                         if return_of_block_code_execution != "".to_string() {
                                                             return format!("{}", return_of_block_code_execution);
                                                         }
                                                     }
                                                     else if is_there_else_block {
-                                                        let return_of_block_code_execution = self.execute_block_code(else_part);
+                                                        let return_of_block_code_execution = self.execute_block_code(else_part, false);
                                                         if return_of_block_code_execution != "".to_string() {
                                                             return format!("{}", return_of_block_code_execution);
                                                         }
@@ -915,7 +912,7 @@ impl ExecData {
                                                         }
 
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
-                                                            let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec());
+                                                            let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec(), true);
                                                             if return_of_block_code_execution != "".to_string() {
                                                                 return format!("{}", return_of_block_code_execution);
                                                             }
@@ -939,7 +936,6 @@ impl ExecData {
                                 self.current_block_type.1 = "".to_string();
                             }
                         }
-                        subtract_indentation(&mut self.indentation);
                     }
 
                     // saving code block stuff
@@ -1217,7 +1213,7 @@ impl ExecData {
                     };
                     self.global_variables.insert(variable_name, token_collection[3].1.clone());
                 }
-                else if v == &"PRINT".to_string() {
+                if v == &"PRINT".to_string() {
                     let stuff_to_print: String = {
                         match &token_collection[1].1 {
                             tokenizer::ValueEnum::String(stuff) => stuff.to_string(), 
@@ -1246,7 +1242,7 @@ impl ExecData {
                             match self.functions.get(function_name) {
                                 Some(function_code_block) => {
                                     let block_code = function_code_block[1..].to_vec();
-                                    let return_of_block_code_execution = self.execute_block_code(block_code);
+                                    let return_of_block_code_execution = self.execute_block_code(block_code, false);
                                     if return_of_block_code_execution != "".to_string() {
                                         return format!("{}", return_of_block_code_execution);
                                     }

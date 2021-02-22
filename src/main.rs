@@ -134,7 +134,7 @@ fn file_execution(args_2: String) {
                 return;
             }
 
-            let return_of_execution = exec_data_variable.exec(tokenized_line.to_vec());
+            let return_of_execution = exec_data_variable.exec(tokenized_line.to_vec(), false);
             if return_of_execution != "".to_string() {
                 print_err(&return_of_execution);
                 return;
@@ -180,8 +180,7 @@ fn repl() {
                     }
                     if valid_input {
                         let tokens = tokenizer::make_tokens(input, &mut exec_data_variable);
-                        dbg!(&exec_data_variable.verines);
-                        let return_of_execution = exec_data_variable.exec(tokens);
+                        let return_of_execution = exec_data_variable.exec(tokens, false);
                         if !return_of_execution.is_empty() {
                             // print error message
                             println!("{}", return_of_execution);

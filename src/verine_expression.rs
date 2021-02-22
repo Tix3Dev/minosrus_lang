@@ -48,6 +48,7 @@ impl From<Op> for Token {
     }
 }
 
+#[derive(Debug)]
 pub enum TokenizerError {
     UnexpectedCharacter(char),
     StdInError,

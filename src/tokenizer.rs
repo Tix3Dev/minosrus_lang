@@ -579,8 +579,6 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
 
                 if is_let {
                     if let Some(verine) = &is_verine {
-                        dbg!(part.to_string());
-
                         exec_data_variable.verines.insert(part.to_string(), verine.to_string());
                     }
                 }
@@ -592,7 +590,5 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
         
         i += 1;
     }
-
-    // dbg!(&final_tokens);
     return final_tokens;
 }
