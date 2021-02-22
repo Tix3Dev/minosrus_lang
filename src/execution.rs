@@ -3,7 +3,7 @@ use crate::tokenizer;
 
 use std::collections::HashMap;
 use std::process;
-use crate::verine_expression::{Tokenizer, Value};
+use crate::verine_expression::{VerineTokenizer, VerineValue};
 use crate::tokenizer::ValueEnum;
 
 #[derive(Clone)]
@@ -691,6 +691,7 @@ impl ExecData {
             hashmap
         };
 
+        // used for verines that are used for while loops (like counter_variables)
         if called_from_while {
             match &token_collection[0].1 {
                 ValueEnum::String(s) => {
@@ -698,34 +699,38 @@ impl ExecData {
                         match &mut token_collection[1].1 {
                             ValueEnum::String(name) => {
                                 if let Some(value) = self.verines.get(name) {
-                                    match Tokenizer::tokenize_and_evaluate(value, &self.global_variables) {
+                                    let push_error = |message: &str| {
+                                        return format!("SYNTAX ERROR: {}", message);
+                                    };
+
+                                    match VerineTokenizer::tokenize_and_evaluate(value, &self.global_variables) {
                                         Ok(token) => {
-                                            let token = match token {
-                                                Value::Float(f) => ValueEnum::Float(f),
-                                                Value::Integer(i) => ValueEnum::Integer(i),
-                                                Value::String(s) => ValueEnum::String(s),
+                                            let new_token = match token {
+                                                VerineValue::Float(f) => ValueEnum::Float(f),
+                                                VerineValue::Integer(i) => ValueEnum::Integer(i),
+                                                VerineValue::String(s) => ValueEnum::String(s)
                                             };
-                                            token_collection[3].1 = token;
+                                            token_collection[3].1 = new_token;
                                         },
                                         Err(error) => {
-                                            use crate::verine_expression::TokenizerError::*;
+                                            use crate::verine_expression::VerineTokenizerError::*;
                                             match error {
-                                                UnexpectedCharacter(_char) => panic!("INVALID CHARACTER IN VERINE!"),
-                                                StdInError => panic!("PROBLEMS READING USER INPUT!"),
-                                                VariableNotFound(var) => panic!(format!("THERE IS NO VARIABLE CALLED {}!", var)),
-                                                NumberNotAnInteger(var) => panic!(format!("'{}' IS NOT A INTEGER!", var)),
-                                                InvalidOperands => panic!("INVALID OPERANDS!"),
-                                                InvalidIndex(i) => panic!(format!("'{}' IS NOT A VALID INDEX!", i)),
-                                                IndexOutOfBounds => panic!("INDEX IS OUT OF BOUNDS!"),
-                                                TypeNotIndexable => panic!("TYPE IS NOT INDEXABLE!"),
-                                                TypeHasNoLength => panic!("TYPE HAS NO LENGTH!"),
-                                                DivisionByZero => panic!("CAN'T DIVIDE BY ZERO!"),
-                                                StringLiteralNotClosed => panic!("STRING ISN'T CLOSED!"),
-                                                UnsupportedReturnType => panic!("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-                                                InvalidExpression => panic!("INVALID VERINE EXPRESSION!"),
-                                            }
+                                                UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
+                                                StdInError => push_error("PROBLEMS READING USER INPUT!"),
+                                                VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
+                                                NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
+                                                InvalidOperands => push_error("INVALID OPERANDS!"),
+                                                InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
+                                                IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
+                                                TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
+                                                TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
+                                                DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
+                                                StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
+                                                UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+                                                InvalidExpression => push_error("INVALID VERINE EXPRESSION!")
+                                            };
                                         }
-                                    }
+                                    };
                                 }
                             }
                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -1204,7 +1209,7 @@ impl ExecData {
 
         match &token_collection[0].1 {
             tokenizer::ValueEnum::String(v) => {
-                if v == &"LET".to_string() { // E.G. LET A = 123
+                if v == &"LET".to_string() {
                     let variable_name: String = {
                         match &token_collection[1].1 {
                             tokenizer::ValueEnum::String(current_v) => current_v.to_string(),
