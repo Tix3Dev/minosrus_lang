@@ -14,6 +14,7 @@ pub struct ExecData {
     // here are all the global variables stored; not changed after one loop iteration
     pub global_variables: HashMap<String, tokenizer::ValueEnum>,
 
+    // here are all verines stored; purpose: while loops
     pub verines: HashMap<String, String>,
 
     // save state of indentation
