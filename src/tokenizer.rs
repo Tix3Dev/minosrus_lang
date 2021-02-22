@@ -1,4 +1,4 @@
-use crate::verine_expression::{Tokenizer, TokenizerError, Value};
+use crate::verine_expression::{VerineTokenizer, VerineTokenizerError, VerineValue};
 use crate::ExecData;
 
 #[derive(Debug, Clone)]
@@ -97,7 +97,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
         vec
     };
 
-    // If the verine exists, it will store its string slice
+    // if the verine exists, it will store its string slice
     let mut is_verine = None;
 
     // check for one verine and if one exists replace input
@@ -117,7 +117,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
 
         let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
 
-        let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
+        let verine = VerineTokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
 
         is_verine = Some(input[from..=to].to_string());
 
@@ -132,13 +132,13 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
         match verine {
             Ok(token) => {
                 match token {
-                    Value::String(s) => evaluate_to(&format!("\"{}\"", s)),
-                    Value::Integer(int) => evaluate_to(&int.to_string()),
-                    Value::Float(float) => evaluate_to(&float.to_string()),
+                    VerineValue::String(s) => evaluate_to(&format!("\"{}\"", s)),
+                    VerineValue::Integer(int) => evaluate_to(&int.to_string()),
+                    VerineValue::Float(float) => evaluate_to(&float.to_string()),
                 }
             }
             Err(error) => {
-                use TokenizerError::*;
+                use VerineTokenizerError::*;
                 match error {
                     UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
                     StdInError => push_error("PROBLEMS READING USER INPUT!"),
