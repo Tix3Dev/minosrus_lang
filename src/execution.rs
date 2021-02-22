@@ -3,6 +3,8 @@ use crate::tokenizer;
 
 use std::collections::HashMap;
 use std::process;
+use crate::verine_expression::{Tokenizer, Value};
+use crate::tokenizer::ValueEnum;
 
 #[derive(Clone)]
 enum OrderEnum {
@@ -690,9 +692,56 @@ impl ExecData {
         };
 
 
+        dbg!("AZER");
 
         // check for code block stuff
         if self.indentation.to_string() != "".to_string() {
+            dbg!("BBBB");
+            dbg!(&self.verines);
+
+
+            let verine_results = self.verines.iter().map(|(key, value)| {
+                let value = Tokenizer::tokenize_and_evaluate(value, &self.global_variables);
+                (key.to_string(), value)
+            });
+
+            let mut verines = HashMap::new();
+
+            for (key, result) in verine_results {
+                match result {
+                    Ok(token) => {
+                        let token = match token {
+                            Value::Float(f) => ValueEnum::Float(f),
+                            Value::Integer(i) => ValueEnum::Integer(i),
+                            Value::String(s) => ValueEnum::String(s),
+                        };
+                        verines.insert(key, token);
+                    },
+                    Err(error) => {
+                        use crate::verine_expression::TokenizerError::*;
+                        match error {
+                            UnexpectedCharacter(_char) => panic!("INVALID CHARACTER IN VERINE!"),
+                            StdInError => panic!("PROBLEMS READING USER INPUT!"),
+                            VariableNotFound(var) => panic!(format!("THERE IS NO VARIABLE CALLED {}!", var)),
+                            NumberNotAnInteger(var) => panic!(format!("'{}' IS NOT A INTEGER!", var)),
+                            InvalidOperands => panic!("INVALID OPERANDS!"),
+                            InvalidIndex(i) => panic!(format!("'{}' IS NOT A VALID INDEX!", i)),
+                            IndexOutOfBounds => panic!("INDEX IS OUT OF BOUNDS!"),
+                            TypeNotIndexable => panic!("TYPE IS NOT INDEXABLE!"),
+                            TypeHasNoLength => panic!("TYPE HAS NO LENGTH!"),
+                            DivisionByZero => panic!("CAN'T DIVIDE BY ZERO!"),
+                            StringLiteralNotClosed => panic!("STRING ISN'T CLOSED!"),
+                            UnsupportedReturnType => panic!("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+                            InvalidExpression => panic!("INVALID VERINE EXPRESSION!"),
+                        }
+                    }
+                }
+            }
+
+            for (var_name, verine) in verines {
+                self.global_variables.insert(var_name, verine);
+            }
+
             match &token_collection[0].1 {
                 tokenizer::ValueEnum::String(v) => {
                     if v == "IF" || v == "WHILE" {
@@ -706,7 +755,6 @@ impl ExecData {
                         }
                     }
                     else if v == "END" && token_collection.len() == 1 {
-                        subtract_indentation(&mut self.indentation);
                         if self.indentation.to_string() == "".to_string() {
                             if self.current_block_type.0 == "normal" {
                                 match &self.block_code[0][0].1 {
@@ -891,6 +939,7 @@ impl ExecData {
                                 self.current_block_type.1 = "".to_string();
                             }
                         }
+                        subtract_indentation(&mut self.indentation);
                     }
 
                     // saving code block stuff

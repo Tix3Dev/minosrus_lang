@@ -14,6 +14,8 @@ pub struct ExecData {
     // here are all the global variables stored; not changed after one loop iteration
     pub global_variables: HashMap<String, tokenizer::ValueEnum>,
 
+    pub verines: HashMap<String, String>,
+
     // save state of indentation
     pub indentation: String,
 
@@ -24,17 +26,19 @@ pub struct ExecData {
     pub functions: HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>,
 
     // keep track of the current block code type (normal or functions)
-    pub current_block_type: (String, String)
+    pub current_block_type: (String, String),
+
 }
 
 impl ExecData {
     pub fn new() -> Self {
         Self {
             global_variables: HashMap::new(),
+            verines: HashMap::new(),
             indentation: "".to_string(),
             block_code: Vec::new(),
             functions: HashMap::new(),
-            current_block_type: ("".to_string(), "".to_string())
+            current_block_type: ("".to_string(), "".to_string()),
         }
     }
 }
@@ -77,7 +81,7 @@ fn file_execution(args_2: String) {
                     }
                 }
 
-                let token_collection_of_current_line = tokenizer::make_tokens(line.clone(), &exec_data_variable.global_variables); 
+                let token_collection_of_current_line = tokenizer::make_tokens(line.clone(), &mut exec_data_variable);
 
                 // check for syntax errors
                 if let Some((_, value)) = token_collection_of_current_line.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
@@ -175,7 +179,8 @@ fn repl() {
                         }
                     }
                     if valid_input {
-                        let tokens = tokenizer::make_tokens(input, &mut exec_data_variable.global_variables);
+                        let tokens = tokenizer::make_tokens(input, &mut exec_data_variable);
+                        dbg!(&exec_data_variable.verines);
                         let return_of_execution = exec_data_variable.exec(tokens);
                         if !return_of_execution.is_empty() {
                             // print error message

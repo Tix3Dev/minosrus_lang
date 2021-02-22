@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use crate::verine_expression::{Tokenizer, TokenizerError, Value};
+use crate::ExecData;
 
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
@@ -17,7 +16,7 @@ pub enum ValueEnum {
     Array(Vec<ArrayTypesEnum>),
 }
 
-pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEnum>) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
@@ -98,6 +97,9 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
         vec
     };
 
+    // If the verine exists, it will store its string slice
+    let mut is_verine = None;
+
     // check for one verine and if one exists replace input
     if input.contains('|') {
         // save | positions
@@ -114,7 +116,10 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
         }
 
         let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
-        let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &global_variables);
+
+        let verine = Tokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
+
+        is_verine = Some(input[from..=to].to_string());
 
         let mut evaluate_to = |result: &str| {
             input.replace_range(from..=to, result);
@@ -253,12 +258,17 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
     // debugging purpose
     println!("split_of_input: {:?}", split_of_input);
 
+    let mut is_let = false;
+
     let mut i = 0;
     while i < split_of_input.len() {
         let part = &split_of_input[i];
         // predefined name check
         if predefined_names.contains(part) {
             final_tokens.push((token_classification[0].to_string(), ValueEnum::String(part.to_string())));
+            if *part == predefined_names[0] {
+                is_let = true;
+            }
         }
         // arithmetic_operator check
         else if arithmetic_operators.contains(part) {
@@ -392,7 +402,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
                         }
                     }
                     else if is_variable_active {
-                        match global_variables.get(&current_element) {
+                        match exec_data_variable.global_variables.get(&current_element) {
                             Some(value_of_variable) => {
                                 match value_of_variable {
                                     ValueEnum::String(v) => {
@@ -458,7 +468,7 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
                     }
                     else if is_variable_active {
                         if character == ' ' {
-                            match global_variables.get(&current_element) {
+                            match exec_data_variable.global_variables.get(&current_element) {
                                 Some(value_of_variable) => {
                                     match value_of_variable {
                                         ValueEnum::String(v) => {
@@ -566,6 +576,14 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
             }
             if is_valid_name {
                 final_tokens.push((token_classification[9].to_string(), ValueEnum::String(part.to_string())));
+
+                if is_let {
+                    if let Some(verine) = &is_verine {
+                        dbg!(part.to_string());
+
+                        exec_data_variable.verines.insert(part.to_string(), verine.to_string());
+                    }
+                }
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
@@ -573,7 +591,8 @@ pub fn make_tokens(mut input: String, global_variables: &HashMap<String, ValueEn
         }
         
         i += 1;
-    }    
+    }
 
+    // dbg!(&final_tokens);
     return final_tokens;
 }
