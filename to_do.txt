@@ -5,6 +5,4 @@
 	LET A = | B |
 	```
 
-- fix while loop bug (verine that is in account for incrementing the index gets evaluated just once)
-
 - FLOAT_FROM keyword
