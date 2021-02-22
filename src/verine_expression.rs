@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use crate::tokenizer;
 use crate::tokenizer::{ArrayTypesEnum, ValueEnum};
-use crate::verine_expression::TokenizerError::*;
+use crate::verine_expression::VerineTokenizerError::*;
 
 #[derive(Debug, Clone)]
 enum Token {
     Id(String),
-    Value(Value),
+    Value(VerineValue),
     Operator(Op),
     Get,
     From,
@@ -21,14 +21,14 @@ enum Token {
 }
 
 #[derive(Debug, Clone)]
-pub enum Value {
+pub enum VerineValue {
     Float(f32),
     Integer(i32),
     String(String),
 }
 
-impl From<Value> for Token {
-    fn from(value: Value) -> Self {
+impl From<VerineValue> for Token {
+    fn from(value: VerineValue) -> Self {
         Self::Value(value)
     }
 }
@@ -48,8 +48,7 @@ impl From<Op> for Token {
     }
 }
 
-#[derive(Debug)]
-pub enum TokenizerError {
+pub enum VerineTokenizerError {
     UnexpectedCharacter(char),
     StdInError,
     InvalidExpression,
@@ -65,14 +64,14 @@ pub enum TokenizerError {
     UnsupportedReturnType, // Returning arrays is not supported
 }
 
-pub struct Tokenizer<'a> {
+pub struct VerineTokenizer<'a> {
     view: &'a [char],
     tokens: Vec<Token>,
 }
 
 type Globals = HashMap<String, tokenizer::ValueEnum>;
 
-impl<'a> Tokenizer<'a> {
+impl<'a> VerineTokenizer<'a> {
     pub fn new(view: &'a [char]) -> Self {
         Self {
             view,
@@ -80,7 +79,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    fn tokenize(&mut self) -> Result<Vec<Token>, TokenizerError> {
+    fn tokenize(&mut self) -> Result<Vec<Token>, VerineTokenizerError> {
         loop {
             let is_the_last_token_an_operator = {
                 match self.tokens.last() {
@@ -98,14 +97,14 @@ impl<'a> Tokenizer<'a> {
                 ['-', digit, ..] if digit.is_ascii_digit() && is_the_last_token_an_operator => self.process_numeric_literals()?,
                 [p, ..] if is_punctuation(*p) => self.process_operators_and_punctuation()?,
                 [c, ..] if is_valid_identifier_character(*c) => self.process_keywords_and_identifiers()?,
-                [e, ..] => return Err(TokenizerError::UnexpectedCharacter(*e)),
+                [e, ..] => return Err(VerineTokenizerError::UnexpectedCharacter(*e)),
                 [] => break,
             }
         }
         Ok(self.tokens.clone())
     }
 
-    fn process_keywords_and_identifiers(&mut self) -> Result<(), TokenizerError> {
+    fn process_keywords_and_identifiers(&mut self) -> Result<(), VerineTokenizerError> {
         let start = self.view;
         let mut i = 0;
 
@@ -151,7 +150,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    fn process_operators_and_punctuation(&mut self) -> Result<(), TokenizerError> {
+    fn process_operators_and_punctuation(&mut self) -> Result<(), VerineTokenizerError> {
         let token = match self.view {
             ['|', ..] => {
                 let token = match self.tokens.last() {
@@ -179,7 +178,7 @@ impl<'a> Tokenizer<'a> {
         Ok(())
     }
 
-    fn process_string_literals(&mut self) -> Result<(), TokenizerError> {
+    fn process_string_literals(&mut self) -> Result<(), VerineTokenizerError> {
         self.view = &self.view[1..]; // Eat first quote
         let start = self.view;
         let mut i = 0;
@@ -191,7 +190,7 @@ impl<'a> Tokenizer<'a> {
                 }
                 ['"', ..] => {
                     let string = start[..i].iter().collect::<String>();
-                    self.tokens.push(Value::String(string).into());
+                    self.tokens.push(VerineValue::String(string).into());
 
                     self.view = &self.view[1..]; // Eat last quote
                     break Ok(());
@@ -205,7 +204,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    fn process_numeric_literals(&mut self) -> Result<(), TokenizerError> {
+    fn process_numeric_literals(&mut self) -> Result<(), VerineTokenizerError> {
         let start = self.view;
         let mut i = 0;
         let mut is_float = false;
@@ -239,10 +238,10 @@ impl<'a> Tokenizer<'a> {
                     let number = &start[..i].iter().collect::<String>();
                     self.tokens.push(if is_float {
                         let float = number.parse::<f32>().unwrap();
-                        Value::Float(float).into()
+                        VerineValue::Float(float).into()
                     } else {
                         let integer = number.parse::<i32>().unwrap();
-                        Value::Integer(integer).into()
+                        VerineValue::Integer(integer).into()
                     });
                     break Ok(())
                 }
@@ -250,7 +249,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<Value, TokenizerError> {
+    fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<VerineValue, VerineTokenizerError> {
         // Nested verine expression evaluation
         {
             // Remember the ranges of top level verine expressions
@@ -281,7 +280,7 @@ impl<'a> Tokenizer<'a> {
 
             for range in &verine_expression_ranges {
                 let without_verines = range.start() + 1..*range.end();
-                let result = Tokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?;
+                let result = VerineTokenizer::evaluate(tokens[without_verines].to_vec(), &global_variables)?;
                 resulting_tokens.push(result.into());
             }
 
@@ -307,7 +306,7 @@ impl<'a> Tokenizer<'a> {
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input).map_err(|_| StdInError)?;
                 input.pop(); // Remove \n
-                *token = Value::String(input).into()
+                *token = VerineValue::String(input).into()
             }
         }
 
@@ -321,21 +320,21 @@ impl<'a> Tokenizer<'a> {
                     [Token::StringFrom, argument, ..] => {
                         let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
                         let argument_string = match argument {
-                            Value::String(str) => str,
-                            Value::Integer(int) => int.to_string(),
-                            Value::Float(float) => float.to_string(),
+                            VerineValue::String(str) => str,
+                            VerineValue::Integer(int) => int.to_string(),
+                            VerineValue::Float(float) => float.to_string(),
                         };
-                        new_tokens.push(Value::String(argument_string).into());
+                        new_tokens.push(VerineValue::String(argument_string).into());
                         tokens = &tokens[2..];
                     }
                     [Token::IntegerFrom, argument, ..] => {
                         let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
                         let argument_int = match argument {
-                            Value::Integer(int) => int,
-                            Value::Float(float) => float as i32,
-                            Value::String(str) => str.parse::<i32>().map_err(|_| NumberNotAnInteger(str))?,
+                            VerineValue::Integer(int) => int,
+                            VerineValue::Float(float) => float as i32,
+                            VerineValue::String(str) => str.parse::<i32>().map_err(|_| NumberNotAnInteger(str))?,
                         };
-                        new_tokens.push(Value::Integer(argument_int).into());
+                        new_tokens.push(VerineValue::Integer(argument_int).into());
                         tokens = &tokens[2..];
                     }
                     [token, ..] => {
@@ -355,20 +354,20 @@ impl<'a> Tokenizer<'a> {
         loop {
             match tokens.as_slice() {
                 [left, Token::Operator(op), right, ..] => {
-                    let left = Tokenizer::evaluate(vec![left.clone()], global_variables)?;
-                    let right = Tokenizer::evaluate(vec![right.clone()], global_variables)?;
+                    let left = VerineTokenizer::evaluate(vec![left.clone()], global_variables)?;
+                    let right = VerineTokenizer::evaluate(vec![right.clone()], global_variables)?;
 
-                    fn compute_float_operation(l: f32, op: &Op, r: f32) -> Value {
+                    fn compute_float_operation(l: f32, op: &Op, r: f32) -> VerineValue {
                         match op {
-                            Op::Plus => Value::Float(l + r),
-                            Op::Minus => Value::Float(l - r),
-                            Op::Asterisk => Value::Float(l * r),
-                            Op::Slash => Value::Float(l / r),
-                            Op::Pow => Value::Float(l.powf(r))
+                            Op::Plus => VerineValue::Float(l + r),
+                            Op::Minus => VerineValue::Float(l - r),
+                            Op::Asterisk => VerineValue::Float(l * r),
+                            Op::Slash => VerineValue::Float(l / r),
+                            Op::Pow => VerineValue::Float(l.powf(r))
                         }
                     }
 
-                    use Value::*;
+                    use VerineValue::*;
                     let result = match (left, op, right) {
                         // String concatenation
                         (String(l), Op::Plus, String(r)) => String(format!("{}{}", l, r)),
@@ -403,21 +402,21 @@ impl<'a> Tokenizer<'a> {
                                 _ => return Err(InvalidIndex(var.to_owned()))
                             }
                         }
-                        Token::Value(Value::Integer(index)) => *index as usize,
+                        Token::Value(VerineValue::Integer(index)) => *index as usize,
                         _ => return Err(InvalidIndex(var.to_owned()))
                     };
 
                     let result = match get_global_variable(var)? {
                         ValueEnum::Array(array) => {
                             match array.get(index).ok_or(IndexOutOfBounds)? {
-                                ArrayTypesEnum::String(s) => Value::String(s.to_owned()),
-                                ArrayTypesEnum::Integer(i) => Value::Integer(*i),
-                                ArrayTypesEnum::Float(f) => Value::Float(*f),
+                                ArrayTypesEnum::String(s) => VerineValue::String(s.to_owned()),
+                                ArrayTypesEnum::Integer(i) => VerineValue::Integer(*i),
+                                ArrayTypesEnum::Float(f) => VerineValue::Float(*f),
                             }
                         }
                         ValueEnum::String(var) => {
                             let char = var.chars().nth(index).ok_or(IndexOutOfBounds)?;
-                            Value::String(char.to_string())
+                            VerineValue::String(char.to_string())
                         }
                         _ => return Err(TypeNotIndexable)
                     };
@@ -426,8 +425,8 @@ impl<'a> Tokenizer<'a> {
                 }
                 [Get, From, Id(var), Len, ..] => {
                     let result = match get_global_variable(var)? {
-                        ValueEnum::Array(array) => Value::Integer(array.len() as i32),
-                        ValueEnum::String(var) => Value::Integer(var.len() as i32),
+                        ValueEnum::Array(array) => VerineValue::Integer(array.len() as i32),
+                        ValueEnum::String(var) => VerineValue::Integer(var.len() as i32),
                         _ => return Err(TypeHasNoLength)
                     };
 
@@ -438,9 +437,9 @@ impl<'a> Tokenizer<'a> {
                     let single = match single.clone() {
                         Token::Id(var) => {
                             match get_global_variable(&var)? {
-                                ValueEnum::String(str) => Value::String(str.to_owned()),
-                                ValueEnum::Integer(int) => Value::Integer(*int),
-                                ValueEnum::Float(float) => Value::Float(*float),
+                                ValueEnum::String(str) => VerineValue::String(str.to_owned()),
+                                ValueEnum::Integer(int) => VerineValue::Integer(*int),
+                                ValueEnum::Float(float) => VerineValue::Float(*float),
                                 _ => return Err(UnsupportedReturnType)
                             }
                         }
@@ -454,11 +453,11 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<Value, TokenizerError> {
+    pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<VerineValue, VerineTokenizerError> {
         let chars = input.chars().collect::<Vec<_>>();
-        let mut tokenizer = Tokenizer::new(chars.as_slice());
+        let mut tokenizer = VerineTokenizer::new(chars.as_slice());
         let tokens = tokenizer.tokenize()?;
-        Tokenizer::evaluate(tokens, &global_variables)
+        VerineTokenizer::evaluate(tokens, &global_variables)
     }
 }
 
