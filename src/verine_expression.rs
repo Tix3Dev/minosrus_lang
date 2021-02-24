@@ -25,7 +25,7 @@ use crate::tokenizer::{ArrayTypesEnum, ValueEnum};
 use crate::verine_expression::VerineTokenizerError::*;
 
 #[derive(Debug, Clone)]
-enum Token {
+pub enum Token {
     Id(String),
     Value(VerineValue),
     Operator(Op),
@@ -101,7 +101,7 @@ impl<'a> VerineTokenizer<'a> {
         }
     }
 
-    fn tokenize(&mut self) -> Result<Vec<Token>, VerineTokenizerError> {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, VerineTokenizerError> {
         loop {
             let is_the_last_token_an_operator = {
                 match self.tokens.last() {
@@ -273,7 +273,7 @@ impl<'a> VerineTokenizer<'a> {
         }
     }
 
-    fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<VerineValue, VerineTokenizerError> {
+    pub fn evaluate(mut tokens: Vec<Token>, global_variables: &Globals) -> Result<VerineValue, VerineTokenizerError> {
         // Nested verine expression evaluation
         {
             // Remember the ranges of top level verine expressions
@@ -485,13 +485,6 @@ impl<'a> VerineTokenizer<'a> {
                 _ => break Err(InvalidExpression)
             }
         }
-    }
-
-    pub fn tokenize_and_evaluate(input: &str, global_variables: &Globals) -> Result<VerineValue, VerineTokenizerError> {
-        let chars = input.chars().collect::<Vec<_>>();
-        let mut tokenizer = VerineTokenizer::new(chars.as_slice());
-        let tokens = tokenizer.tokenize()?;
-        VerineTokenizer::evaluate(tokens, &global_variables)
     }
 }
 

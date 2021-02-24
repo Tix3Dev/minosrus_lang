@@ -18,8 +18,9 @@
  */
 
 
-use crate::verine_expression::{VerineTokenizer, VerineTokenizerError, VerineValue};
+use crate::verine_expression::{VerineTokenizer, VerineTokenizerError, VerineValue, Token};
 use crate::ExecData;
+use crate::verine_expression::Token::Value;
 
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
@@ -34,6 +35,7 @@ pub enum ValueEnum {
     Integer(i32),
     Float(f32),
     Array(Vec<ArrayTypesEnum>),
+    Verine(Vec<Token>),
 }
 
 pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<(String, ValueEnum)> {
@@ -49,11 +51,12 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
         "STRING".to_string(),
         "INTEGER".to_string(),
         "FLOAT".to_string(),
+        "VERINE".to_string(),
         "ARRAY".to_string(),
         "COMMENT".to_string(),
-        "VARIABLE/FUNCTION_NAME".to_string()
+        "VARIABLE/FUNCTION_NAME".to_string(),
     ];
-    
+
     // used to check whether a token is a ... or not
     let predefined_names = vec![
         "LET".to_string(),
@@ -118,10 +121,10 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
     };
 
     // if the verine exists, it will store its string slice
-    let mut is_verine = None;
+    // let mut is_verine = None;
 
     // check for one verine and if one exists replace input
-    if input.contains('|') {
+    let verine_tokens = if input.contains('|') {
         // save | positions
         let mut verine_positions: Vec<usize> = vec![];
         for (index, character) in input.chars().enumerate() {
@@ -137,48 +140,37 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
 
         let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
 
-        let verine = VerineTokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
+        // let verine = VerineTokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
+        //
+        // is_verine = Some(input[from..=to].to_string());
 
-        is_verine = Some(input[from..=to].to_string());
-
-        let mut evaluate_to = |result: &str| {
-            input.replace_range(from..=to, result);
-        };
+        // let mut evaluate_to = |result: &str| {
+        //     input.replace_range(from..=to, result);
+        // };
 
         let mut push_error = |message: &str| {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
         };
 
-        match verine {
-            Ok(token) => {
-                match token {
-                    VerineValue::String(s) => evaluate_to(&format!("\"{}\"", s)),
-                    VerineValue::Integer(int) => evaluate_to(&int.to_string()),
-                    VerineValue::Float(float) => evaluate_to(&format!("{:.5}", float)),
-                }
-            }
-            Err(error) => {
+        let chars = input[from + 1..to].chars().collect::<Vec<_>>();
+        let mut tokenizer = VerineTokenizer::new(chars.as_slice());
+
+        let tokens_result = tokenizer.tokenize();
+        match tokens_result {
+            Ok(tokens) => Some(tokens),
+            Err(err) => {
                 use VerineTokenizerError::*;
-                match error {
+                match err {
                     UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
-                    StdInError => push_error("PROBLEMS READING USER INPUT!"),
-                    VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
-                    NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
-                    InvalidOperands => push_error("INVALID OPERANDS!"),
-                    InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
-                    IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
-                    TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
-                    TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
-                    DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
                     StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
-                    UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-                    InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
-                    NumberNotAFloat(var) => push_error(&format!("'{}' IS NOT A FLOAT!", var)),
+                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                 }
-                return final_tokens;
+                None
             }
         }
-    }
+    } else {
+        None
+    };
 
     // split input into parts; strings don't get split; arrays don't get split
     let input = input.trim().to_string() + " ";
@@ -191,12 +183,12 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
     let mut string_started = false;
     let mut verine_started = false;
     let mut split_of_input: Vec<String> = vec![];
-    
+
     if input.contains(&"[".to_string()) && !(input.contains(&"]".to_string())) {
         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("A [ ALWAYS NEEDS A ] ! ORDER: [ AND THEN ] !".to_string())));
         return final_tokens;
     }
-    
+
     for character in input.chars() {
         if character == '[' {
             array_token.push(character);
@@ -207,7 +199,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                 array_token.push(character);
                 split_of_input.push(array_token);
                 array_token = String::new();
-                array_started = false;   
+                array_started = false;
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("A ] ALWAYS NEEDS A [ ! ORDER: [ AND THEN ] !".to_string())));
                 return final_tokens;
@@ -248,7 +240,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                 is_there_a_string = true;
                 if current_token.starts_with('"') {
                     string_started = false;
-                } 
+                }
             }
 
             if !(allowed_string_inner_part_characters.contains(&character)) && string_started {
@@ -259,7 +251,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
             if character == '"' {
                 if !(current_token.starts_with('"')) {
                     string_started = true;
-                } 
+                }
             }
 
             current_token.push(character);
@@ -272,7 +264,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("STRING ISN'T CLOSED!".to_string())));
         return final_tokens;
     }
-   
+
     if split_of_input[split_of_input.len() - 1] == "" {
         split_of_input.remove(split_of_input.len() - 1);
     }
@@ -345,6 +337,12 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                 break;
             }
         }
+        // verine check
+        else if part.chars().nth(0).unwrap() == '|' && part.chars().rev().nth(0).unwrap() == '|' {
+            if let Some(tokens) = verine_tokens.clone() {
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::Verine(tokens)))
+            }
+        }
         // array check
         else if part.chars().nth(0).unwrap() == '[' && part.chars().rev().nth(0).unwrap() == ']' {
             let mut array = part.clone();
@@ -355,7 +353,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
 
             // check if array is empty
             if array.trim().is_empty() {
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::Array(vec![])));
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::Array(vec![])));
                 break;
             }
 
@@ -538,7 +536,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                     }
                     else if is_integer_active {
                         if character.is_numeric() {
-                            current_element.push(character);   
+                            current_element.push(character);
                         }
                         else if character == ' ' {
                             if part.parse::<i32>().is_ok() {
@@ -574,13 +572,13 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                     }
                 }
             }
-        
-            final_tokens.push((token_classification[7].to_string(), ValueEnum::Array(split_of_array)));
+
+            final_tokens.push((token_classification[8].to_string(), ValueEnum::Array(split_of_array)));
         }
         // comment check
         else if part.chars().nth(0).unwrap() == '#' {
             if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[8].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
+                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
                 return final_tokens;
             } else {
                final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
@@ -596,19 +594,19 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                 }
             }
             if is_valid_name {
-                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(part.to_string())));
+                final_tokens.push((token_classification[10].to_string(), ValueEnum::String(part.to_string())));
 
-                if is_let {
-                    if let Some(verine) = &is_verine {
-                        exec_data_variable.verines.insert(part.to_string(), verine.to_string());
-                    }
-                }
+                // if is_let {
+                //     if let Some(verine) = &is_verine {
+                //         exec_data_variable.verines.insert(part.to_string(), verine.to_string());
+                //     }
+                // }
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
             }
         }
-        
+
         i += 1;
     }
     return final_tokens;

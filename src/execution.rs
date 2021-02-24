@@ -23,8 +23,9 @@ use crate::tokenizer;
 
 use std::collections::HashMap;
 use std::process;
-use crate::verine_expression::{VerineTokenizer, VerineValue};
+use crate::verine_expression::{VerineTokenizer, VerineValue, Token};
 use crate::tokenizer::ValueEnum;
+use std::process::exit;
 
 #[derive(Clone)]
 enum OrderEnum {
@@ -274,9 +275,9 @@ fn update_while_condition_values(
 }
 
 impl ExecData {
-    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, called_from_while: bool) -> String {
+    fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, called_from_block: bool) -> String {
         for line in block_code {
-            let return_of_execution = self.exec(line, called_from_while);
+            let return_of_execution = self.exec(line, called_from_block);
             if return_of_execution != "".to_string() {
                 return return_of_execution;
             }
@@ -316,6 +317,59 @@ impl ExecData {
                 }
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        }
+
+        let mut saved_verines = HashMap::<usize, Vec<Token>>::new();
+
+        if called_from_while || self.indentation.is_empty() {
+            for (i, (key, token)) in &mut token_collection.iter_mut().enumerate() {
+                if let ValueEnum::Verine(verine) = token {
+                    saved_verines.insert(i, verine.clone());
+
+                    let verine = VerineTokenizer::evaluate(verine.clone(), &self.global_variables);
+
+                    let push_error = |message: &str| {
+                        return format!("RUNTIME ERROR: {}", message);
+                    };
+
+                    match verine {
+                        Ok(verine) => {
+                            match verine {
+                                VerineValue::String(s) => {
+                                    *key = "STRING".to_string();
+                                    *token = ValueEnum::String(s);
+                                },
+                                VerineValue::Integer(int) => {
+                                    *key = "INTEGER".to_string();
+                                    *token = ValueEnum::Integer(int);
+                                },
+                                VerineValue::Float(float) => {
+                                    *key = "FLOAT".to_string();
+                                    *token = ValueEnum::Float(float);
+                                },
+                            }
+                        }
+                        Err(error) => {
+                            use crate::verine_expression::VerineTokenizerError::*;
+                            return match error {
+                                StdInError => push_error("PROBLEMS READING USER INPUT!"),
+                                VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
+                                NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
+                                InvalidOperands => push_error("INVALID OPERANDS!"),
+                                InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
+                                IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
+                                TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
+                                TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
+                                DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
+                                UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+                                InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
+                                NumberNotAFloat(var) => push_error(&format!("'{}' IS NOT A FLOAT!", var)),
+                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                            }
+                        }
+                    }
+                }
+            }
         }
         // check for stop
         match &token_collection[0].1 {
@@ -712,55 +766,55 @@ impl ExecData {
         };
 
         // used for verines that are used for while loops (like counter_variables)
-        if called_from_while {
-            match &token_collection[0].1 {
-                ValueEnum::String(s) => {
-                    if s == "LET" {
-                        match &mut token_collection[1].1 {
-                            ValueEnum::String(name) => {
-                                if let Some(value) = self.verines.get(name) {
-                                    let push_error = |message: &str| {
-                                        return format!("SYNTAX ERROR: {}", message);
-                                    };
-
-                                    match VerineTokenizer::tokenize_and_evaluate(value, &self.global_variables) {
-                                        Ok(token) => {
-                                            let new_token = match token {
-                                                VerineValue::Float(f) => ValueEnum::Float(f),
-                                                VerineValue::Integer(i) => ValueEnum::Integer(i),
-                                                VerineValue::String(s) => ValueEnum::String(s)
-                                            };
-                                            token_collection[3].1 = new_token;
-                                        },
-                                        Err(error) => {
-                                            use crate::verine_expression::VerineTokenizerError::*;
-                                            match error {
-                                                UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
-                                                StdInError => push_error("PROBLEMS READING USER INPUT!"),
-                                                VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
-                                                NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
-                                                InvalidOperands => push_error("INVALID OPERANDS!"),
-                                                InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
-                                                IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
-                                                TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
-                                                TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
-                                                DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
-                                                StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
-                                                UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-                                                InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
-                                                NumberNotAFloat(_) => push_error("NUMBER NOT A FLOAT!"),
-                                            };
-                                        }
-                                    };
-                                }
-                            }
-                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                        }
-                    }
-                }
-                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-            }
-        }
+        // if called_from_while {
+        //     match &token_collection[0].1 {
+        //         ValueEnum::String(s) => {
+        //             if s == "LET" {
+        //                 match &mut token_collection[1].1 {
+        //                     ValueEnum::String(name) => {
+        //                         if let Some(value) = self.verines.get(name) {
+        //                             let push_error = |message: &str| {
+        //                                 return format!("SYNTAX ERROR: {}", message);
+        //                             };
+        //
+        //                             // match VerineTokenizer::tokenize_and_evaluate(value, &self.global_variables) {
+        //                             //     Ok(token) => {
+        //                             //         let new_token = match token {
+        //                             //             VerineValue::Float(f) => ValueEnum::Float(f),
+        //                             //             VerineValue::Integer(i) => ValueEnum::Integer(i),
+        //                             //             VerineValue::String(s) => ValueEnum::String(s)
+        //                             //         };
+        //                             //         token_collection[3].1 = new_token;
+        //                             //     },
+        //                             //     Err(error) => {
+        //                             //         use crate::verine_expression::VerineTokenizerError::*;
+        //                             //         match error {
+        //                             //             UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
+        //                             //             StdInError => push_error("PROBLEMS READING USER INPUT!"),
+        //                             //             VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
+        //                             //             NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
+        //                             //             InvalidOperands => push_error("INVALID OPERANDS!"),
+        //                             //             InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
+        //                             //             IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
+        //                             //             TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
+        //                             //             TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
+        //                             //             DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
+        //                             //             StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
+        //                             //             UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
+        //                             //             InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
+        //                             //             NumberNotAFloat(_) => push_error("NUMBER NOT A FLOAT!"),
+        //                             //         };
+        //                             //     }
+        //                             // };
+        //                         }
+        //                     }
+        //                     _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        //                 }
+        //             }
+        //         }
+        //         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+        //     }
+        // }
 
         // check for code block stuff
         if self.indentation.to_string() != "".to_string() {
@@ -969,10 +1023,22 @@ impl ExecData {
                         if v == "FN" {
                             return format!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
                         }
+
+                        for (i, tokens) in saved_verines {
+                            token_collection[i].0 = "VERINE".to_string();
+                            token_collection[i].1 = ValueEnum::Verine(tokens);
+                        }
+
                         self.block_code.push(token_collection.clone());
                     }
                     else if self.current_block_type.0 == "function" {
                         // function in function already checked
+
+                        for (i, tokens) in saved_verines {
+                            token_collection[i].0 = "VERINE".to_string();
+                            token_collection[i].1 = ValueEnum::Verine(tokens);
+                        }
+
                         self.functions.get_mut(&self.current_block_type.1).unwrap().push(token_collection.clone());
                     }
 
@@ -1032,6 +1098,7 @@ impl ExecData {
                                                                             token_collection_clone[3].0 = "ARRAY".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Array(v.to_vec());
                                                                         }
+                                                                        tokenizer::ValueEnum::Verine(_) => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                                     }
                                                                 },
                                                                 None => {
