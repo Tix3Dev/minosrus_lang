@@ -328,7 +328,7 @@ impl ExecData {
                     let verine = VerineTokenizer::evaluate(verine.clone(), &self.global_variables);
 
                     let push_error = |message: &str| {
-                        return format!("RUNTIME ERROR: {}", message);
+                        return format!("EXECUTION ERROR: {}", message);
                     };
 
                     match verine {
