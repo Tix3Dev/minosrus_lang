@@ -119,12 +119,20 @@ List (of those that are in verines):
 		> LET A_AS_STRING = | STRING_FROM A |
 
 - INTEGER_FROM
-	- Used to convert a string (which consists of digits) to a integer
+	- Used to convert a string (which consists of digits) to an integer
 	- Throws an EXECUTION ERROR if the given type isn't a string or can't be converted (because it includes invalid characters)
 
 	- Example:
 		> LET A = "123"
 		> LET A_AS_INTEGER = | INTEGER_FROM A |
+
+- FLOAT_FROM
+	- Used to convert a string (which consists of digits) to a float 
+	- Throws an EXECUTION ERROR if the given type isn't a string or can't be converted (because it includes invalid characters)
+
+	- Example:
+		> LET A = "123.123"
+		> LET A_AS_FLOAT = | FLOAT_FROM A |
 
 List (of those that are in code blocks):
 - END
