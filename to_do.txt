@@ -1,6 +1,1 @@
-- fix weird behavior:
-	this one which only exists when executing it from_file
-	```
-	LET B = [12, 32]
-	LET A = | B |
-	```
+- fix bugs of examples: guessing_game and reverse_array
