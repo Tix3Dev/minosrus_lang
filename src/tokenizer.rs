@@ -43,6 +43,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
 
     // used for the hashmap final_tokens -> classification of token
     let token_classification = vec![
+        "COMMENT".to_string(),
         "PREDEFINED_NAME".to_string(),
         "ARITHMETIC_OPERATOR".to_string(),
         "COMPARING_OPERATOR".to_string(),
@@ -52,7 +53,6 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         "FLOAT".to_string(),
         "VERINE".to_string(),
         "ARRAY".to_string(),
-        "COMMENT".to_string(),
         "VARIABLE/FUNCTION_NAME".to_string(),
     ];
 
@@ -119,10 +119,13 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         vec
     };
 
-    // if the verine exists, it will store its string slice
-    // let mut is_verine = None;
+    // comment check
+    if input.trim().chars().nth(0).unwrap() == '#' {
+        final_tokens.push((token_classification[0].to_string(), ValueEnum::String(input.trim()[1..].to_string())));
+        return final_tokens;
+    }
 
-    // check for one verine and if one exists replace input
+    // if the verine exists, it will store its string slice
     let verine_tokens = if input.contains('|') {
         // save | positions
         let mut verine_positions: Vec<usize> = vec![];
@@ -138,14 +141,6 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         }
 
         let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
-
-        // let verine = VerineTokenizer::tokenize_and_evaluate(&input[from + 1..to], &exec_data_variable.global_variables);
-        //
-        // is_verine = Some(input[from..=to].to_string());
-
-        // let mut evaluate_to = |result: &str| {
-        //     input.replace_range(from..=to, result);
-        // };
 
         let mut push_error = |message: &str| {
             final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
@@ -275,23 +270,23 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         let part = &split_of_input[i];
         // predefined name check
         if predefined_names.contains(part) {
-            final_tokens.push((token_classification[0].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[1].to_string(), ValueEnum::String(part.to_string())));
         }
         // arithmetic_operator check
         else if arithmetic_operators.contains(part) {
-            final_tokens.push((token_classification[1].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[2].to_string(), ValueEnum::String(part.to_string())));
         }
         // comparing_operator check
         else if comparing_operators.contains(part) {
-            final_tokens.push((token_classification[2].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[3].to_string(), ValueEnum::String(part.to_string())));
         }
         // equal_sign check
         else if part == &equal_sign {
-            final_tokens.push((token_classification[3].to_string(), ValueEnum::String(part.to_string())));
+            final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.to_string())));
         }
         // string check
         else if part.chars().nth(0).unwrap() == '\"' && part.chars().rev().nth(0).unwrap() == '\"' {
-            final_tokens.push((token_classification[4].to_string(), ValueEnum::String(part.as_str()[1..part.len()-1].to_string())));
+            final_tokens.push((token_classification[5].to_string(), ValueEnum::String(part.as_str()[1..part.len()-1].to_string())));
         }
         // integer check
         else if !(part.chars().any(|c| !(c.is_numeric() || c == '-' || c == '.'))) {
@@ -322,10 +317,10 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
             }
 
             if part.parse::<i32>().is_ok() {
-                final_tokens.push((token_classification[5].to_string(), ValueEnum::Integer(part.parse::<i32>().unwrap())));
+                final_tokens.push((token_classification[6].to_string(), ValueEnum::Integer(part.parse::<i32>().unwrap())));
             }
             else if part.parse::<f32>().is_ok() {
-                final_tokens.push((token_classification[6].to_string(), ValueEnum::Float(part.parse::<f32>().unwrap())));
+                final_tokens.push((token_classification[7].to_string(), ValueEnum::Float(part.parse::<f32>().unwrap())));
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("THE NUMBER IS NOT I32 OR F32!".to_string())));
                 break;
@@ -334,7 +329,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         // verine check
         else if part.chars().nth(0).unwrap() == '|' && part.chars().rev().nth(0).unwrap() == '|' {
             if let Some(tokens) = verine_tokens.clone() {
-                final_tokens.push((token_classification[7].to_string(), ValueEnum::Verine(tokens)))
+                final_tokens.push((token_classification[8].to_string(), ValueEnum::Verine(tokens)))
             }
         }
         // array check
@@ -347,7 +342,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
 
             // check if array is empty
             if array.trim().is_empty() {
-                final_tokens.push((token_classification[8].to_string(), ValueEnum::Array(vec![])));
+                final_tokens.push((token_classification[9].to_string(), ValueEnum::Array(vec![])));
                 break;
             }
 
@@ -567,17 +562,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
                 }
             }
 
-            final_tokens.push((token_classification[8].to_string(), ValueEnum::Array(split_of_array)));
-        }
-        // comment check
-        else if part.chars().nth(0).unwrap() == '#' {
-            if final_tokens.len() == 0 {
-                final_tokens.push((token_classification[9].to_string(), ValueEnum::String(input.as_str()[1..].to_string())));
-                return final_tokens;
-            } else {
-               final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("IT'S NOT ALLOWED TO PUT A COMMENT AFTER SOMETHING. ONE COMMENT TAKES ONE LINE!".to_string())));
-               break;
-            }
+            final_tokens.push((token_classification[9].to_string(), ValueEnum::Array(split_of_array)));
         }
         // variable/function name check
         else {
