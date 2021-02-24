@@ -18,9 +18,8 @@
  */
 
 
-use crate::verine_expression::{VerineTokenizer, VerineTokenizerError, VerineValue, Token};
+use crate::verine_expression::{VerineTokenizer, VerineTokenizerError, Token};
 use crate::ExecData;
-use crate::verine_expression::Token::Value;
 
 #[derive(Debug, Clone)]
 pub enum ArrayTypesEnum {
@@ -38,7 +37,7 @@ pub enum ValueEnum {
     Verine(Vec<Token>),
 }
 
-pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<(String, ValueEnum)> {
+pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(String, ValueEnum)> {
     // final tokens that are returned stored here
     let mut final_tokens: Vec<(String, ValueEnum)> = Vec::new();
 
@@ -271,17 +270,12 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
     // debugging purpose
     println!("split_of_input: {:?}", split_of_input);
 
-    let mut is_let = false;
-
     let mut i = 0;
     while i < split_of_input.len() {
         let part = &split_of_input[i];
         // predefined name check
         if predefined_names.contains(part) {
             final_tokens.push((token_classification[0].to_string(), ValueEnum::String(part.to_string())));
-            if *part == predefined_names[0] {
-                is_let = true;
-            }
         }
         // arithmetic_operator check
         else if arithmetic_operators.contains(part) {
@@ -595,12 +589,6 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
             }
             if is_valid_name {
                 final_tokens.push((token_classification[10].to_string(), ValueEnum::String(part.to_string())));
-
-                // if is_let {
-                //     if let Some(verine) = &is_verine {
-                //         exec_data_variable.verines.insert(part.to_string(), verine.to_string());
-                //     }
-                // }
             } else {
                 final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("VARIABLE/FUNCTION NAME INCLUDES INVALID CHARACTERS!".to_string())));
                 break;
