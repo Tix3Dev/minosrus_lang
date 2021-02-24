@@ -25,7 +25,6 @@ use std::collections::HashMap;
 use std::process;
 use crate::verine_expression::{VerineTokenizer, VerineValue, Token};
 use crate::tokenizer::ValueEnum;
-use std::process::exit;
 
 #[derive(Clone)]
 enum OrderEnum {
