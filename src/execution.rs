@@ -747,7 +747,8 @@ impl ExecData {
                                                 DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
                                                 StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
                                                 UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-                                                InvalidExpression => push_error("INVALID VERINE EXPRESSION!")
+                                                InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
+                                                NumberNotAFloat(_) => push_error("NUMBER NOT A FLOAT!"),
                                             };
                                         }
                                     };

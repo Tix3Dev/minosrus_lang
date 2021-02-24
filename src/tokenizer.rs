@@ -154,7 +154,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                 match token {
                     VerineValue::String(s) => evaluate_to(&format!("\"{}\"", s)),
                     VerineValue::Integer(int) => evaluate_to(&int.to_string()),
-                    VerineValue::Float(float) => evaluate_to(&float.to_string()),
+                    VerineValue::Float(float) => evaluate_to(&format!("{:.5}", float)),
                 }
             }
             Err(error) => {
@@ -173,6 +173,7 @@ pub fn make_tokens(mut input: String, exec_data_variable: &mut ExecData) -> Vec<
                     StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
                     UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
                     InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
+                    NumberNotAFloat(var) => push_error(&format!("'{}' IS NOT A FLOAT!", var)),
                 }
                 return final_tokens;
             }

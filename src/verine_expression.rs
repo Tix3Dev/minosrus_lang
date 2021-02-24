@@ -35,6 +35,7 @@ enum Token {
     At,
     StringFrom,
     IntegerFrom,
+    FloatFrom,
     ReadLn,
     OpenVerine,
     CloseVerine,
@@ -74,6 +75,7 @@ pub enum VerineTokenizerError {
     InvalidExpression,
     VariableNotFound(String),
     NumberNotAnInteger(String),
+    NumberNotAFloat(String),
     InvalidOperands,
     InvalidIndex(String),
     IndexOutOfBounds,
@@ -140,6 +142,7 @@ impl<'a> VerineTokenizer<'a> {
                         "AT" => Token::At,
                         "STRING_FROM" => Token::StringFrom,
                         "INTEGER_FROM" => Token::IntegerFrom,
+                        "FLOAT_FROM" => Token::FloatFrom,
                         "READLN" => Token::ReadLn,
                         _ => Token::Id(start[..i].iter().collect::<String>())
                     };
@@ -180,6 +183,7 @@ impl<'a> VerineTokenizer<'a> {
                     Some(Token::At) => Token::OpenVerine,
                     Some(Token::StringFrom) => Token::OpenVerine,
                     Some(Token::IntegerFrom) => Token::OpenVerine,
+                    Some(Token::FloatFrom) => Token::OpenVerine,
                     Some(_) => Token::CloseVerine,
                 };
                 Some((1, token))
@@ -355,6 +359,16 @@ impl<'a> VerineTokenizer<'a> {
                             VerineValue::String(str) => str.parse::<i32>().map_err(|_| NumberNotAnInteger(str))?,
                         };
                         new_tokens.push(VerineValue::Integer(argument_int).into());
+                        tokens = &tokens[2..];
+                    }
+                    [Token::FloatFrom, argument, ..] => {
+                        let argument = Self::evaluate(vec![argument.clone()], global_variables)?;
+                        let argument_float = match argument {
+                            VerineValue::Integer(int) => int as f32,
+                            VerineValue::Float(float) => float,
+                            VerineValue::String(str) => str.parse::<f32>().map_err(|_| NumberNotAFloat(str))?,
+                        };
+                        new_tokens.push(VerineValue::Float(argument_float).into());
                         tokens = &tokens[2..];
                     }
                     [token, ..] => {
