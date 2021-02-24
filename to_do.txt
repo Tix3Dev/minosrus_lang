@@ -4,5 +4,3 @@
 	LET B = [12, 32]
 	LET A = | B |
 	```
-
-- FLOAT_FROM keyword
