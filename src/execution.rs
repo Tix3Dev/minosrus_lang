@@ -763,58 +763,7 @@ impl ExecData {
 
             hashmap
         };
-
-        // used for verines that are used for while loops (like counter_variables)
-        // if called_from_while {
-        //     match &token_collection[0].1 {
-        //         ValueEnum::String(s) => {
-        //             if s == "LET" {
-        //                 match &mut token_collection[1].1 {
-        //                     ValueEnum::String(name) => {
-        //                         if let Some(value) = self.verines.get(name) {
-        //                             let push_error = |message: &str| {
-        //                                 return format!("SYNTAX ERROR: {}", message);
-        //                             };
-        //
-        //                             // match VerineTokenizer::tokenize_and_evaluate(value, &self.global_variables) {
-        //                             //     Ok(token) => {
-        //                             //         let new_token = match token {
-        //                             //             VerineValue::Float(f) => ValueEnum::Float(f),
-        //                             //             VerineValue::Integer(i) => ValueEnum::Integer(i),
-        //                             //             VerineValue::String(s) => ValueEnum::String(s)
-        //                             //         };
-        //                             //         token_collection[3].1 = new_token;
-        //                             //     },
-        //                             //     Err(error) => {
-        //                             //         use crate::verine_expression::VerineTokenizerError::*;
-        //                             //         match error {
-        //                             //             UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
-        //                             //             StdInError => push_error("PROBLEMS READING USER INPUT!"),
-        //                             //             VariableNotFound(var) => push_error(&format!("THERE IS NO VARIABLE CALLED {}!", var)),
-        //                             //             NumberNotAnInteger(var) => push_error(&format!("'{}' IS NOT A INTEGER!", var)),
-        //                             //             InvalidOperands => push_error("INVALID OPERANDS!"),
-        //                             //             InvalidIndex(i) => push_error(&format!("'{}' IS NOT A VALID INDEX!", i)),
-        //                             //             IndexOutOfBounds => push_error("INDEX IS OUT OF BOUNDS!"),
-        //                             //             TypeNotIndexable => push_error("TYPE IS NOT INDEXABLE!"),
-        //                             //             TypeHasNoLength => push_error("TYPE HAS NO LENGTH!"),
-        //                             //             DivisionByZero => push_error("CAN'T DIVIDE BY ZERO!"),
-        //                             //             StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
-        //                             //             UnsupportedReturnType => push_error("VERINE RETURN TYPE IS NOT SUPPORTED!"),
-        //                             //             InvalidExpression => push_error("INVALID VERINE EXPRESSION!"),
-        //                             //             NumberNotAFloat(_) => push_error("NUMBER NOT A FLOAT!"),
-        //                             //         };
-        //                             //     }
-        //                             // };
-        //                         }
-        //                     }
-        //                     _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-        //                 }
-        //             }
-        //         }
-        //         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-        //     }
-        // }
-
+        
         // check for code block stuff
         if self.indentation.to_string() != "".to_string() {
             match &token_collection[0].1 {
