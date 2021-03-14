@@ -175,19 +175,8 @@ impl<'a> VerineTokenizer<'a> {
 
     fn process_operators_and_punctuation(&mut self) -> Result<(), VerineTokenizerError> {
         let token = match self.view {
-            ['|', ..] => {
-                let token = match self.tokens.last() {
-                    None => Token::OpenVerine,
-                    Some(Token::Operator(_)) => Token::OpenVerine,
-                    Some(Token::From) => Token::OpenVerine,
-                    Some(Token::At) => Token::OpenVerine,
-                    Some(Token::StringFrom) => Token::OpenVerine,
-                    Some(Token::IntegerFrom) => Token::OpenVerine,
-                    Some(Token::FloatFrom) => Token::OpenVerine,
-                    Some(_) => Token::CloseVerine,
-                };
-                Some((1, token))
-            },
+            ['(', ..] => Some((1, Token::OpenVerine)),
+            [')', ..] => Some((1, Token::CloseVerine)),
             ['+', ..] => Some((1, Op::Plus.into())),
             ['-', ..] => Some((1, Op::Minus.into())),
             ['*', '*', ..] => Some((2, Op::Pow.into())),
@@ -494,7 +483,7 @@ fn is_valid_identifier_character(c: char) -> bool {
 
 fn is_punctuation(c: char) -> bool {
     match c {
-        '+' | '-' | '*' | '/' | '.' | '|' => true,
+        '+' | '-' | '*' | '/' | '.' | '(' | ')' => true,
         _ => false,
     }
 }

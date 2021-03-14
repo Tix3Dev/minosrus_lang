@@ -125,46 +125,89 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         return final_tokens;
     }
 
-    // if the verine exists, it will store its string slice
-    let verine_tokens = if input.contains('|') {
-        // save | positions
-        let mut verine_positions: Vec<usize> = vec![];
-        for (index, character) in input.chars().enumerate() {
-            if character == '|' {
-                verine_positions.push(index);
-            }
-        }
+    let mut verines_tokens = vec![];
 
-        if verine_positions.len() % 2 != 0 {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
-            return final_tokens;
-        }
-
-        let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
-
-        let mut push_error = |message: &str| {
-            final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
-        };
-
-        let chars = input[from + 1..to].chars().collect::<Vec<_>>();
-        let mut tokenizer = VerineTokenizer::new(chars.as_slice());
-
-        let tokens_result = tokenizer.tokenize();
-        match tokens_result {
-            Ok(tokens) => Some(tokens),
-            Err(err) => {
-                use VerineTokenizerError::*;
-                match err {
-                    UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
-                    StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
-                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+    let mut verine_openings = 0;
+    let mut from = 0;
+    for (index, character) in input.chars().enumerate() {
+        match character {
+            '(' => {
+                if verine_openings == 0 {
+                    from = index;
                 }
-                None
+                verine_openings += 1;
             }
+            ')' => {
+                verine_openings -= 1;
+                if verine_openings == 0 {
+                    let to = index;
+
+                    let mut push_error = |message: &str| {
+                        final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
+                    };
+
+                    let chars = input[from + 1..to].chars().collect::<Vec<_>>();
+                    let mut tokenizer = VerineTokenizer::new(chars.as_slice());
+
+                    let tokens_result = tokenizer.tokenize();
+                    match tokens_result {
+                        Ok(tokens) => verines_tokens.push(Some(tokens)),
+                        Err(err) => {
+                            use VerineTokenizerError::*;
+                            match err {
+                                UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
+                                StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
+                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                            }
+                            verines_tokens.push(None);
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
-    } else {
-        None
-    };
+    }
+
+    // if the verine exists, it will store its string slice
+    // let verine_tokens = if input.contains('(') {
+    //     // save | positions
+    //     let mut verine_positions: Vec<usize> = vec![];
+    //     for (index, character) in input.chars().enumerate() {
+    //         if character == '|' {
+    //             verine_positions.push(index);
+    //         }
+    //     }
+    //
+    //     if verine_positions.len() % 2 != 0 {
+    //         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("EVERY | NEEDS A | !".to_string())));
+    //         return final_tokens;
+    //     }
+    //
+    //     let (from, to) = (*verine_positions.first().unwrap(), *verine_positions.last().unwrap());
+    //
+    //     let mut push_error = |message: &str| {
+    //         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String(message.to_string())));
+    //     };
+    //
+    //     let chars = input[from + 1..to].chars().collect::<Vec<_>>();
+    //     let mut tokenizer = VerineTokenizer::new(chars.as_slice());
+    //
+    //     let tokens_result = tokenizer.tokenize();
+    //     match tokens_result {
+    //         Ok(tokens) => Some(tokens),
+    //         Err(err) => {
+    //             use VerineTokenizerError::*;
+    //             match err {
+    //                 UnexpectedCharacter(_char) => push_error("INVALID CHARACTER IN VERINE!"),
+    //                 StringLiteralNotClosed => push_error("STRING ISN'T CLOSED!"),
+    //                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+    //             }
+    //             None
+    //         }
+    //     }
+    // } else {
+    //     None
+    // };
 
     // split input into parts; strings don't get split; arrays don't get split
     let input = input.trim().to_string() + " ";
@@ -177,6 +220,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
     let mut string_started = false;
     let mut verine_started = false;
     let mut split_of_input: Vec<String> = vec![];
+    let mut open_verines = 0;
 
     if input.contains(&"[".to_string()) && !(input.contains(&"]".to_string())) {
         final_tokens.push(("ERROR_MESSAGE".to_string(), ValueEnum::String("A [ ALWAYS NEEDS A ] ! ORDER: [ AND THEN ] !".to_string())));
@@ -202,15 +246,21 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
         else if array_started {
             array_token.push(character);
         }
-        else if character == '|' {
-            if verine_token.starts_with('|') {
-                verine_token.push(character);
-                split_of_input.push(verine_token);
-                verine_token = String::new();
-                verine_started = false;
-            } else {
-                verine_token.push(character);
+        else if character == '(' {
+            if open_verines == 0 {
                 verine_started = true;
+                verine_token.clear();
+            }
+            open_verines += 1;
+            verine_token.push(character);
+        }
+        else if character == ')' {
+            verine_token.push(character);
+            open_verines -= 1;
+            if open_verines == 0 {
+                split_of_input.push(verine_token.clone());
+                verine_started = false;
+                verine_token.clear();
             }
         }
         else if verine_started {
@@ -327,8 +377,8 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
             }
         }
         // verine check
-        else if part.chars().nth(0).unwrap() == '|' && part.chars().rev().nth(0).unwrap() == '|' {
-            if let Some(tokens) = verine_tokens.clone() {
+        else if part.chars().nth(0).unwrap() == '(' && part.chars().rev().nth(0).unwrap() == ')' {
+            if let Some(tokens) = verines_tokens.remove(0).clone() {
                 final_tokens.push((token_classification[8].to_string(), ValueEnum::Verine(tokens)))
             }
         }
