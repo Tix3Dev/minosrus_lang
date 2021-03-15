@@ -1,1 +1,5 @@
 - fix bugs of examples: guessing_game and reverse_array
+
+- cleaning up the code
+
+- change evaluate for LET etc. cuz e.g. it's wrong for INSERT (if the index is a variable)
