@@ -85,6 +85,15 @@ List (of those that are at the beginning):
 		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
 		> REMOVE FROM A AT 1
 
+- SET
+	- Used to change the value of an element of an array
+
+	- Fails if index of element doesn't exist
+
+	- Example:
+		> LET A = ["TOM", "WILLY", "JERRY", "RUSTY"]
+		> SET A AT 0 TO "BOB"
+
 (
 	RESET -> reset environment (everything that is saved gets deleted)
 	STOP -> stop interpreter
