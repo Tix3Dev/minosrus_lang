@@ -722,11 +722,27 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:INSERT",
+                        "STRING:?",
+                        "PREDEFINED_NAME:INTO",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:AT",
+                        "VARIABLE/FUNCTION_NAME:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:INSERT",
                         "INTEGER:?",
                         "PREDEFINED_NAME:INTO",
                         "VARIABLE/FUNCTION_NAME:?",
                         "PREDEFINED_NAME:AT",
                         "INTEGER:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:INSERT",
+                        "INTEGER:?",
+                        "PREDEFINED_NAME:INTO",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:AT",
+                        "VARIABLE/FUNCTION_NAME:?"
                     ],
                     vec![
                         "PREDEFINED_NAME:INSERT",
@@ -738,11 +754,27 @@ impl ExecData {
                     ],
                     vec![
                         "PREDEFINED_NAME:INSERT",
+                        "FLOAT:?",
+                        "PREDEFINED_NAME:INTO",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:AT",
+                        "VARIABLE/FUNCTION_NAME:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:INSERT",
                         "VARIABLE/FUNCTION_NAME:?",
                         "PREDEFINED_NAME:INTO",
                         "VARIABLE/FUNCTION_NAME:?",
                         "PREDEFINED_NAME:AT",
                         "INTEGER:?"
+                    ],
+                    vec![
+                        "PREDEFINED_NAME:INSERT",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:INTO",
+                        "VARIABLE/FUNCTION_NAME:?",
+                        "PREDEFINED_NAME:AT",
+                        "VARIABLE/FUNCTION_NAME:?"
                     ]
                 ]));
 
@@ -1245,7 +1277,7 @@ impl ExecData {
                                                                             token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
                                                                         },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
+                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -1257,8 +1289,31 @@ impl ExecData {
                                                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                     }
                                                 }
+                                                if token_collection[5].0 == "VARIABLE/FUNCTION_NAME" {
+                                                    match &token_collection[5].1 {
+                                                        tokenizer::ValueEnum::String(variable_name) => {
+                                                            match self.global_variables.get(variable_name) {
+                                                                Some(value_of_variable) => {
+                                                                    match value_of_variable {
+                                                                        tokenizer::ValueEnum::Integer(v) => {
+                                                                            token_collection_clone[5].0 = "INTEGER".to_string();
+                                                                            token_collection_clone[5].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                        },
+                                                                        _ => {
+                                                                            return format!("EXECUTION ERROR: THIRD VARIABLE HAS TO BE AN INTEGER!");
+                                                                        }
+                                                                    }
+                                                                },
+                                                                None => {
+                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                }
+                                                            }
+                                                        },
+                                                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                                    }
+                                                }
+
                                             }
-                                            // 3 & 5 have to be changed meow comment xD
                                             else if fv == "SET" {
                                                 if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[3].1 {
@@ -1266,20 +1321,12 @@ impl ExecData {
                                                             match self.global_variables.get(variable_name) {
                                                                 Some(value_of_variable) => {
                                                                     match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[3].0 = "STRING".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
                                                                         tokenizer::ValueEnum::Integer(v) => {
                                                                             token_collection_clone[3].0 = "INTEGER".to_string();
                                                                             token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                         },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[3].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
+                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE AN INTEGER!");
                                                                         }
                                                                     }
                                                                 },
@@ -1310,7 +1357,7 @@ impl ExecData {
                                                                             token_collection_clone[5].1 = tokenizer::ValueEnum::Float(*v);
                                                                         },
                                                                         _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
+                                                                            return format!("EXECUTION ERROR: THIRD VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
                                                                         }
                                                                     }
                                                                 },
@@ -1488,7 +1535,7 @@ impl ExecData {
                                                 }
                                             };
 
-                                            if index >= vec.len() {
+                                            if index >= vec.len() && index != 0 {
                                                 return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
                                             }
 
