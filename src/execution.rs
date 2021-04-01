@@ -212,30 +212,25 @@ fn update_while_condition_values(
     block_code: &Vec<Vec<(String, tokenizer::ValueEnum)>>,
     global_variables: &HashMap<String, tokenizer::ValueEnum>,
     error: &mut String,
-) -> Vec<Vec<(String, tokenizer::ValueEnum)>> {
+) -> Result<Vec<Vec<(String, tokenizer::ValueEnum)>>, String> {
     let mut block_code_clone = block_code.clone();
 
     if block_code[0][1].0 == "VARIABLE/FUNCTION_NAME" {
         match &block_code[0][1].1 {
             tokenizer::ValueEnum::String(variable_name) => {
-                match global_variables.get(variable_name) {
-                    Some(value_of_variable) => {
-                        match value_of_variable {
-                            tokenizer::ValueEnum::String(v) => {
-                                block_code_clone[0][1].0 = "STRING".to_string();
-                                block_code_clone[0][1].1 = tokenizer::ValueEnum::String(v.to_string());
-                            },
-                            tokenizer::ValueEnum::Integer(v) => {
-                                block_code_clone[0][1].0 = "INTEGER".to_string();
-                                block_code_clone[0][1].1 = tokenizer::ValueEnum::Integer(*v);
-                            },
-                            _ => {
-                                *error = "EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!".to_string();
-                            }
-                        }
+                let value_of_variable = global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                match value_of_variable {
+                    tokenizer::ValueEnum::String(v) => {
+                        block_code_clone[0][1].0 = "STRING".to_string();
+                        block_code_clone[0][1].1 = tokenizer::ValueEnum::String(v.to_string());
                     },
-                    None => {
-                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name + "!";
+                    tokenizer::ValueEnum::Integer(v) => {
+                        block_code_clone[0][1].0 = "INTEGER".to_string();
+                        block_code_clone[0][1].1 = tokenizer::ValueEnum::Integer(*v);
+                    },
+                    _ => {
+                        *error = "EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!".to_string();
                     }
                 }
             },
@@ -245,25 +240,19 @@ fn update_while_condition_values(
     if block_code[0][3].0 == "VARIABLE/FUNCTION_NAME" {
         match &block_code[0][3].1 {
             tokenizer::ValueEnum::String(variable_name) => {
-                match global_variables.get(variable_name) {
-                    Some(value_of_variable) => {
-                        match value_of_variable {
-                            tokenizer::ValueEnum::String(v) => {
-                                block_code_clone[0][3].0 = "STRING".to_string();
-                                block_code_clone[0][3].1 = tokenizer::ValueEnum::String(v.to_string());
-                            },
-                            tokenizer::ValueEnum::Integer(v) => {
-                                block_code_clone[0][3].0 = "INTEGER".to_string();
-                                block_code_clone[0][3].1 = tokenizer::ValueEnum::Integer(*v);
-                            },
-                            _ => {
-                                *error = "EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!".to_string();
-                            }
-                        }
-                    },
-                    None => {
-                        *error = "EXECUTION ERROR: THERE IS NO VARIABLE CALLED ".to_string() + variable_name + "!";
+                let value_of_variable = global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
 
+                match value_of_variable {
+                    tokenizer::ValueEnum::String(v) => {
+                        block_code_clone[0][3].0 = "STRING".to_string();
+                        block_code_clone[0][3].1 = tokenizer::ValueEnum::String(v.to_string());
+                    },
+                    tokenizer::ValueEnum::Integer(v) => {
+                        block_code_clone[0][3].0 = "INTEGER".to_string();
+                        block_code_clone[0][3].1 = tokenizer::ValueEnum::Integer(*v);
+                    },
+                    _ => {
+                        *error = "EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!".to_string();
                     }
                 }
             },
@@ -271,21 +260,21 @@ fn update_while_condition_values(
         }
     }
 
-    block_code_clone
+    Ok(block_code_clone)
 }
 
 impl ExecData {
     fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, called_from_block: bool) -> String {
         for line in block_code {
             let return_of_execution = self.exec(line, called_from_block);
-            if return_of_execution != "".to_string() {
-                return return_of_execution;
+            if let Err(e) = return_of_execution {
+                return e;
             }
         }
         return format!("");
     }
 
-    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>, called_from_while: bool) -> String {
+    pub fn exec(&mut self, token_collection: Vec<(String, tokenizer::ValueEnum)>, called_from_while: bool) -> Result<(), String> {
         let mut token_collection = token_collection.clone();
         // debugging purpose
         println!("token_collection: {:?}", token_collection);
@@ -294,7 +283,7 @@ impl ExecData {
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"ERROR_MESSAGE") {
             match value {
                 tokenizer::ValueEnum::String(v) => {
-                    return format!("SYNTAX ERROR: {}", v);
+                    return Err(format!("SYNTAX ERROR: {}", v));
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
@@ -303,7 +292,7 @@ impl ExecData {
         if let Some((_, value)) = token_collection.iter().find(|(key, _)| key == &"COMMENT") {
             match value {
                 tokenizer::ValueEnum::String(_v) => {
-                    return format!("");
+                    return Ok(());
                 },
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
@@ -313,7 +302,7 @@ impl ExecData {
             tokenizer::ValueEnum::String(v) => {
                 if v == "RESET" && token_collection.len() == 1 {
                     self.global_variables.clear();
-                    return format!("");
+                    return Ok(());
                 }
             },
             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -329,7 +318,7 @@ impl ExecData {
                     let verine = VerineTokenizer::evaluate(verine.clone(), &self.global_variables);
 
                     let push_error = |message: &str| {
-                        return format!("EXECUTION ERROR: {}", message);
+                        return Err(format!("EXECUTION ERROR: {}", message));
                     };
 
                     match verine {
@@ -394,7 +383,7 @@ impl ExecData {
                         if self.current_block_type.0 == "" {
                             add_indentation(&mut self.indentation);
                         } else {
-                            return format!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                            return Err("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!".to_string());
                         }
                     }
                     else if v == "END" && token_collection.len() == 1 {
@@ -426,7 +415,7 @@ impl ExecData {
                                                                     // check key and value order
                                                                     let return_of_check = is_key_and_value_order_right(line.to_vec());
                                                                     if return_of_check != "".to_string() {
-                                                                        return format!("{}", return_of_check);
+                                                                        return Err(format!("{}", return_of_check));
                                                                     }
 
                                                                     // evaluate left and right side of elif
@@ -435,24 +424,19 @@ impl ExecData {
                                                                     if line[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                                         match &line[1].1 {
                                                                             tokenizer::ValueEnum::String(variable_name) => {
-                                                                                match self.global_variables.get(variable_name) {
-                                                                                    Some(value_of_variable) => {
-                                                                                        match value_of_variable {
-                                                                                            tokenizer::ValueEnum::String(v) => {
-                                                                                                line_clone[1].0 = "STRING".to_string();
-                                                                                                line_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                                            },
-                                                                                            tokenizer::ValueEnum::Integer(v) => {
-                                                                                                line_clone[1].0 = "INTEGER".to_string();
-                                                                                                line_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                                            },
-                                                                                            _ => {
-                                                                                                return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                                            }
-                                                                                        }
+                                                                                let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                                                match value_of_variable {
+                                                                                    tokenizer::ValueEnum::String(v) => {
+                                                                                        line_clone[1].0 = "STRING".to_string();
+                                                                                       line_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                                     },
-                                                                                    None => {
-                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                                    tokenizer::ValueEnum::Integer(v) => {
+                                                                                        line_clone[1].0 = "INTEGER".to_string();
+                                                                                        line_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                                    },
+                                                                                    _ => {
+                                                                                        return Err("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING OR INTEGER!".to_string());
                                                                                     }
                                                                                 }
                                                                             },
@@ -462,24 +446,18 @@ impl ExecData {
                                                                     if line[3].0 == "VARIABLE/FUNCTION_NAME" {
                                                                         match &line[3].1 {
                                                                             tokenizer::ValueEnum::String(variable_name) => {
-                                                                                match self.global_variables.get(variable_name) {
-                                                                                    Some(value_of_variable) => {
-                                                                                        match value_of_variable {
-                                                                                            tokenizer::ValueEnum::String(v) => {
-                                                                                                line_clone[3].0 = "STRING".to_string();
-                                                                                                line_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                                            },
-                                                                                            tokenizer::ValueEnum::Integer(v) => {
-                                                                                                line_clone[3].0 = "INTEGER".to_string();
-                                                                                                line_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                                            },
-                                                                                            _ => {
-                                                                                                return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!");
-                                                                                            }
-                                                                                        }
+                                                                                let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+                                                                                match value_of_variable {
+                                                                                    tokenizer::ValueEnum::String(v) => {
+                                                                                        line_clone[3].0 = "STRING".to_string();
+                                                                                        line_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                                     },
-                                                                                    None => {
-                                                                                        return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                                    tokenizer::ValueEnum::Integer(v) => {
+                                                                                        line_clone[3].0 = "INTEGER".to_string();
+                                                                                        line_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                                    },
+                                                                                    _ => {
+                                                                                        return Err("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING OR INTEGER!".to_string());
                                                                                     }
                                                                                 }
                                                                             },
@@ -502,7 +480,7 @@ impl ExecData {
                                                                         is_there_else_block = true;
                                                                         where_is_else_block = line_position;
                                                                     } else {
-                                                                        return format!("EXECUTION ERROR: THERE ARE MORE TOKENS THAN ELSE NEEDS!");
+                                                                        return Err("EXECUTION ERROR: THERE ARE MORE TOKENS THAN ELSE NEEDS!".to_string());
                                                                     }
                                                                 }
                                                             },
@@ -528,19 +506,19 @@ impl ExecData {
                                                     if check_block_code_condition(operator.to_string(), self.block_code.to_vec()) {
                                                         let return_of_block_code_execution = self.execute_block_code(if_part.to_vec(), false);
                                                         if return_of_block_code_execution != "".to_string() {
-                                                            return format!("{}", return_of_block_code_execution);
+                                                            return Err(format!("{}", return_of_block_code_execution));
                                                         }
                                                     }
                                                     else if is_there_elif_block && is_elif_block_true {
                                                         let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec(), false);
                                                         if return_of_block_code_execution != "".to_string() {
-                                                            return format!("{}", return_of_block_code_execution);
+                                                            return Err(format!("{}", return_of_block_code_execution));
                                                         }
                                                     }
                                                     else if is_there_else_block {
                                                         let return_of_block_code_execution = self.execute_block_code(else_part, false);
                                                         if return_of_block_code_execution != "".to_string() {
-                                                            return format!("{}", return_of_block_code_execution);
+                                                            return Err(format!("{}", return_of_block_code_execution));
                                                         }
                                                     }
                                                 },
@@ -553,15 +531,12 @@ impl ExecData {
                                             match &self.block_code[0][2].1.clone() {
                                                 tokenizer::ValueEnum::String(operator) => {
                                                     loop {
-                                                        let new_block_code = update_while_condition_values(&self.block_code, &self.global_variables, &mut error);
-                                                        if error != "".to_string() {
-                                                            return format!("{}", error);
-                                                        }
-
+                                                        let new_block_code = update_while_condition_values(&self.block_code, &self.global_variables, &mut error)?;
+                                                        
                                                         if check_block_code_condition(operator.to_string(), new_block_code) {
                                                             let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec(), true);
                                                             if return_of_block_code_execution != "".to_string() {
-                                                                return format!("{}", return_of_block_code_execution);
+                                                                return Err(format!("{}", return_of_block_code_execution));
                                                             }
                                                         } else {
                                                             break;
@@ -588,7 +563,7 @@ impl ExecData {
                     // saving code block stuff
                     if self.current_block_type.0 == "normal" {
                         if v == "FN" {
-                            return format!("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!");
+                            return Err("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!".to_string());
                         }
 
                         for (i, tokens) in saved_verines {
@@ -613,7 +588,7 @@ impl ExecData {
                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
             }
 
-            return format!("");
+            return Ok(()); 
         }
 
 
@@ -622,13 +597,13 @@ impl ExecData {
         let first_key_element = &token_collection[0].0;
 
         if first_key_element != "PREDEFINED_NAME" {
-            return format!("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !");
+            return Err("EXECUTION ERROR: EVERY LINE HAS TO START WITH A PREDEFINED NAME (EXCEPT FOR COMMENT-LINES) !".to_string());
         }
 
         // check if key and value order is right
         let return_of_check = is_key_and_value_order_right(token_collection.to_vec());
         if return_of_check != "".to_string() {
-            return format!("{}", return_of_check);
+            return Err(format!("{}", return_of_check));
         }
 
         // evaluate value for LET, PRINT, IF, PUSH, INSERT
@@ -646,31 +621,26 @@ impl ExecData {
                                                 if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[3].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[3].0 = "STRING".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[3].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[3].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Array(v) => {
-                                                                            token_collection_clone[3].0 = "ARRAY".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Array(v.to_vec());
-                                                                        }
-                                                                        tokenizer::ValueEnum::Verine(_) => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[3].0 = "STRING".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[3].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[3].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Array(v) => {
+                                                                    token_collection_clone[3].0 = "ARRAY".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Array(v.to_vec());
                                                                 }
+                                                                tokenizer::ValueEnum::Verine(_) => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                                             }
                                                         },
                                                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -681,28 +651,23 @@ impl ExecData {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[1].0 = "STRING".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[1].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[1].0 = "STRING".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[1].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: CAN'T PRINT THIS VARIABLE!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -714,28 +679,23 @@ impl ExecData {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[1].0 = "STRING".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[1].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[1].0 = "STRING".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[1].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -745,28 +705,23 @@ impl ExecData {
                                                 if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[3].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[3].0 = "STRING".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[3].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[3].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[3].0 = "STRING".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[3].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[3].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: SECOND VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -779,28 +734,23 @@ impl ExecData {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[1].0 = "STRING".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[1].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[1].0 = "STRING".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[1].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -812,28 +762,23 @@ impl ExecData {
                                                 if token_collection[1].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[1].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[1].0 = "STRING".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[1].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[1].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[1].0 = "STRING".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[1].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[1].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[1].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: FIRST VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -843,20 +788,15 @@ impl ExecData {
                                                 if token_collection[5].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[5].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[5].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[5].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: THIRD VARIABLE HAS TO BE AN INTEGER!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[5].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[5].1 = tokenizer::ValueEnum::Integer(*v);
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: THIRD VARIABLE HAS TO BE AN INTEGER!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -869,20 +809,15 @@ impl ExecData {
                                                 if token_collection[3].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[3].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[3].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: SECOND VARIABLE HAS TO BE AN INTEGER!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[3].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[3].1 = tokenizer::ValueEnum::Integer(*v);
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: SECOND VARIABLE HAS TO BE AN INTEGER!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -892,28 +827,22 @@ impl ExecData {
                                                 if token_collection[5].0 == "VARIABLE/FUNCTION_NAME" {
                                                     match &token_collection[5].1 {
                                                         tokenizer::ValueEnum::String(variable_name) => {
-                                                            match self.global_variables.get(variable_name) {
-                                                                Some(value_of_variable) => {
-                                                                    match value_of_variable {
-                                                                        tokenizer::ValueEnum::String(v) => {
-                                                                            token_collection_clone[5].0 = "STRING".to_string();
-                                                                            token_collection_clone[5].1 = tokenizer::ValueEnum::String(v.to_string());
-                                                                        },
-                                                                        tokenizer::ValueEnum::Integer(v) => {
-                                                                            token_collection_clone[5].0 = "INTEGER".to_string();
-                                                                            token_collection_clone[5].1 = tokenizer::ValueEnum::Integer(*v);
-                                                                        },
-                                                                        tokenizer::ValueEnum::Float(v) => {
-                                                                            token_collection_clone[5].0 = "FLOAT".to_string();
-                                                                            token_collection_clone[5].1 = tokenizer::ValueEnum::Float(*v);
-                                                                        },
-                                                                        _ => {
-                                                                            return format!("EXECUTION ERROR: THIRD VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!");
-                                                                        }
-                                                                    }
+                                                            let value_of_variable = self.global_variables.get(variable_name).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name))?;
+                                                            match value_of_variable {
+                                                                tokenizer::ValueEnum::String(v) => {
+                                                                    token_collection_clone[5].0 = "STRING".to_string();
+                                                                    token_collection_clone[5].1 = tokenizer::ValueEnum::String(v.to_string());
                                                                 },
-                                                                None => {
-                                                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", variable_name);
+                                                                tokenizer::ValueEnum::Integer(v) => {
+                                                                    token_collection_clone[5].0 = "INTEGER".to_string();
+                                                                    token_collection_clone[5].1 = tokenizer::ValueEnum::Integer(*v);
+                                                                },
+                                                                tokenizer::ValueEnum::Float(v) => {
+                                                                    token_collection_clone[5].0 = "FLOAT".to_string();
+                                                                    token_collection_clone[5].1 = tokenizer::ValueEnum::Float(*v);
+                                                                },
+                                                                _ => {
+                                                                    return Err("EXECUTION ERROR: THIRD VARIABLE HAS TO BE A STRING, INTEGER OR FLOAT!".to_string());
                                                                 }
                                                             }
                                                         },
@@ -929,7 +858,7 @@ impl ExecData {
                             }
                         },
                         None => {
-                            return format!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean);
+                            return Err(format!("EXECUTION ERROR: '{}' IS NEVER AT THE BEGINNING!", clean));
                         }
                     }
                 },
@@ -984,11 +913,11 @@ impl ExecData {
                                     let block_code = function_code_block[1..].to_vec();
                                     let return_of_block_code_execution = self.execute_block_code(block_code, false);
                                     if return_of_block_code_execution != "".to_string() {
-                                        return format!("{}", return_of_block_code_execution);
+                                        return Err(format!("{}", return_of_block_code_execution));
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}!", function_name);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO FUNCTION CALLED {}!", function_name));
                                 }
                             }
                         },
@@ -1030,18 +959,18 @@ impl ExecData {
                                                     *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
-                                                    return format!("EXECUTION ERROR: YOU HAVE TO PUSH A STRING, INTEGER OR FLOAT ONTO AN ARRAY!");
+                                                    return Err("EXECUTION ERROR: YOU HAVE TO PUSH A STRING, INTEGER OR FLOAT ONTO AN ARRAY!".to_string());
                                                 }
                                             }
                                         },
                                         _ => {
-                                            return format!("EXECUTION  ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!");
+                                            return Err("EXECUTION  ERROR: YOU CAN ONLY PUSH ONTO ARRAYS!".to_string());
                                         }
 
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
                                 }
                             }
                         },
@@ -1060,12 +989,12 @@ impl ExecData {
                                             *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                         },
                                         _ => {
-                                            return format!("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!");
+                                            return Err("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!".to_string());
                                         }
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
                                 }
                             }
                         },
@@ -1087,7 +1016,7 @@ impl ExecData {
                                             };
 
                                             if index >= vec.len() && index != 0 {
-                                                return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
+                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
                                             }
 
                                             match &token_collection[1].1 {
@@ -1107,17 +1036,17 @@ impl ExecData {
                                                     *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                                 },
                                                 _ => {
-                                                    return format!("EXECUTION ERROR: YOU HAVE TO INSERT A STRING, INTEGER OR FLOAT INTO AN ARRAY!");
+                                                    return Err("EXECUTION ERROR: YOU HAVE TO INSERT A STRING, INTEGER OR FLOAT INTO AN ARRAY!".to_string());
                                                 }
                                             }
                                         },
                                         _ => {
-                                            return format!("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!");
+                                            return Err("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!".to_string());
                                         }
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
                                 }
                             }
                         },
@@ -1140,7 +1069,7 @@ impl ExecData {
                                             };
                                             
                                             if index >= vec.len() {
-                                                return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
+                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
                                             }
 
                                             let mut vec_clone = vec.clone();
@@ -1151,7 +1080,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
                                 }
                             }
                         },
@@ -1174,7 +1103,7 @@ impl ExecData {
                                             };
 
                                             if index >= vec.len() {
-                                                return format!("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!");
+                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
                                             }
 
                                             match &token_collection[5].1 {
@@ -1200,7 +1129,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff);
+                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
                                 }
                             }
                         },
@@ -1242,7 +1171,7 @@ impl ExecData {
                                     }
                                 },
                                 None => {
-                                    return format!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword);
+                                    return Err(format!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword));
                                 }
                             }
                         },
@@ -1256,6 +1185,6 @@ impl ExecData {
         // debugging purpose
         println!("self.global_variables: {:?}", self.global_variables);
 
-        return format!("");
+        Ok(()) 
     }
 }
