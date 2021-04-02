@@ -50,7 +50,7 @@ List (of those that are at the beginning):
 		> LET COUNTER = 1
 		> WHILE COUNTER <= 10 START
 			> PRINT COUNTER
-			> LET COUNTER = | COUNTER + 1 |
+			> LET COUNTER = ( COUNTER + 1 )
 			> END
 
 - PUSH
@@ -107,9 +107,9 @@ List (of those that are in verines):
 
 	- Example:
 		> LET A = "HELLO"
-		> LET LEN_OF_STRING = | GET FROM A LEN |
+		> LET LEN_OF_STRING = ( GET FROM A LEN )
 		> LET B = [12, 34, 56, 78]
-		> LET FIRST_ELEMENT = | GET FROM B AT 0 |
+		> LET FIRST_ELEMENT = ( GET FROM B AT 0 )
 
 - READLN
 	- Used to get user input
@@ -117,7 +117,7 @@ List (of those that are in verines):
 	- In case you need an integer you can use INTEGER_FROM
 
 	- Example:
-		> LET USER_INPUT = | READLN |
+		> LET USER_INPUT = ( READLN )
 
 - STRING_FROM
 	- Used to convert a integer to a string
@@ -125,7 +125,7 @@ List (of those that are in verines):
 
 	- Example:
 		> LET A = 123
-		> LET A_AS_STRING = | STRING_FROM A |
+		> LET A_AS_STRING = ( STRING_FROM A )
 
 - INTEGER_FROM
 	- Used to convert a string (which consists of digits) to an integer
@@ -133,7 +133,7 @@ List (of those that are in verines):
 
 	- Example:
 		> LET A = "123"
-		> LET A_AS_INTEGER = | INTEGER_FROM A |
+		> LET A_AS_INTEGER = ( INTEGER_FROM A )
 
 - FLOAT_FROM
 	- Used to convert a string (which consists of digits) to a float 
@@ -141,7 +141,7 @@ List (of those that are in verines):
 
 	- Example:
 		> LET A = "123.123"
-		> LET A_AS_FLOAT = | FLOAT_FROM A |
+		> LET A_AS_FLOAT = ( FLOAT_FROM A )
 
 List (of those that are in code blocks):
 - END

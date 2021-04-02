@@ -2,8 +2,8 @@ Repl:
 
 > LET COUNTER = 1
 > WHILE COUNTER <= 5 START
-	> PRINT | "COUNTER: " + COUNTER |
-	> LET COUNTER = | COUNTER + 1 |
+	> PRINT ( "COUNTER: " + COUNTER )
+	> LET COUNTER = ( COUNTER + 1 )
 	> END
 
 Output:
