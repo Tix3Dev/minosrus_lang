@@ -971,22 +971,15 @@ impl ExecData {
                 else if v == &"POP".to_string() {
                     match &token_collection[2].1 {
                         tokenizer::ValueEnum::String(stuff) => {
-                            match self.global_variables.get(stuff) {
-                                Some(value) => {
-                                    match &value {
-                                        tokenizer::ValueEnum::Array(vec) => {
-                                            let mut vec_clone = vec.clone();
-                                            vec_clone.pop();
-                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                        },
-                                        _ => {
-                                            return Err("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!".to_string());
-                                        }
-                                    }
+                            let value = self.global_variables.get(stuff).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff))?;
+
+                            match &value {
+                                tokenizer::ValueEnum::Array(vec) => {
+                                    let mut vec_clone = vec.clone();
+                                    vec_clone.pop();
+                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                 },
-                                None => {
-                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
-                                }
+                                _ => return Err("EXECUTION  ERROR: YOU CAN ONLY POP FROM ARRAYS!".to_string())
                             }
                         },
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -995,50 +988,41 @@ impl ExecData {
                 else if v == &"INSERT".to_string() {
                     match &token_collection[3].1 {
                         tokenizer::ValueEnum::String(stuff) => {
-                            match self.global_variables.get(stuff) {
-                                Some(value) => {
-                                    match &value {
-                                        tokenizer::ValueEnum::Array(vec) => {
-                                            let index = {
-                                                match &token_collection[5].1 {
-                                                    tokenizer::ValueEnum::Integer(index_where_to_insert) => *index_where_to_insert as usize,
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                }
-                                            };
+                            let value = self.global_variables.get(stuff).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff))?;
 
-                                            if index >= vec.len() && index != 0 {
-                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
-                                            }
-
-                                            match &token_collection[1].1 {
-                                                tokenizer::ValueEnum::String(stuff_to_push) => {
-                                                    let mut vec_clone = vec.clone(); 
-                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                tokenizer::ValueEnum::Integer(stuff_to_push) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                tokenizer::ValueEnum::Float(stuff_to_push) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone.insert(index, tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                _ => {
-                                                    return Err("EXECUTION ERROR: YOU HAVE TO INSERT A STRING, INTEGER OR FLOAT INTO AN ARRAY!".to_string());
-                                                }
-                                            }
-                                        },
-                                        _ => {
-                                            return Err("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!".to_string());
+                            match &value {
+                                tokenizer::ValueEnum::Array(vec) => {
+                                    let index = {
+                                        match &token_collection[5].1 {
+                                            tokenizer::ValueEnum::Integer(index_where_to_insert) => *index_where_to_insert as usize,
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                         }
+                                    };
+
+                                    if index >= vec.len() && index != 0 {
+                                        return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
+                                    }
+
+                                    match &token_collection[1].1 {
+                                        tokenizer::ValueEnum::String(stuff_to_push) => {
+                                            let mut vec_clone = vec.clone(); 
+                                            vec_clone.insert(index, tokenizer::ArrayTypesEnum::String(stuff_to_push.to_string()));
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                        },
+                                        tokenizer::ValueEnum::Integer(stuff_to_push) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone.insert(index, tokenizer::ArrayTypesEnum::Integer(*stuff_to_push));
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                        },
+                                        tokenizer::ValueEnum::Float(stuff_to_push) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone.insert(index, tokenizer::ArrayTypesEnum::Float(*stuff_to_push));
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                        },
+                                        _ => return Err("EXECUTION ERROR: YOU HAVE TO INSERT A STRING, INTEGER OR FLOAT INTO AN ARRAY!".to_string())
                                     }
                                 },
-                                None => {
-                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
-                                }
+                                _ => return Err("EXECUTION ERROR: YOU CAN ONLY INSERT INTO ARRAYS!".to_string())
                             }
                         },
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -1048,31 +1032,26 @@ impl ExecData {
                 else if v == &"REMOVE".to_string() {
                     match &token_collection[2].1 {
                         tokenizer::ValueEnum::String(stuff) => {
-                            match self.global_variables.get(stuff) {
-                                Some(value) => {
-                                    match &value {
-                                        tokenizer::ValueEnum::Array(vec) => {
-                                            let index = {
-                                                match &token_collection[4].1 {
-                                                    tokenizer::ValueEnum::Integer(index_where_to_remove) => *index_where_to_remove as usize,
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                }
-                                            };
-                                            
-                                            if index >= vec.len() {
-                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
-                                            }
+                            let value = self.global_variables.get(stuff).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff))?;
 
-                                            let mut vec_clone = vec.clone();
-                                            vec_clone.remove(index);
-                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                        },
-                                        _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                            match &value {
+                                tokenizer::ValueEnum::Array(vec) => {
+                                    let index = {
+                                        match &token_collection[4].1 {
+                                            tokenizer::ValueEnum::Integer(index_where_to_remove) => *index_where_to_remove as usize,
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                        }
+                                    };
+                                    
+                                    if index >= vec.len() {
+                                        return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
                                     }
+
+                                    let mut vec_clone = vec.clone();
+                                    vec_clone.remove(index);
+                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                 },
-                                None => {
-                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
-                                }
+                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                             }
                         },
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -1082,46 +1061,41 @@ impl ExecData {
                 else if v == &"SET".to_string() {
                     match &token_collection[1].1 {
                         tokenizer::ValueEnum::String(stuff) => {
-                            match self.global_variables.get(stuff) {
-                                Some(value) => {
-                                    match &value {
-                                        tokenizer::ValueEnum::Array(vec) => {
-                                            let index = {
-                                                match &token_collection[3].1 {
-                                                    tokenizer::ValueEnum::Integer(index_where_to_remove) => *index_where_to_remove as usize,
-                                                    _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                                }
-                                            };
+                            let value = self.global_variables.get(stuff).ok_or(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff))?;
 
-                                            if index >= vec.len() {
-                                                return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
-                                            }
+                            match &value {
+                                tokenizer::ValueEnum::Array(vec) => {
+                                    let index = {
+                                        match &token_collection[3].1 {
+                                            tokenizer::ValueEnum::Integer(index_where_to_remove) => *index_where_to_remove as usize,
+                                            _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
+                                        }
+                                    };
 
-                                            match &token_collection[5].1 {
-                                                tokenizer::ValueEnum::String(end_value) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone[index] = ArrayTypesEnum::String(end_value.to_string());
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                tokenizer::ValueEnum::Integer(end_value) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone[index] = ArrayTypesEnum::Integer(*end_value);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                },
-                                                tokenizer::ValueEnum::Float(end_value) => {
-                                                    let mut vec_clone = vec.clone();
-                                                    vec_clone[index] = ArrayTypesEnum::Float(*end_value);
-                                                    *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
-                                                }
-                                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
-                                            }
+                                    if index >= vec.len() {
+                                        return Err("EXECUTION ERROR: INDEX IS OUT OF BOUNDS!".to_string());
+                                    }
+
+                                    match &token_collection[5].1 {
+                                        tokenizer::ValueEnum::String(end_value) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone[index] = ArrayTypesEnum::String(end_value.to_string());
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
                                         },
+                                        tokenizer::ValueEnum::Integer(end_value) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone[index] = ArrayTypesEnum::Integer(*end_value);
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                        },
+                                        tokenizer::ValueEnum::Float(end_value) => {
+                                            let mut vec_clone = vec.clone();
+                                            vec_clone[index] = ArrayTypesEnum::Float(*end_value);
+                                            *self.global_variables.get_mut(stuff).unwrap() = tokenizer::ValueEnum::Array(vec_clone);
+                                        }
                                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                     }
                                 },
-                                None => {
-                                    return Err(format!("EXECUTION ERROR: THERE IS NO VARIABLE CALLED {}!", stuff));
-                                }
+                                _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                             }
                         },
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -1132,38 +1106,33 @@ impl ExecData {
                 else if v == &"HELP_FOR".to_string() {
                     match &token_collection[1].1 {
                         tokenizer::ValueEnum::String(keyword) => {
-                            match predefined_name_order.get(&keyword.as_str()) {
-                                Some(order_collection) => {
-                                    match order_collection {
-                                        OrderEnum::SingleOption(v) => {
-                                            println!("-SINGLE OPTION-");
-                                            print!("1: '");
-                                            for e_nr in 0..v.len() {
-                                                if e_nr == v.len() - 1 {
-                                                    println!("{}'", v[e_nr]);
-                                                } else {
-                                                    print!("{}, ", v[e_nr]);
-                                                }
-                                            }
-                                        },
-                                        OrderEnum::MultipleOptions(v) => {
-                                            println!("-MULTIPLE OPTIONS-");
-                                            for p_nr in 0..v.len() {
-                                                print!("{}: '", p_nr+1);
-                                                for e_nr in 0..v[p_nr].len() {
-                                                    if e_nr == v[p_nr].len() - 1 {
-                                                        println!("{}'", v[p_nr][e_nr]);
-                                                    } else {
-                                                        print!("{}, ", v[p_nr][e_nr]);
-                                                    }
-                                                }
-                                            }
-                                        }    
+                            let order_collection= predefined_name_order.get(&keyword.as_str()).ok_or(format!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword))?;
+
+                            match order_collection {
+                                OrderEnum::SingleOption(v) => {
+                                    println!("-SINGLE OPTION-");
+                                    print!("1: '");
+                                    for e_nr in 0..v.len() {
+                                        if e_nr == v.len() - 1 {
+                                            println!("{}'", v[e_nr]);
+                                        } else {
+                                            print!("{}, ", v[e_nr]);
+                                        }
                                     }
                                 },
-                                None => {
-                                    return Err(format!("EXECUTION ERROR: CAN'T PRINT HELP FOR {} BECAUSE IT'S NOT A PREDEFINED NAME WHICH IS AT THE BEGINNING OF A LINE!", keyword));
-                                }
+                                OrderEnum::MultipleOptions(v) => {
+                                    println!("-MULTIPLE OPTIONS-");
+                                    for p_nr in 0..v.len() {
+                                        print!("{}: '", p_nr+1);
+                                        for e_nr in 0..v[p_nr].len() {
+                                            if e_nr == v[p_nr].len() - 1 {
+                                                println!("{}'", v[p_nr][e_nr]);
+                                            } else {
+                                                print!("{}, ", v[p_nr][e_nr]);
+                                            }
+                                        }
+                                    }
+                                }    
                             }
                         },
                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
