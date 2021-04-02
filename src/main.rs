@@ -46,7 +46,7 @@ pub struct ExecData {
     // here are all functions saved
     pub functions: HashMap<String, Vec<Vec<(String, tokenizer::ValueEnum)>>>,
 
-    // keep track of the current block code type (normal or functions)
+    // keep track of the current block code type (normal or functions), the name of the function
     pub current_block_type: (String, String),
 
 }
