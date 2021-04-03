@@ -1,3 +1,1 @@
 - fix bugs of examples: guessing_game and reverse_array
-
-- cleaning up the code
