@@ -600,7 +600,7 @@ impl ExecData {
             Err(e) => return Err(format!("{}", e))
         }
 
-        // evaluate value for LET, PRINT, IF, PUSH, INSERT
+        // evaluate value for LET, PRINT, IF, PUSH, INSERT, SET
         if token_collection.len() > 0 {
             let mut token_collection_clone = token_collection.clone();
 

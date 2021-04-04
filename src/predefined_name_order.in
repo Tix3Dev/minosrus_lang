@@ -417,7 +417,23 @@
                 "PREDEFINED_NAME:SET",
                 "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:AT",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:TO",
+                "STRING:?"
+            ],
+            vec![
+                "PREDEFINED_NAME:SET",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
                 "INTEGER:?",
+                "PREDEFINED_NAME:TO",
+                "INTEGER:?"
+            ],
+            vec![
+                "PREDEFINED_NAME:SET",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:TO",
                 "INTEGER:?"
             ],
@@ -433,10 +449,26 @@
                 "PREDEFINED_NAME:SET",
                 "VARIABLE/FUNCTION_NAME:?",
                 "PREDEFINED_NAME:AT",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:TO",
+                "FLOAT:?"
+            ],
+            vec![
+                "PREDEFINED_NAME:SET",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
                 "INTEGER:?",
                 "PREDEFINED_NAME:TO",
                 "VARIABLE_FUNCTION_NAME:?"
             ],
+            vec![
+                "PREDEFINED_NAME:SET",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:AT",
+                "VARIABLE/FUNCTION_NAME:?",
+                "PREDEFINED_NAME:TO",
+                "VARIABLE/FUNCTION_NAME:?"
+            ]
         ]));
 
     hashmap.insert("HELP_FOR", OrderEnum::SingleOption(
