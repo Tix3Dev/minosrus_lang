@@ -1,1 +1,3 @@
 - fix bugs of examples: guessing_game and reverse_array
+
+- interpreter doesn't stop if it is in a block code
