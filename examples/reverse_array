@@ -2,14 +2,14 @@ Repl:
 
 > LET ARR = ["MY", "NAME", "IS", "RUSTY"]
 > LET I = 0
-> LET J = ( GET FROM ARR LEN )
+> LET J = ( GET FROM ARR LEN - 1)
 >
 > WHILE I < J START
 	> LET TEMP = ( GET FROM ARR AT I )
 	> SET ARR AT I TO ( GET FROM ARR AT J )
 	> SET ARR AT J TO TEMP
-	> LET I = I + 1
-	> LET J = J - 1
+	> LET I = ( I + 1 )
+	> LET J = ( J - 1 )
 	> END
 
 Output:
