@@ -251,12 +251,15 @@ fn update_while_condition_values(
 
 impl ExecData {
     fn execute_block_code(&mut self, block_code: Vec<Vec<(String, tokenizer::ValueEnum)>>, called_from_block: bool) -> Result<(), String> {
+        self.block_code.clear();
+
         for line in block_code {
             let return_of_execution = self.exec(line, called_from_block);
             if let Err(e) = return_of_execution {
                 return Err(e);
             }
         }
+
         Ok(())
     }
 
@@ -369,11 +372,7 @@ impl ExecData {
                 add_indentation(&mut self.indentation);
             }
             else if v == "FN" {
-                if self.current_block_type.0 == "" {
-                    add_indentation(&mut self.indentation);
-                } else {
-                    return Err("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!".to_string());
-                }
+                return Err("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!".to_string());
             }
             else if v == "END" && token_collection.len() == 1 {
                 subtract_indentation(&mut self.indentation);
@@ -536,8 +535,9 @@ impl ExecData {
                             };
 
                             loop {
+                                let block_code_original = self.block_code.clone();
                                 let new_block_code = update_while_condition_values(&self.block_code, &self.global_variables, &mut error)?;
-                                
+
                                 if check_block_code_condition(operator.to_string(), new_block_code) {
                                     let return_of_block_code_execution = self.execute_block_code(self.block_code[1..].to_vec(), true);
                                     
@@ -548,11 +548,12 @@ impl ExecData {
                                 } else {
                                     break;
                                 }
+
+                                self.block_code = block_code_original;
                             }
                         }
 
                         self.current_block_type.0 = "".to_string();
-                        self.block_code.clear();
                     }
                     else if self.current_block_type.0 == "function" {
                         self.current_block_type.0 = "".to_string();
@@ -563,10 +564,6 @@ impl ExecData {
 
             // saving code block stuff
             if self.current_block_type.0 == "normal" {
-                if v == "FN" {
-                    return Err("EXECUTION ERROR: FUNCTIONS CAN'T BE INSIDE OF OTHER CODE BLOCKS!".to_string());
-                }
-
                 for (i, tokens) in saved_verines {
                     token_collection[i].0 = "VERINE".to_string();
                     token_collection[i].1 = ValueEnum::Verine(tokens);
@@ -575,8 +572,6 @@ impl ExecData {
                 self.block_code.push(token_collection.clone());
             }
             else if self.current_block_type.0 == "function" {
-                // function in function already checked
-
                 for (i, tokens) in saved_verines {
                     token_collection[i].0 = "VERINE".to_string();
                     token_collection[i].1 = ValueEnum::Verine(tokens);
@@ -896,7 +891,6 @@ impl ExecData {
                     self.block_code.push(token_collection);
                     self.current_block_type.0 = "normal".to_string();
                     add_indentation(&mut self.indentation);
-
                 }
                 else if v == &"WHILE".to_string() {
                     self.block_code.push(token_collection);
