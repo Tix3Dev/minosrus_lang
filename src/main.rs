@@ -158,7 +158,10 @@ fn file_execution(args_2: String) {
             let return_of_execution = exec_data_variable.exec(tokenized_line.to_vec(), false);
             match return_of_execution {
                 Ok(_) => (),
-                Err(e) => print_err(&e)
+                Err(e) => {
+                    print_err(&e);
+                    break;
+                }
             }
         }
 
