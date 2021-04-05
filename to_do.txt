@@ -1,3 +1,9 @@
 - fix bugs of examples: guessing_game
 
 - verines in conditions don't work
+
+- error message for errors in a code block get indexed with the index of END
+    e.g.:
+    - ERROR OCCURED ON LINE NR. 19: '       END'
+    -> EXECUTION ERROR: '' IS NOT A INTEGER!
+    INTERPRETER STOPPED DUE PREVIOUS RUNTIME ERROR!
