@@ -1,5 +1,3 @@
 - fix bugs of examples: guessing_game
 
 - verines in conditions don't work
-
-- interpreter doesn't stop if it is in a block code
