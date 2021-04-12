@@ -234,7 +234,7 @@ pub fn make_tokens(input: String, exec_data_variable: &mut ExecData) -> Vec<(Str
             }
             else {
                 // end of token
-                if last_character != ' ' {
+                if last_character != ' ' && !current_token.is_empty() {
                     split_of_input.push(current_token);
                     current_token = String::new();
                 }
