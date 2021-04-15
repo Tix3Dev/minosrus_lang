@@ -389,12 +389,12 @@ impl ExecData {
                                 _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                             };
 
-                            let mut elif_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
-                            let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = Vec::new();
+                            let mut else_part: Vec<Vec<(String, tokenizer::ValueEnum)>> = vec![];
 
                             let mut is_there_elif_block = false;
                             let mut is_elif_block_true = false;
-                            let mut where_is_elif_block = 0;
+                            let mut where_are_elif_blocks = vec![];
+                            let mut where_is_right_elif_block = 0;
 
                             let mut is_there_else_block = false;
                             let mut where_is_else_block = 0;
@@ -407,7 +407,7 @@ impl ExecData {
 
                                 if first_token == "ELIF" {
                                     is_there_elif_block = true;
-                                    where_is_elif_block = line_position;
+                                    where_are_elif_blocks.push(line_position);
 
                                     // check key and value order
                                     let return_of_check = is_key_and_value_order_right(line.to_vec());
@@ -431,7 +431,7 @@ impl ExecData {
                                         match value_of_variable {
                                             tokenizer::ValueEnum::String(v) => {
                                                 line_clone[1].0 = "STRING".to_string();
-                                               line_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
+                                                line_clone[1].1 = tokenizer::ValueEnum::String(v.to_string());
                                             },
                                             tokenizer::ValueEnum::Integer(v) => {
                                                 line_clone[1].0 = "INTEGER".to_string();
@@ -470,6 +470,7 @@ impl ExecData {
                                         tokenizer::ValueEnum::String(elif_operator) => {
                                             if check_block_code_condition(elif_operator.to_string(), vec![line_clone]) {
                                                 is_elif_block_true = true;
+                                                where_is_right_elif_block = where_are_elif_blocks.len() - 1;
                                             }
                                         },
                                         _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
@@ -485,13 +486,11 @@ impl ExecData {
                                 }
                             }
                             let if_part = if is_there_elif_block && is_there_else_block {
-                                elif_part = self.block_code[where_is_elif_block+1..where_is_else_block].to_vec();
                                 else_part = self.block_code[where_is_else_block+1..].to_vec();
-                                self.block_code[1..where_is_elif_block].to_vec()
+                                self.block_code[1..where_are_elif_blocks[0]].to_vec()
                             }
                             else if is_there_elif_block {
-                                elif_part = self.block_code[where_is_elif_block+1..].to_vec();
-                                self.block_code[1..where_is_elif_block].to_vec()
+                                self.block_code[1..where_are_elif_blocks[0]].to_vec()
                             }
                             else if is_there_else_block {
                                 else_part = self.block_code[where_is_else_block+1..].to_vec();
@@ -509,6 +508,9 @@ impl ExecData {
                                 }
                             }
                             else if is_there_elif_block && is_elif_block_true {
+                                let final_right_elif_position = where_are_elif_blocks[where_is_right_elif_block]+1;
+                                let elif_part = self.block_code[final_right_elif_position..final_right_elif_position+1].to_vec();
+
                                 let return_of_block_code_execution = self.execute_block_code(elif_part.to_vec(), false);
                                 
                                 match return_of_block_code_execution {
