@@ -1,3 +1,5 @@
+- Update README.md - Examples with verines
+
 - fix bugs of examples: guessing_game
 
 - error message for errors in a code block get indexed with the index of END
