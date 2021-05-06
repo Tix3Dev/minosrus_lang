@@ -443,7 +443,7 @@ impl ExecData {
                                         }
                                     }
                                     if line[3].0 == "VARIABLE/FUNCTION_NAME" {
-                                        let variable_name = match &line[1].1 {
+                                        let variable_name = match &line[3].1 {
                                             tokenizer::ValueEnum::String(variable_name) => variable_name,
                                             _ => unreachable!("SOMEHOW THIS SHOULDN'T BE PRINTED!")
                                         };
